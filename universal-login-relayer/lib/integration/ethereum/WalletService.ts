@@ -36,7 +36,7 @@ class WalletService {
     throw new InvalidENSDomain(ensName);
   }
 
-  async deploy({publicKey, ensName, gasPrice, signature}: DeployArgs) {
+  async deploy({publicKey, ensName, gasPrice, signature, network}: DeployArgs) {
     ensure(!await this.ensService.resolveName(ensName), EnsNameTaken, ensName);
     const ensArgs = this.ensService.argsFor(ensName);
     ensureNotNull(ensArgs, InvalidENSDomain, ensName);
