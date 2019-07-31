@@ -50,7 +50,7 @@ describe('INT: FutureWalletFactory', async () => {
 
   it('deploy contract', async () => {
     const ensName = 'name.mylogin.eth';
-    const {waitForBalance, contractAddress, deploy} = (await futureWalletFactory.createFutureWallet());
+    const {waitForBalance, contractAddress, deploy} = (await futureWalletFactory.createFutureWallet("placeholder"));
     wallet.sendTransaction({to: contractAddress, value: utils.parseEther('2')});
     const result = await waitForBalance();
     expect(result.contractAddress).be.eq(contractAddress);

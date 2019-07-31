@@ -38,7 +38,7 @@ export class FutureWalletFactory {
     return encodeInitializeWithRefundData(initArgs);
   }
 
-  async createFutureWallet(): Promise<FutureWallet> {
+  async createFutureWallet(network: string): Promise<FutureWallet> {
     const [privateKey, contractAddress, publicKey] = await this.blockchainService.createFutureWallet(this.config.factoryAddress);
     const waitForBalance = async () => new Promise(
       (resolve) => {

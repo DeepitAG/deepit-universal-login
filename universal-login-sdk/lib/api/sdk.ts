@@ -53,10 +53,10 @@ class UniversalLoginSDK {
     return [privateKey, contract.address];
   }
 
-  async createFutureWallet() {
+  async createFutureWallet(network = "mainnet") {
     await this.getRelayerConfig();
     this.getFutureWalletFactory();
-    return this.futureWalletFactory!.createFutureWallet();
+    return this.futureWalletFactory!.createFutureWallet(network);
   }
 
   async addKey(to: string, publicKey: string, privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY) {
