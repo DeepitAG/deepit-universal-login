@@ -7,7 +7,7 @@ import PendingMessages from '../../../../../lib/core/services/messages/PendingMe
 import basicWalletContractWithMockToken from '../../../../fixtures/basicWalletContractWithMockToken';
 import MessageSQLRepository from '../../../../../lib/integration/sql/services/MessageSQLRepository';
 import {getKeyFromHashAndSignature, createMessageItem} from '../../../../../lib/core/utils/utils';
-import {getKnex} from '../../../../../lib/core/utils/knexUtils';
+import {getKnexConfig} from '../../../../helpers/knex';
 import {clearDatabase} from '../../../../../lib/http/relayers/RelayerUnderTest';
 import {MessageStatusService} from '../../../../../lib/core/services/messages/MessageStatusService';
 import {SignaturesService} from '../../../../../lib/integration/ethereum/SignaturesService';
@@ -21,7 +21,7 @@ describe('INT: PendingMessages', () => {
   let wallet: Wallet;
   let walletContract: Contract;
   let actionKey: string;
-  const knex = getKnex();
+  const knex = getKnexConfig();
   let spy: SinonSpy;
   let messageHash: string;
 
@@ -106,7 +106,7 @@ describe('INT: PendingMessages', () => {
     it('should throw when pending message already has transaction hash', async () => {
       await walletContract.setRequiredSignatures(1);
       await pendingMessages.add(message);
-      await messageRepository.markAsSuccess(messageHash, '0x829751e6e6b484a2128924ce59c2ff518acf07fd345831f0328d117dfac30cec');
+      await messageRepository.markAsPending(messageHash, '0x829751e6e6b484a2128924ce59c2ff518acf07fd345831f0328d117dfac30cec');
       await expect(pendingMessages.ensureCorrectExecution(messageHash))
           .to.be.eventually.rejectedWith('Execution request already processed');
     });

@@ -1,8 +1,9 @@
 import {providers} from 'ethers';
-import {sleep, onCritical, SignedMessage} from '@universal-login/commons';
+import {sleep, onCritical, SignedMessage, ensureNotNull} from '@universal-login/commons';
 import IQueueStore from './IQueueStore';
 import MessageExecutor from '../../../integration/ethereum/MessageExecutor';
 import IMessageRepository from './IMessagesRepository';
+import {TransactionHashNotFound} from '../../utils/errors';
 
 type QueueState = 'running' | 'stopped' | 'stopping';
 
@@ -15,6 +16,7 @@ class QueueService {
     private messageExecutor: MessageExecutor,
     private queueStore: IQueueStore,
     private messageRepository: IMessageRepository,
+    private onTransactionSent: OnTransactionSent,
     private tick: number = 100
   ) {
     this.state = 'stopped';
@@ -27,11 +29,15 @@ class QueueService {
   }
 
   async execute(messageHash: string) {
-    await this.messageRepository.setMessageState(messageHash, 'Pending');
     try {
       const signedMessage = await this.messageRepository.getMessage(messageHash);
-      const {hash} = await this.messageExecutor.executeAndWait(signedMessage);
-      await this.messageRepository.markAsSuccess(messageHash, hash!);
+      const transactionResponse = await this.messageExecutor.execute(signedMessage);
+      const {hash, wait} = transactionResponse;
+      ensureNotNull(hash, TransactionHashNotFound);
+      await this.messageRepository.markAsPending(messageHash, hash!);
+      await wait();
+      await this.onTransactionSent(transactionResponse);
+      await this.messageRepository.setMessageState(messageHash, 'Success');
     } catch (error) {
       const errorMessage = `${error.name}: ${error.message}`;
       await this.messageRepository.markAsError(messageHash, errorMessage);

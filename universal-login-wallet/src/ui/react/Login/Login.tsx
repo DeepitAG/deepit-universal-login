@@ -4,13 +4,15 @@ import {WalletSelector} from '@universal-login/react';
 import Logo from './../../assets/logo-with-text.svg';
 import Modal from '../Modals/Modal';
 import {useServices, useRouter, useWalletConfig} from '../../hooks';
+import ModalService from '../../../core/entities/ModalService';
 
 interface LoginProps {
   location? : {state: {from: {pathname : string}}};
+  modalService: ModalService;
 }
 
-const Login = ({location} : LoginProps) => {
-  const {modalService, connectToWallet, walletService, sdk} = useServices();
+const Login = ({location, modalService} : LoginProps) => {
+  const {connectToWallet, walletService, sdk} = useServices();
   const walletConfig = useWalletConfig();
   const {history} = useRouter();
   const from = location && location.state ? location.state.from : DEFAULT_LOCATION;
@@ -23,10 +25,11 @@ const Login = ({location} : LoginProps) => {
     modalService.showModal('waitingForDeploy');
     await deploy(name, defaultDeployOptions.gasPrice.toString());
     walletService.setDeployed(name);
+    modalService.hideModal();
     history.push(from);
   };
 
-  const onConnectionClick = async (name: string) => {
+  const onConnectClick = async (name: string) => {
     unsubscribe = await connectToWallet(name, loginAndChangeScreen);
     history.push('/approve');
   };
@@ -46,12 +49,12 @@ const Login = ({location} : LoginProps) => {
         </label>
         <WalletSelector
           onCreateClick={(name: string) => onCreateCLick(name)}
-          onConnectionClick={onConnectionClick}
+          onConnectClick={onConnectClick}
           sdk={sdk}
           domains={walletConfig.domains}
           actions={WALLET_SUGGESTION_ALL_ACTIONS}
         />
-      <Modal />
+      <Modal modalService={modalService}/>
     </div>
   );
 };

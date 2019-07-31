@@ -3,7 +3,7 @@ import {utils} from 'ethers';
 import {ACTION_KEY, calculateMessageHash, createSignedMessage, waitExpect} from '@universal-login/commons';
 import {transferMessage, addKeyMessage, removeKeyMessage} from '../../../fixtures/basicWalletContract';
 import setupMessageService from '../../../helpers/setupMessageService';
-import {getKnex} from '../../../../lib/core/utils/knexUtils';
+import {getKnexConfig} from '../../../helpers/knex';
 import {clearDatabase} from '../../../../lib/http/relayers/RelayerUnderTest';
 
 describe('INT: MultiSignatureExecute', async () => {
@@ -15,7 +15,7 @@ describe('INT: MultiSignatureExecute', async () => {
   let msg;
   let otherWallet;
   let actionKey;
-  const knex = getKnex();
+  const knex = getKnexConfig();
 
   beforeEach(async () => {
     ({wallet, actionKey, provider, messageHandler, mockToken, walletContract, otherWallet} = await setupMessageService(knex));
@@ -56,9 +56,12 @@ describe('INT: MultiSignatureExecute', async () => {
       const signedMessage0 = createSignedMessage(msg, wallet.privateKey);
       const signedMessage1 = createSignedMessage(msg, actionKey);
       await messageHandler.handleMessage(signedMessage0);
-      await messageHandler.handleMessage(signedMessage1);
+      const {messageHash} = await messageHandler.handleMessage(signedMessage1);
       await messageHandler.stopLater();
       expect(await provider.getBalance(msg.to)).to.eq(expectedBalance);
+      const {state, transactionHash} = await messageHandler.getStatus(messageHash);
+      expect(transactionHash).to.not.be.null;
+      expect(state).to.be.eq('Success');
     });
   });
 

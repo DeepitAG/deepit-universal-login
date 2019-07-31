@@ -3,35 +3,39 @@ import ModalWrapperWithoutClose from './ModalWrapper';
 import ModalTransfer from './ModalTransfer';
 import ModalRequest from './ModalRequest';
 import ModalInvitation from './ModalInvitation';
-import {useSubscription, useServices, useRelayerConfig} from '../../hooks';
+import {useServices, useRelayerConfig} from '../../hooks';
 import ModalWrapperClosable from './ModalWrapperClosable';
 import ModalAddress from './ModalAddress';
 import ModalPersonalInfo from './ModalPersonalInfo';
 import ModalCardInfo from './ModalCardInfo';
 import ModalWaitingFor from './ModalWaitingFor';
 import {Safello, TopUp, ModalWrapper} from '@universal-login/react';
+import {ModalTxnSuccess} from './ModalTxnSuccess';
+import ModalService from '../../../core/entities/ModalService';
 
-const Modal = () => {
-  const {modalService, walletPresenter} = useServices();
-  const openModal = useSubscription(modalService);
-  const hideModal = () => modalService.hideModal();
+export interface ModalProps {
+  modalService: ModalService;
+}
+
+const Modal = ({modalService}: ModalProps) => {
+  const {walletPresenter} = useServices();
   const config = useRelayerConfig();
-  switch (openModal) {
+  switch (modalService.modalState) {
     case 'transfer':
       return (
-        <ModalWrapperClosable hideModal={hideModal}>
-          <ModalTransfer hideModal={hideModal}/>
+        <ModalWrapperClosable hideModal={modalService.hideModal}>
+          <ModalTransfer modalService={modalService}/>
         </ModalWrapperClosable>
       );
     case 'request':
       return (
-        <ModalWrapperClosable hideModal={hideModal}>
+        <ModalWrapperClosable hideModal={modalService.hideModal}>
           <ModalRequest />
         </ModalWrapperClosable>
       );
     case 'invitation':
       return (
-        <ModalWrapperClosable hideModal={hideModal}>
+        <ModalWrapperClosable hideModal={modalService.hideModal}>
           <ModalInvitation />
         </ModalWrapperClosable>
       );
@@ -53,7 +57,7 @@ const Modal = () => {
     case 'personalInfo':
       return (
         <ModalWrapperWithoutClose>
-          <ModalPersonalInfo />
+          <ModalPersonalInfo modalService={modalService}/>
         </ModalWrapperWithoutClose>
       );
     case 'cardInfo':
@@ -64,15 +68,21 @@ const Modal = () => {
       );
     case 'waitingForDeploy':
       return (
-        <ModalWrapperWithoutClose>
-          <ModalWaitingFor action={'Creating wallet'}/>
-        </ModalWrapperWithoutClose>
+        <ModalWrapper isVisible modalClassName="jarvis-modal">
+          <ModalWaitingFor action={'Txn pending'}/>
+        </ModalWrapper>
       );
     case 'waitingForTransfer':
       return (
         <ModalWrapperWithoutClose>
           <ModalWaitingFor action={'Transferring funds'}/>
         </ModalWrapperWithoutClose>
+      );
+    case 'transactionSuccess':
+      return (
+        <ModalWrapper isVisible modalClassName="jarvis-modal">
+          <ModalTxnSuccess />
+        </ModalWrapper>
       );
     case 'safello':
       return config ?  (

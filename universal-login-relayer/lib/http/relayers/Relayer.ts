@@ -9,7 +9,6 @@ import {Wallet, providers} from 'ethers';
 import cors from 'cors';
 import {EventEmitter} from 'fbemitter';
 import useragent from 'express-useragent';
-import {getKnex} from '../../core/utils/knexUtils';
 import Knex from 'knex';
 import {Server} from 'http';
 import {Config} from '../../config/relayer';
@@ -26,6 +25,7 @@ import WalletMasterContractService from '../../integration/ethereum/services/Wal
 import {MessageStatusService} from '../../core/services/messages/MessageStatusService';
 import {SignaturesService} from '../../integration/ethereum/SignaturesService';
 import MessageValidator from '../../core/services/messages/MessageValidator';
+import MessageExecutor from '../../integration/ethereum/MessageExecutor';
 
 const defaultPort = '3311';
 
@@ -51,6 +51,7 @@ class Relayer {
   private signaturesService: SignaturesService = {} as SignaturesService;
   private statusService: MessageStatusService = {} as MessageStatusService;
   private messageValidator: MessageValidator = {} as MessageValidator;
+  private messageExecutor: MessageExecutor = {} as MessageExecutor;
   private app: Application = {} as Application;
   protected server: Server = {} as Server;
   private walletDeployer: WalletDeployer = {} as WalletDeployer;
@@ -60,7 +61,7 @@ class Relayer {
     this.hooks = new EventEmitter();
     this.provider = provider || new providers.JsonRpcProvider(config.jsonRpcUrl, config.chainSpec);
     this.wallet = new Wallet(config.privateKey, this.provider);
-    this.database = getKnex();
+    this.database = Knex(config.database);
   }
 
   async start() {
@@ -89,7 +90,8 @@ class Relayer {
     this.signaturesService = new SignaturesService(this.wallet);
     this.statusService = new MessageStatusService(this.messageRepository, this.signaturesService);
     this.messageValidator = new MessageValidator(this.wallet, this.config.contractWhiteList);
-    this.messageHandler = new MessageHandler(this.wallet, this.authorisationStore, this.hooks, this.messageRepository, this.queueStore, this.messageValidator, this.statusService);
+    this.messageExecutor = new MessageExecutor(this.wallet, this.messageValidator);
+    this.messageHandler = new MessageHandler(this.wallet, this.authorisationStore, this.hooks, this.messageRepository, this.queueStore, this.messageExecutor, this.statusService);
     const publicConfig = getPublicConfig(this.config);
     this.app.use(bodyParser.json());
     this.app.use('/wallet', WalletRouter(this.walletContractService, this.messageHandler));

@@ -4,20 +4,21 @@ import UniversalLoginSDK from '@universal-login/sdk';
 import {Input} from '../commons/Input';
 import {Suggestions} from './Suggestions';
 import {renderBusyIndicator} from './BusyIndicator';
+import {getStyleForTopLevelComponent} from '../../core/utils/getStyleForTopLevelComponent';
 import Logo from './../assets/logo.svg';
 import './../styles/walletSelector.css';
 import './../styles/walletSelectorDefaults.css';
 
 interface WalletSelector {
   onCreateClick: (...args: any[]) => void;
-  onConnectionClick: (...args: any[]) => void;
+  onConnectClick: (...args: any[]) => void;
   sdk: UniversalLoginSDK;
   domains: string[];
   actions?: WalletSuggestionAction[];
   className?: string;
 }
 
-export const WalletSelector = ({onCreateClick, onConnectionClick, sdk, domains, actions = WALLET_SUGGESTION_ALL_ACTIONS, className}: WalletSelector) => {
+export const WalletSelector = ({onCreateClick, onConnectClick, sdk, domains, actions = WALLET_SUGGESTION_ALL_ACTIONS, className}: WalletSelector) => {
   const [debouncedSuggestionsService] = useState(
     new DebouncedSuggestionsService(new SuggestionsService(sdk, domains, actions))
   );
@@ -39,14 +40,12 @@ export const WalletSelector = ({onCreateClick, onConnectionClick, sdk, domains, 
 
   const renderSuggestions = () =>
     !busy && (connections.length || creations.length) ?
-      <Suggestions connections={connections} creations={creations} onCreateClick={onCreateClick} onConnectionClick={onConnectionClick} /> :
+      <Suggestions connections={connections} creations={creations} onCreateClick={onCreateClick} onConnectClick={onConnectClick} /> :
       null;
-
-  const getWalletSelectorClass = (className?: string) => className ? className : 'universal-login-default';
 
   return(
     <div className="universal-login">
-      <div className={getWalletSelectorClass(className)}>
+      <div className={getStyleForTopLevelComponent(className)}>
         <div className="selector-input-wrapper">
           <img src={Logo} alt="Universal login logo" className="selector-input-img" />
           <Input

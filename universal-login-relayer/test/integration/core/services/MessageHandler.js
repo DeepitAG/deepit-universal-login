@@ -4,7 +4,7 @@ import {ACTION_KEY, createSignedMessage, waitExpect} from '@universal-login/comm
 import {transferMessage, addKeyMessage, removeKeyMessage} from '../../../fixtures/basicWalletContract';
 import setupMessageService from '../../../helpers/setupMessageService';
 import defaultDeviceInfo from '../../../config/defaults';
-import {getKnex} from '../../../../lib/core/utils/knexUtils';
+import {getKnexConfig} from '../../../helpers/knex';
 import {clearDatabase} from '../../../../lib/http/relayers/RelayerUnderTest';
 
 describe('INT: MessageHandler', async () => {
@@ -16,7 +16,7 @@ describe('INT: MessageHandler', async () => {
   let walletContract;
   let msg;
   let otherWallet;
-  const knex = getKnex();
+  const knex = getKnexConfig();
 
   beforeEach(async () => {
     ({wallet, provider, messageHandler, mockToken, authorisationStore, walletContract, otherWallet} = await setupMessageService(knex));
@@ -55,7 +55,8 @@ describe('INT: MessageHandler', async () => {
       const {messageHash} = await messageHandler.handleMessage(signedMessage);
       await messageHandler.stopLater();
       expect(await provider.getBalance(msg.to)).to.eq(expectedBalance);
-      const {state} = await messageHandler.getStatus(messageHash);
+      const {state, transactionHash} = await messageHandler.getStatus(messageHash);
+      expect(transactionHash).to.not.be.null;
       expect(state).to.be.eq('Success');
     });
   });
