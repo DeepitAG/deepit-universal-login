@@ -5,7 +5,7 @@ import App from '../../../src/ui/react/App';
 import {providers, Wallet, utils} from 'ethers';
 import {Services} from '../../../src/ui/createServices';
 import {setupSdk} from '../helpers/setupSdk';
-import {ETHER_NATIVE_TOKEN} from '@universal-login/commons';
+import {ETHER_NATIVE_TOKEN, waitExpect} from '@universal-login/commons';
 import {createPreconfiguredServices} from '../helpers/ServicesUnderTests';
 import {AppPage} from '../pages/AppPage';
 import {getWallets, createMockProvider} from 'ethereum-waffle';
@@ -14,7 +14,7 @@ import chai, {expect} from 'chai';
 chai.use(require('chai-string'));
 
 
-describe('UI: Connect', () => {
+describe('UI: Connection flow', () => {
   let services : Services;
   let relayer: any;
   let provider: providers.Provider;
@@ -37,11 +37,15 @@ describe('UI: Connect', () => {
 
   it('Should connect to existing wallet', async () => {
     const appPage = new AppPage(appWrapper);
+    appPage.login().clickConnectToExisting();
     await appPage.login().connect(name);
+    appPage.connection().clickConnectWithAnotherDevice();
+    await appPage.connection().waitForEmojiView();
+    await waitExpect(() => expect(services.walletPresenter.getName()).to.be.eq(name));
     const publicKey = (new Wallet(services.walletService.applicationWallet!.privateKey)).address;
     await services.sdk.addKey(contractAddress, publicKey, privateKey, {gasToken: ETHER_NATIVE_TOKEN.address});
     await appPage.login().waitForHomeView('');
-    expect(appPage.dashboard().getWalletBalance()).to.startWith('1.99');
+    expect(appPage.dashboard().getWalletBalance()).to.startWith('1.9999');
   });
 
   after(async () => {

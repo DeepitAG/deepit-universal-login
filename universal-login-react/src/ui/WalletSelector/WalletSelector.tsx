@@ -40,7 +40,7 @@ export const WalletSelector = ({onCreateClick, onConnectClick, sdk, domains, act
 
   const renderSuggestions = () =>
     !busy && (connections.length || creations.length) ?
-      <Suggestions connections={connections} creations={creations} onCreateClick={onCreateClick} onConnectClick={onConnectClick} /> :
+      <Suggestions connections={connections} creations={creations} onCreateClick={onCreateClick} onConnectClick={onConnectClick} actions={actions}/> :
       null;
 
   return(
@@ -62,5 +62,3 @@ export const WalletSelector = ({onCreateClick, onConnectClick, sdk, domains, act
     </div>
   );
 };
-
-export default WalletSelector;

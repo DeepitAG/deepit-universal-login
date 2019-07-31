@@ -7,6 +7,19 @@ export default class LoginPage {
   constructor(private wrapper: ReactWrapper) {
   }
 
+  clickCreateOne() {
+    this.wrapper.find('.welcome-box-create').last().simulate('click');
+  }
+
+  clickConnectToExisting() {
+    this.wrapper.find('.welcome-box-connect').last().simulate('click');
+  }
+
+  approveTerms() {
+    this.wrapper.find('.checkbox').childAt(0).simulate('change');
+    this.wrapper.find('button.terms-btn').last().simulate('click');
+  }
+
   async pickUsername(userName: string, action: string, result: string) {
     const input = this.wrapper.find('input');
     input.simulate('change', {target: {value: userName}});
@@ -20,15 +33,7 @@ export default class LoginPage {
   }
 
   async connect(userName: string) {
-    await this.pickUsername(userName, 'connect to existing', 'Waiting for approval');
-  }
-
-  chooseTopUpMethod() {
-    this.wrapper.find('#topup-btn-crypto').simulate('click');
-   }
-
-  getAddress() {
-    return this.wrapper.find('#contract-address').prop('defaultValue');
+    await this.pickUsername(userName, 'connect to existing', 'Connect with another device');
   }
 
   async waitForHomeView(balance: string, timeout?: number) {
