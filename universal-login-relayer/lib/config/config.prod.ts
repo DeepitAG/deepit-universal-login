@@ -45,6 +45,17 @@ export const config: Config =  Object.freeze({
       directory: path.join(__dirname, '../integration/sql/migrations'),
     }
   },
+  networks: {
+    development: {
+      uri: "GENERATED",
+      factoryAddress: "GENERATED",
+      chainSpec: {
+        name: 'test',
+        ensAddress: 'GENERATED',
+        chainId: 0,
+      }
+    }
+  },
 });
 
 export default config;
