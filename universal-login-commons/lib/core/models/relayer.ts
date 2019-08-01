@@ -28,3 +28,9 @@ export interface PublicRelayerConfig {
   localization: LocalizationConfig;
   onRampProviders: OnRampConfig;
 }
+
+export interface NetworkData {
+  uri: string;
+  factoryAddress: string;
+  chainSpec: ChainSpec;
+}
