@@ -15,6 +15,18 @@ import deployFactory from '../ops/deployFactory';
 
 const ganachePort = 18545;
 
+const networksConfig = {
+  development: {
+    uri: "GENERATED",
+    factoryAddress: "GENERATED",
+    chainSpec: {
+      name: 'test',
+      ensAddress: 'GENERATED',
+      chainId: 0,
+    }
+  }
+};
+
 const databaseConfig = {
   client: 'postgresql',
   connection: {
@@ -65,7 +77,8 @@ function getRelayerConfig(jsonRpcUrl: string, wallet: Wallet, walletMasterAddres
         addressHelper: true
       }
     },
-    database: databaseConfig
+    database: databaseConfig,
+    networks: networksConfig
   };
 }
 
