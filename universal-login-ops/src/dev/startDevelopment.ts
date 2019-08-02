@@ -17,7 +17,7 @@ const ganachePort = 18545;
 
 const networksConfig = {
   development: {
-    uri: "GENERATED",
+    jsonRpcUrl: "GENERATED",
     factoryAddress: "GENERATED",
     chainSpec: {
       name: 'test',
@@ -78,7 +78,7 @@ function getRelayerConfig(jsonRpcUrl: string, wallet: Wallet, walletMasterAddres
       }
     },
     database: databaseConfig,
-    networks: networksConfig
+    networkConf: networksConfig
   };
 }
 

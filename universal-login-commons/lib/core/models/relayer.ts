@@ -29,8 +29,10 @@ export interface PublicRelayerConfig {
   onRampProviders: OnRampConfig;
 }
 
-export interface NetworkData {
-  uri: string;
+interface NetworkData {
+  jsonRpcUrl: string;
   factoryAddress: string;
   chainSpec: ChainSpec;
 }
+
+export declare type NetworkConfig = Record<string, NetworkData>;

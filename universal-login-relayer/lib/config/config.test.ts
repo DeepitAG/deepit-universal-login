@@ -42,9 +42,9 @@ export const config: Config =  Object.freeze({
       directory: path.join(__dirname, '../integration/sql/migrations'),
     }
   },
-  networks: {
+  networkConf: {
     development: {
-      uri: "GENERATED",
+      jsonRpcUrl: "GENERATED",
       factoryAddress: "GENERATED",
       chainSpec: {
         name: 'test',

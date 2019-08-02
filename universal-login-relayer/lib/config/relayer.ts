@@ -1,4 +1,4 @@
-import {ContractWhiteList, SupportedToken, ChainSpec, LocalizationConfig, SafelloConfig, NetworkData} from '@universal-login/commons';
+import {ContractWhiteList, SupportedToken, ChainSpec, LocalizationConfig, SafelloConfig, NetworkConfig} from '@universal-login/commons';
 import {KnexConfig} from './KnexConfig';
 
 export interface Config {
@@ -16,5 +16,5 @@ export interface Config {
     safello: SafelloConfig;
   };
   database: KnexConfig;
-  networks: Record<string, NetworkData>;
+  networkConf: NetworkConfig;
 }
