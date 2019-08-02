@@ -1,24 +1,25 @@
 import React from 'react';
 import {Route, Switch, BrowserRouter} from 'react-router-dom';
+import {Wallet} from 'ethers';
 import {NavigationColumn} from './ui/commons/NavigationColumn';
 import {WalletSelector} from './ui/WalletSelector/WalletSelector';
 import {EmojiForm} from './ui/Notifications/EmojiForm';
-import {TEST_ACCOUNT_ADDRESS, generateCode, generateCodeWithFakes} from '@universal-login/commons';
+import {TEST_ACCOUNT_ADDRESS, generateCode, generateCodeWithFakes, ApplicationWallet} from '@universal-login/commons';
 import {EmojiPanel} from './ui/WalletSelector/EmojiPanel';
 import {Settings} from './ui/Settings/Settings';
 import {Onboarding} from './ui/Onboarding/Onboarding';
 import {useServices} from './core/services/useServices';
-import './ui/styles/playground.css';
-import {useModal} from './core/services/useModal';
 import Modal from './ui/Modals/Modal';
+import {createModalService} from './core/services/createModalService';
+import {ReactModalType, ReactModalContext} from './core/models/ReactModalContext';
+import './ui/styles/playground.css';
 
 export const App = () => {
-
+  const modalService = createModalService<ReactModalType>();
   const {sdk} = useServices();
-  const modalService = useModal();
 
-  const onCreate = () => {
-    console.log('create clicked');
+  const onCreate = (applicationWallet: ApplicationWallet) => {
+    alert(`Wallet contract deployed at ${applicationWallet.contractAddress}`);
   };
 
   const onConnect = () => {
@@ -75,8 +76,10 @@ export const App = () => {
               path="/topup"
               render={() => (
                 <>
-                  <button onClick={() => modalService.showModal('topUpAccount')}>Show Topup</button>
-                  <Modal modalService={modalService} />
+                  <ReactModalContext.Provider value={modalService}>
+                    <button onClick={() => modalService.showModal('topUpAccount')}>Show Topup</button>
+                    <Modal contractAddress={Wallet.createRandom().address}/>
+                  </ReactModalContext.Provider>
                 </>
               )}
             />
