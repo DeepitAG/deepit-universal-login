@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import {utils, Contract, Wallet} from 'ethers';
-import {createMockProvider, getWallets, deployContract} from 'ethereum-waffle';
+import {deployContract} from 'ethereum-waffle';
 import {BalanceChecker} from '../../../lib/integration/ethereum/BalanceChecker';
 import {RequiredBalanceChecker} from '../../../lib/integration/ethereum/RequiredBalanceChecker';
 import {ETHER_NATIVE_TOKEN} from '../../../lib/core/constants/constants';
@@ -44,13 +44,15 @@ describe('INT: RequiredBalanceChecker', () => {
 
   it('one token with just enough balance', async () => {
     await mockToken.transfer(TEST_ACCOUNT_ADDRESS, utils.parseEther('0.3'));
-    expect(await requiredBalanceChecker.findTokenWithRequiredBalance(supportedTokens, TEST_ACCOUNT_ADDRESS, chainName)).to.eq(mockToken.address);
+    const actualTokenAddress = await requiredBalanceChecker.findTokenWithRequiredBalance(supportedTokens, TEST_ACCOUNT_ADDRESS, chainName);
+    expect(actualTokenAddress).to.eq(mockToken.address);
   });
 
   it('two tokens with just enough balance', async () => {
     await wallet.sendTransaction({to: TEST_ACCOUNT_ADDRESS, value: utils.parseEther('0.5')});
     await mockToken.transfer(TEST_ACCOUNT_ADDRESS, utils.parseEther('0.3'));
-    expect(await requiredBalanceChecker.findTokenWithRequiredBalance(supportedTokens, TEST_ACCOUNT_ADDRESS, chainName)).to.eq(ETHER_NATIVE_TOKEN.address);
+    const actualTokenAddress = await requiredBalanceChecker.findTokenWithRequiredBalance(supportedTokens, TEST_ACCOUNT_ADDRESS, chainName);
+    expect(actualTokenAddress).to.eq(ETHER_NATIVE_TOKEN.address);
   });
 
   afterEach(async () => {

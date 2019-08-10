@@ -1,12 +1,13 @@
 import chai, {expect} from 'chai';
-import {providers, Wallet, utils, Contract} from 'ethers';
-import {createMockProvider, getWallets, solidity, deployContract} from 'ethereum-waffle';
+import {providers, Wallet, utils, Contract, ethers} from 'ethers';
+import {solidity, deployContract} from 'ethereum-waffle';
 import {BalanceChecker} from '../../../lib/integration/ethereum/BalanceChecker';
 import {ETHER_NATIVE_TOKEN} from '../../../lib/core/constants/constants';
 import MockToken from '../../fixtures/MockToken.json';
 import {TEST_ACCOUNT_ADDRESS} from '../../../lib/core/constants/test';
 import setupMultiChainProvider from '../../fixtures/setupMultiChainProvider.js';
 import {MultiChainProvider} from '../../../lib/integration/ethereum/MultiChainProvider';
+import {WeiPerEther} from 'ethers/constants';
 
 chai.use(solidity);
 
@@ -29,13 +30,13 @@ describe('INT: BalanceChecker', async () => {
   describe('ETH', async () => {
     it('0 ETH', async () => {
       const balance = await balanceChecker.getBalance(TEST_ACCOUNT_ADDRESS, ETHER_NATIVE_TOKEN.address, chainName);
-      expect(balance).to.eq(0);
+      expect(balance).to.eq('0');
     });
 
     it('1 ETH', async () => {
       await wallet.sendTransaction({to: TEST_ACCOUNT_ADDRESS, value: utils.parseEther('1')});
       const balance = await balanceChecker.getBalance(TEST_ACCOUNT_ADDRESS, ETHER_NATIVE_TOKEN.address, chainName);
-      expect(balance).to.eq(utils.parseEther('1'));
+      expect(balance).to.equal(WeiPerEther);
     });
   });
 
@@ -46,13 +47,13 @@ describe('INT: BalanceChecker', async () => {
 
     it('0 tokens', async () => {
       const balance = await balanceChecker.getBalance(TEST_ACCOUNT_ADDRESS, mockToken.address, chainName);
-      expect(balance).to.eq(0);
+      expect(balance).to.equal('0');
     });
 
     it('1 token', async () => {
       await mockToken.transfer(TEST_ACCOUNT_ADDRESS, utils.bigNumberify('1'));
       const balance = await balanceChecker.getBalance(TEST_ACCOUNT_ADDRESS, mockToken.address, chainName);
-      expect(balance).to.eq(utils.bigNumberify('1'));
+      expect(balance).to.equal(ethers.constants.One);
     });
 
     it('not deployed', async () => {

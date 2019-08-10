@@ -50,12 +50,12 @@ describe('INT: FutureWalletFactory', async () => {
 
   it('deploy contract', async () => {
     const ensName = 'name.mylogin.eth';
-    const {waitForBalance, contractAddress, deploy} = (await futureWalletFactory.createFutureWallet("placeholder"));
-    wallet.sendTransaction({to: contractAddress, value: utils.parseEther('2')});
+    const {waitForBalance, contractAddress, deploy} = (await futureWalletFactory.createFutureWallet('development'));
+    await wallet.sendTransaction({to: contractAddress, value: utils.parseEther('2')});
     const result = await waitForBalance();
     expect(result.contractAddress).be.eq(contractAddress);
     expect(result.tokenAddress).be.eq(ETHER_NATIVE_TOKEN.address);
-    wallet.sendTransaction({to: contractAddress, value: utils.parseEther('2')});
+    await wallet.sendTransaction({to: contractAddress, value: utils.parseEther('2')});
     await deploy(ensName, '1');
     expect(await provider.getCode(contractAddress)).to.be.eq(`0x${getDeployedBytecode(ProxyContract as ContractJSON)}`);
   });
