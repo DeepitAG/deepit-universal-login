@@ -1,6 +1,6 @@
-import {Wallet, providers} from 'ethers';
+import {providers} from 'ethers';
 import {EventEmitter} from 'fbemitter';
-import {SignedMessage} from '@universal-login/commons';
+import {SignedMessage, MultiChainProvider} from '@universal-login/commons';
 import {isAddKeyCall, getKeyFromData, isAddKeysCall} from '../utils/utils';
 import AuthorisationStore from '../../integration/sql/services/AuthorisationStore';
 import QueueService from './messages/QueueService';
@@ -16,7 +16,7 @@ class MessageHandler {
   private queueService: QueueService;
 
   constructor(
-    wallet: Wallet,
+    multiChainProvider: MultiChainProvider,
     private authorisationStore: AuthorisationStore,
     private hooks: EventEmitter,
     messageRepository: IMessageRepository,
@@ -25,7 +25,7 @@ class MessageHandler {
     statusService: MessageStatusService
   ) {
     this.queueService = new QueueService(messageExecutor, queueStore, messageRepository, this.onTransactionSent.bind(this));
-    this.pendingMessages = new PendingMessages(wallet, messageRepository, this.queueService, statusService);
+    this.pendingMessages = new PendingMessages(multiChainProvider, messageRepository, this.queueService, statusService);
   }
 
   start() {

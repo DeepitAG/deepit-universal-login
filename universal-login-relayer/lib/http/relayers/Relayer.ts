@@ -5,7 +5,7 @@ import RequestAuthorisationRouter from '../routes/authorisation';
 import WalletService from '../../integration/ethereum/WalletService';
 import ENSService from '../../integration/ethereum/ensService';
 import bodyParser from 'body-parser';
-import {Wallet, providers} from 'ethers';
+import {providers} from 'ethers';
 import cors from 'cors';
 import {EventEmitter} from 'fbemitter';
 import useragent from 'express-useragent';
@@ -68,7 +68,6 @@ class Relayer {
   async start() {
     await this.database.migrate.latest();
     this.runServer();
-    await this.ensService.start();
     this.messageHandler.start();
   }
 
@@ -85,15 +84,15 @@ class Relayer {
     this.balanceChecker = new BalanceChecker(this.multiChainProvider);
     this.requiredBalanceChecker = new RequiredBalanceChecker(this.balanceChecker);
     this.walletContractService = new WalletService(this.multiChainProvider, this.ensService, this.hooks, this.walletDeployer, this.requiredBalanceChecker);
-    this.walletMasterContractService = new WalletMasterContractService(this.provider);
+    this.walletMasterContractService = new WalletMasterContractService(this.multiChainProvider);
     this.authorisationService = new AuthorisationService(this.authorisationStore, this.walletMasterContractService);
     this.messageRepository = new MessageSQLRepository(this.database);
     this.queueStore = new QueueSQLStore(this.database);
-    this.signaturesService = new SignaturesService(this.wallet);
+    this.signaturesService = new SignaturesService(this.multiChainProvider);
     this.statusService = new MessageStatusService(this.messageRepository, this.signaturesService);
-    this.messageValidator = new MessageValidator(this.wallet, this.config.contractWhiteList);
-    this.messageExecutor = new MessageExecutor(this.wallet, this.messageValidator);
-    this.messageHandler = new MessageHandler(this.wallet, this.authorisationStore, this.hooks, this.messageRepository, this.queueStore, this.messageExecutor, this.statusService);
+    this.messageValidator = new MessageValidator(this.multiChainProvider);
+    this.messageExecutor = new MessageExecutor(this.multiChainProvider, this.messageValidator);
+    this.messageHandler = new MessageHandler(this.multiChainProvider, this.authorisationStore, this.hooks, this.messageRepository, this.queueStore, this.messageExecutor, this.statusService);
     const publicConfig = getPublicConfig(this.config);
     this.app.use(bodyParser.json());
     this.app.use('/wallet', WalletRouter(this.walletContractService, this.messageHandler));

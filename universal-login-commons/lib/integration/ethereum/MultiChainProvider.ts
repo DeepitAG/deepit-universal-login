@@ -35,7 +35,11 @@ export class MultiChainProvider {
     return this.config[chainName].walletMasterAddress;
   }
 
-  getSupportedTokens(chainName: string){
+  getSupportedTokens(chainName: string) {
     return this.config[chainName].supportedTokens;
+  }
+
+  getContractWhiteList(chainName: string) {
+    return this.config[chainName].contractWhiteList;
   }
 }

@@ -1,13 +1,15 @@
 import {Contract, Wallet, utils} from 'ethers';
+import {MultiChainProvider} from '@universal-login/commons';
 import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
 
 
 export class SignaturesService {
-  constructor(private wallet: Wallet) {
+  constructor(private multiChainProvider: MultiChainProvider) {
   }
 
-  async getRequiredSignatures(walletAddress: string): Promise<utils.BigNumber> {
-    const walletContract = new Contract(walletAddress, WalletContract.interface, this.wallet);
+  async getRequiredSignatures(walletAddress: string, chainName: string): Promise<utils.BigNumber> {
+    const wallet = this.multiChainProvider.getWallet(chainName);
+    const walletContract = new Contract(walletAddress, WalletContract.interface, wallet);
     const requiredSignatures = await walletContract.requiredSignatures();
     return requiredSignatures;
   }
