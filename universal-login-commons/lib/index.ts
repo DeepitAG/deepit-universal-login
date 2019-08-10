@@ -3,13 +3,8 @@ export {Omit, PartialRequired, Procedure, Predicate, DeepPartial} from './core/t
 export {DeviceInfo, Notification} from './core/models/notifications';
 export {Message, MessageWithFrom, MessageWithoutFrom, SignedMessage, UnsignedMessage, MessageStatus, MessageState, CollectedSignatureKeyPair} from './core/models/message';
 export * from './core/models/ContractJSON';
-<<<<<<< HEAD
 export {SupportedToken, ContractWhiteList, ChainSpec, OnRampConfig, PublicRelayerConfig, NetworkConfig} from './core/models/relayer';
-export {LocalizationConfig, SafelloConfig} from './core/models/onRamp';
-=======
-export {SupportedToken, ContractWhiteList, ChainSpec, OnRampConfig, PublicRelayerConfig} from './core/models/relayer';
 export {LocalizationConfig, SafelloConfig, RampConfig} from './core/models/onRamp';
->>>>>>> upstream/master
 export {createKeyPair, KeyPair} from './core/models/keyPair';
 export {TransactionOverrides} from './core/models/transactions';
 export {WalletSuggestionAction, WALLET_SUGGESTION_ALL_ACTIONS} from './core/models/WalletSuggestionAction';
