@@ -26,7 +26,7 @@ import {MessageStatusService} from '../../core/services/messages/MessageStatusSe
 import {SignaturesService} from '../../integration/ethereum/SignaturesService';
 import MessageValidator from '../../core/services/messages/MessageValidator';
 import MessageExecutor from '../../integration/ethereum/MessageExecutor';
-import {BalanceChecker, RequiredBalanceChecker} from '@universal-login/commons';
+import {BalanceChecker, RequiredBalanceChecker, MultiChainProvider} from '@universal-login/commons';
 
 const defaultPort = '3311';
 
@@ -38,8 +38,7 @@ export type RelayerClass = {
 class Relayer {
   protected readonly port: string;
   protected readonly hooks: EventEmitter;
-  public provider: providers.Provider;
-  protected readonly wallet: Wallet;
+  public multiChainProvider: MultiChainProvider;
   public readonly database: Knex;
   private ensService: ENSService = {} as ENSService;
   private authorisationStore: AuthorisationStore = {} as AuthorisationStore;
@@ -59,11 +58,10 @@ class Relayer {
   protected server: Server = {} as Server;
   private walletDeployer: WalletDeployer = {} as WalletDeployer;
 
-  constructor(protected config: Config, provider?: providers.Provider) {
+  constructor(protected config: Config) {
     this.port = config.port || defaultPort;
     this.hooks = new EventEmitter();
-    this.provider = provider || new providers.JsonRpcProvider(config.jsonRpcUrl, config.chainSpec);
-    this.wallet = new Wallet(config.privateKey, this.provider);
+    this.multiChainProvider = new MultiChainProvider(config.networkConf);
     this.database = Knex(config.database);
   }
 
@@ -81,15 +79,14 @@ class Relayer {
       origin : '*',
       credentials: true,
     }));
-    this.ensService = new ENSService(this.config.chainSpec.ensAddress, this.config.ensRegistrars, this.provider);
+    this.ensService = new ENSService(this.multiChainProvider);
     this.authorisationStore = new AuthorisationStore(this.database);
-    this.walletDeployer = new WalletDeployer(this.config.factoryAddress, this.wallet);
-    this.balanceChecker = new BalanceChecker(this.provider);
+    this.walletDeployer = new WalletDeployer(this.multiChainProvider);
+    this.balanceChecker = new BalanceChecker(this.multiChainProvider);
     this.requiredBalanceChecker = new RequiredBalanceChecker(this.balanceChecker);
-    this.walletContractService = new WalletService(this.wallet, this.config, this.ensService, this.hooks, this.walletDeployer, this.requiredBalanceChecker);
+    this.walletContractService = new WalletService(this.multiChainProvider, this.ensService, this.hooks, this.walletDeployer, this.requiredBalanceChecker);
     this.walletMasterContractService = new WalletMasterContractService(this.provider);
     this.authorisationService = new AuthorisationService(this.authorisationStore, this.walletMasterContractService);
-    this.walletContractService = new WalletService(this.wallet, this.config, this.ensService, this.hooks, this.walletDeployer, this.requiredBalanceChecker);
     this.messageRepository = new MessageSQLRepository(this.database);
     this.queueStore = new QueueSQLStore(this.database);
     this.signaturesService = new SignaturesService(this.wallet);

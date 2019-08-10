@@ -1,44 +1,51 @@
-import {utils, Contract, providers} from 'ethers';
+import {utils, Contract} from 'ethers';
 import ENS from '@universal-login/contracts/build/ENS.json';
 import {parseDomain, resolveName, ENSDomainInfo} from '@universal-login/commons';
+import MultiChainProvider from '@universal-login/commons';
 
 class ENSService {
-  private domainsInfo : Record<string, ENSDomainInfo>  = {};
 
-  private ens: Contract;
-
-  constructor(private ensAddress: string, private ensRegistrars: string[], private provider: providers.Provider) {
-    this.ens = new Contract(this.ensAddress, ENS.interface, this.provider);
+  constructor(private multiChainProvider: MultiChainProvider) {
   }
 
-  async start() {
-    for (let count = 0; count < this.ensRegistrars.length; count++) {
-      const domain = this.ensRegistrars[count];
-      const resolverAddress = await this.ens.resolver(utils.namehash(domain));
-      const registrarAddress = await this.ens.owner(utils.namehash(domain));
-      this.domainsInfo[domain] = {registrarAddress, resolverAddress};
+  async getDomainsInfo(chainName: string) {
+    const ensRegistrars = this.multiChainProvider.getRegistrars(chainName);
+    const chainSpec = this.multiChainProvider.getChainSpec(chainName);
+    const provider = this.multiChainProvider.getNetworkProvider(chainName);
+    const ens = new Contract(chainSpec.ensAddress, ENS.interface, provider);
+    const domainsInfo : Record<string, ENSDomainInfo>  = {};
+    for (let count = 0; count < ensRegistrars.length; count++) {
+      const domain = ensRegistrars[count];
+      const resolverAddress = await ens.resolver(utils.namehash(domain));
+      const registrarAddress = await ens.owner(utils.namehash(domain));
+      domainsInfo[domain] = {registrarAddress, resolverAddress};
     }
+    return domainsInfo;
   }
 
-  findRegistrar(domain: string) {
-    return this.domainsInfo[domain] || null;
+  async findRegistrar(domain: string, chainName: string) {
+    const domainsInfo = await this.getDomainsInfo(chainName)
+    return domainsInfo[domain] || null;
   }
 
-  argsFor(ensName: string) {
+  async argsFor(ensName: string, chainName: string) {
+    const chainSpec = this.multiChainProvider.getChainSpec(chainName);
     const [label, domain] = parseDomain(ensName);
     const hashLabel = utils.keccak256(utils.toUtf8Bytes(label));
     const node = utils.namehash(`${label}.${domain}`);
-    const registrarConfig = this.findRegistrar(domain);
+    const registrarConfig = await this.findRegistrar(domain, chainName);
     if (registrarConfig === null) {
       return null;
     }
     const {resolverAddress} = registrarConfig;
     const {registrarAddress} = registrarConfig;
-    return [hashLabel, ensName, node, this.ensAddress, registrarAddress, resolverAddress];
+    return [hashLabel, ensName, node, chainSpec.ensAddress, registrarAddress, resolverAddress];
   }
 
-  resolveName = async (ensName: string) => {
-    return resolveName(this.provider, this.ensAddress, ensName);
+  resolveName = async (ensName: string, chainName: string) => {
+    const provider = this.multiChainProvider.getNetworkProvider(chainName);
+    const chainSpec = this.multiChainProvider.getChainSpec(chainName);
+    return resolveName(provider, chainSpec.ensAddress, ensName);
   }
 }
 

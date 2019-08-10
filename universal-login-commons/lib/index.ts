@@ -1,3 +1,4 @@
+export {MultiChainProvider} from './integration/ethereum/MultiChainProvider';
 export {Omit, PartialRequired, Procedure, Predicate, DeepPartial} from './core/types/common';
 export {DeviceInfo, Notification} from './core/models/notifications';
 export {Message, MessageWithFrom, MessageWithoutFrom, SignedMessage, UnsignedMessage, MessageStatus, MessageState, CollectedSignatureKeyPair} from './core/models/message';

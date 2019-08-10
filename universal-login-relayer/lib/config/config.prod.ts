@@ -4,14 +4,8 @@ import {getEnv, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
 import {Config} from './relayer';
 
 export const config: Config =  Object.freeze({
-  jsonRpcUrl: getEnv('JSON_RPC_URL', ''),
   port: getEnv('PORT', ''),
   privateKey: getEnv('PRIVATE_KEY', ''),
-  chainSpec: Object.freeze({
-    ensAddress: getEnv('ENS_ADDRESS', ''),
-    chainId: 0,
-    name: 'ganache'
-  }),
   ensRegistrars: [
     getEnv('ENS_DOMAIN_1', ''),
     getEnv('ENS_DOMAIN_2', ''),
@@ -22,11 +16,6 @@ export const config: Config =  Object.freeze({
     master: [],
     proxy: ['0xca33d06bff615ad98056f8f720c57042cd3e820985235a3f77b73067c451cd3e']
   },
-  factoryAddress: getEnv('FACTORY_ADDRESS', ''),
-  supportedTokens: [{
-    address: ETHER_NATIVE_TOKEN.address,
-    minimalAmount: utils.parseEther('0.005').toString()
-  }],
   localization: {
     language: 'en',
     country: 'any'
@@ -46,14 +35,18 @@ export const config: Config =  Object.freeze({
     }
   },
   networkConf: {
-    development: {
-      jsonRpcUrl: "GENERATED",
-      factoryAddress: "GENERATED",
-      chainSpec: {
-        name: 'test',
-        ensAddress: 'GENERATED',
+    kovan: {
+      jsonRpcUrl: getEnv('JSON_RPC_URL', ''),
+      factoryAddress: getEnv('FACTORY_ADDRESS', ''),
+      chainSpec: Object.freeze({
+        ensAddress: getEnv('ENS_ADDRESS', ''),
         chainId: 0,
-      }
+        name: 'ganache'
+      }),
+      supportedTokens: [{
+        address: ETHER_NATIVE_TOKEN.address,
+        minimalAmount: utils.parseEther('0.005').toString()
+      }],
     }
   },
 });

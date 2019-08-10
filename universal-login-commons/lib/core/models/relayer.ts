@@ -33,6 +33,11 @@ interface NetworkData {
   jsonRpcUrl: string;
   factoryAddress: string;
   chainSpec: ChainSpec;
+  supportedTokens: SupportedToken[];
+  privateKey: string;
+  ensRegistrars: string[];
+  walletMasterAddress: string;
+  contractWhiteList: ContractWhiteList;
 }
 
 export declare type NetworkConfig = Record<string, NetworkData>;

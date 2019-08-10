@@ -4,22 +4,12 @@ import {Config} from './relayer';
 export const config: Config =  Object.freeze({
   port: 'GENERATED',
   privateKey: 'GENERATED',
-  chainSpec: {
-    name: 'test',
-    ensAddress: 'GENERATED',
-    chainId: 0,
-  },
   ensRegistrars: ['GENERATED'],
   walletMasterAddress: 'GENERATED',
   contractWhiteList: {
     proxy: ['GENERATED'],
     master: ['GENERATED']
   },
-  factoryAddress: 'GENERATED',
-  supportedTokens: [{
-    address: 'GENERATED',
-    minimalAmount: 'GENERATED'
-  }],
   localization: {
     language: 'en',
     country: 'any'
@@ -50,7 +40,11 @@ export const config: Config =  Object.freeze({
         name: 'test',
         ensAddress: 'GENERATED',
         chainId: 0,
-      }
+      },
+      supportedTokens: [{
+        address: 'GENERATED',
+        minimalAmount: 'GENERATED'
+      }],
     }
   },
 });
