@@ -45,8 +45,8 @@ class MessageHandler {
     }
   }
 
-  async handleMessage(message: SignedMessage) {
-    return this.pendingMessages.add(message);
+  async handleMessage(message: SignedMessage, chainName: string) {
+    return this.pendingMessages.add(message, chainName);
   }
 
   private async removeReqFromAuthService(message: SignedMessage) {
@@ -54,11 +54,11 @@ class MessageHandler {
     return this.authorisationStore.removeRequest(message.from, key);
   }
 
-  async getStatus(messageHash: string) {
+  async getStatus(messageHash: string, chainName: string) {
     if (!await this.pendingMessages.isPresent(messageHash)) {
       return null;
     }
-    return this.pendingMessages.getStatus(messageHash);
+    return this.pendingMessages.getStatus(messageHash, chainName);
   }
 
   async stop() {

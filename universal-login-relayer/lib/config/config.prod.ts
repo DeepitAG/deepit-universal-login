@@ -5,17 +5,6 @@ import {Config} from './relayer';
 
 export const config: Config =  Object.freeze({
   port: getEnv('PORT', ''),
-  privateKey: getEnv('PRIVATE_KEY', ''),
-  ensRegistrars: [
-    getEnv('ENS_DOMAIN_1', ''),
-    getEnv('ENS_DOMAIN_2', ''),
-    getEnv('ENS_DOMAIN_3', ''),
-  ],
-  walletMasterAddress: getEnv('WALLET_MASTER_ADDRESS', ''),
-  contractWhiteList: {
-    master: [],
-    proxy: ['0xca33d06bff615ad98056f8f720c57042cd3e820985235a3f77b73067c451cd3e']
-  },
   localization: {
     language: 'en',
     country: 'any'
@@ -52,6 +41,17 @@ export const config: Config =  Object.freeze({
         address: ETHER_NATIVE_TOKEN.address,
         minimalAmount: utils.parseEther('0.005').toString()
       }],
+      privateKey: getEnv('PRIVATE_KEY', ''),
+      ensRegistrars: [
+        getEnv('ENS_DOMAIN_1', ''),
+        getEnv('ENS_DOMAIN_2', ''),
+        getEnv('ENS_DOMAIN_3', ''),
+      ],
+      walletMasterAddress: getEnv('WALLET_MASTER_ADDRESS', ''),
+      contractWhiteList: {
+        master: [],
+        proxy: ['0xca33d06bff615ad98056f8f720c57042cd3e820985235a3f77b73067c451cd3e']
+      },
     }
   },
 });

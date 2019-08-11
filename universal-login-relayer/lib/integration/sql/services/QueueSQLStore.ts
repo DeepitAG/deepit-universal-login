@@ -9,7 +9,7 @@ export default class QueueSQLStore implements IQueueStore {
     this.tableName = 'queue_items';
   }
 
-  async add(signedMessage: SignedMessage) {
+  async add(signedMessage: SignedMessage, chainName: string) {
     const messageHash = calculateMessageHash(signedMessage);
     await this.database
       .insert({
@@ -27,7 +27,12 @@ export default class QueueSQLStore implements IQueueStore {
       .orderBy('created_at', 'asc')
       .column('hash', 'type')
       .select();
-    return next;
+    const chain = await this.database(this.tableName)
+      .first()
+      .orderBy('created_at', 'asc')
+      .column('chain', 'type')
+      .select();
+    return {hash: next.hash, chainName: chain.chainName};
   }
 
   async remove(hash: string) {

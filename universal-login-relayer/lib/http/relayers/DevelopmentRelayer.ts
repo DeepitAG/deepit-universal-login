@@ -13,13 +13,9 @@ declare interface Transaction {
 }
 
 class DevelopmentRelayer extends Relayer {
-  private tokenContractAddress: string;
-  private tokenContract: Contract;
 
   constructor(config: DevelopmentRelayerConfig, provider?: providers.Provider) {
-    super(config, provider);
-    this.tokenContractAddress = config.tokenContractAddress;
-    this.tokenContract = new Contract(this.tokenContractAddress, Token.interface, this.wallet);
+    super(config);
     this.addHooks();
   }
 
@@ -27,15 +23,18 @@ class DevelopmentRelayer extends Relayer {
     const tokenAmount = utils.parseEther('100');
     const etherAmount = utils.parseEther('100');
     this.hooks.addListener('created', async (transaction: Transaction) => {
-      const receipt = await waitToBeMined(this.provider, transaction.hash);
+      const provider = this.multiChainProvider.getNetworkProvider('development');
+      const wallet = this.multiChainProvider.getWallet('development');
+      const tokenContract = this.multiChainProvider.getTokenContract('development');
+      const receipt = await waitToBeMined(provider, transaction.hash);
       if (receipt.status) {
-        const tokenTransaction = await this.tokenContract.transfer(receipt.contractAddress, tokenAmount);
-        await waitToBeMined(this.provider, tokenTransaction.hash);
+        const tokenTransaction = await tokenContract.transfer(receipt.contractAddress, tokenAmount);
+        await waitToBeMined(provider, tokenTransaction.hash);
         const transaction = {
           to: receipt.contractAddress,
           value: etherAmount
         };
-        await this.wallet.sendTransaction(transaction);
+        await wallet.sendTransaction(transaction);
       }
     });
   }

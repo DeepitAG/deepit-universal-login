@@ -6,28 +6,28 @@ import {asyncHandler, sanitize, responseOf, asString, asObject, asNumber, asOpti
 import {asBigNumberish, asOverrideOptions, asArrayish} from '../utils/sanitizers';
 
 const create = (walletContractService : WalletService) =>
-  async (data: {body: {managementKey: string, ensName: string, overrideOptions?: {}}}) => {
+  async (data: {body: {managementKey: string, ensName: string, overrideOptions?: {}, chainName: string}}) => {
     const {managementKey, ensName, overrideOptions} = data.body;
-    const transaction = await walletContractService.create(managementKey, ensName, overrideOptions);
+    const transaction = await walletContractService.create(managementKey, ensName, overrideOptions, data.body.chainName);
     return responseOf({transaction}, 201);
   };
 
 const execution = (messageHandler : MessageHandler) =>
-  async (data: {body: SignedMessage}) => {
-    const status = await messageHandler.handleMessage(data.body);
+  async (data: {body: {signedMessage: SignedMessage, chainName: string}}) => {
+    const status = await messageHandler.handleMessage(data.body.signedMessage, data.body.chainName);
     return responseOf({status}, 201);
   };
 
 const getStatus = (messageHandler: MessageHandler) =>
-  async (data: {messageHash: string}) => {
-    const status = await messageHandler.getStatus(data.messageHash);
+  async (data: {messageHash: string, chainName: string}) => {
+    const status = await messageHandler.getStatus(data.messageHash, data.chainName);
     return responseOf(status);
   };
 
 const deploy = (walletContractService: WalletService) =>
   async (data: {body: DeployArgs}) => {
-    const {publicKey, ensName, gasPrice, signature} = data.body;
-    const transaction = await walletContractService.deploy({publicKey, ensName, gasPrice, signature});
+    const {publicKey, ensName, gasPrice, signature, chainName} = data.body;
+    const transaction = await walletContractService.deploy({publicKey, ensName, gasPrice, signature, chainName});
     return responseOf(transaction, 201);
   };
 
@@ -39,7 +39,8 @@ export default (walletContractService : WalletService, messageHandler: MessageHa
       body: asObject({
         managementKey: asString,
         ensName: asString,
-        overrideOptions: asOptional(asOverrideOptions)
+        overrideOptions: asOptional(asOverrideOptions),
+        chainName: asString
       })
     }),
     create(walletContractService)
@@ -48,16 +49,19 @@ export default (walletContractService : WalletService, messageHandler: MessageHa
   router.post('/execution', asyncHandler(
     sanitize({
       body: asObject({
-        gasToken: asString,
-        operationType: asNumber,
-        to: asString,
-        from: asString,
-        nonce: asString,
-        gasLimit: asBigNumberish,
-        gasPrice: asBigNumberish,
-        data: asArrayish,
-        value: asBigNumberish,
-        signature: asString
+        signedMessage: asObject({
+          gasToken: asString,
+          operationType: asNumber,
+          to: asString,
+          from: asString,
+          nonce: asString,
+          gasLimit: asBigNumberish,
+          gasPrice: asBigNumberish,
+          data: asArrayish,
+          value: asBigNumberish,
+          signature: asString
+        }),
+        chainName: asString
       })
     }),
     execution(messageHandler)
@@ -66,6 +70,7 @@ export default (walletContractService : WalletService, messageHandler: MessageHa
   router.get('/execution/:messageHash', asyncHandler(
     sanitize({
       messageHash: asString,
+      chainName: asString
     }),
     getStatus(messageHandler)
   ));
@@ -76,7 +81,8 @@ export default (walletContractService : WalletService, messageHandler: MessageHa
         publicKey: asString,
         ensName: asString,
         gasPrice: asString,
-        signature: asString
+        signature: asString,
+        chainName: asString
       })
     }),
     deploy(walletContractService)

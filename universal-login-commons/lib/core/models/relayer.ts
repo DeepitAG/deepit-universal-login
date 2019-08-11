@@ -21,15 +21,6 @@ export interface OnRampConfig {
   ramp: RampConfig;
 }
 
-export interface PublicRelayerConfig {
-  supportedTokens: SupportedToken[];
-  factoryAddress: string;
-  chainSpec: ChainSpec;
-  contractWhiteList: ContractWhiteList;
-  localization: LocalizationConfig;
-  onRampProviders: OnRampConfig;
-}
-
 interface NetworkData {
   jsonRpcUrl: string;
   factoryAddress: string;
@@ -39,6 +30,13 @@ interface NetworkData {
   ensRegistrars: string[];
   walletMasterAddress: string;
   contractWhiteList: ContractWhiteList;
+  tokenContractAddress?: string;
 }
 
 export declare type NetworkConfig = Record<string, NetworkData>;
+
+export interface PublicRelayerConfig {
+  networkConf: NetworkConfig;
+  localization: LocalizationConfig;
+  onRampProviders: OnRampConfig;
+}

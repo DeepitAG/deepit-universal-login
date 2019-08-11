@@ -1,5 +1,5 @@
 import {Wallet, Contract} from 'ethers';
-import {calculateMessageHash, SignedMessage, INVALID_KEY, ensure, MessageStatus} from '@universal-login/commons';
+import {calculateMessageHash, SignedMessage, INVALID_KEY, ensure, MessageStatus, MultiChainProvider} from '@universal-login/commons';
 import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
 import {MessageStatusService} from './MessageStatusService';
 import {DuplicatedSignature, InvalidSignature, DuplicatedExecution, NotEnoughSignatures} from '../../utils/errors';
@@ -10,7 +10,7 @@ import QueueService from './QueueService';
 export default class PendingMessages {
 
   constructor(
-    private wallet : Wallet,
+    private multiChainProvider : MultiChainProvider,
     private messageRepository: IMessageRepository,
     private queueService: QueueService,
     private statusService: MessageStatusService
@@ -20,32 +20,33 @@ export default class PendingMessages {
     return this.messageRepository.isPresent(messageHash);
   }
 
-  async add(message: SignedMessage) : Promise<MessageStatus> {
+  async add(message: SignedMessage, chainName: string) : Promise<MessageStatus> {
     const messageHash = calculateMessageHash(message);
     if (!await this.isPresent(messageHash)) {
       const messageItem = createMessageItem(message);
       await this.messageRepository.add(messageHash, messageItem);
     }
-    await this.addSignatureToPendingMessage(messageHash, message);
-    const status = await this.getStatus(messageHash);
+    await this.addSignatureToPendingMessage(messageHash, message, chainName);
+    const status = await this.getStatus(messageHash, chainName);
     status.messageHash = messageHash;
-    if (await this.isEnoughSignatures(messageHash)) {
-      await this.onReadyToExecute(messageHash, message);
+    if (await this.isEnoughSignatures(messageHash, chainName)) {
+      await this.onReadyToExecute(messageHash, message, chainName);
     }
     return status;
   }
 
-  private async onReadyToExecute(messageHash: string, message: SignedMessage) {
-    await this.ensureCorrectExecution(messageHash);
-    return this.queueService.add(message);
+  private async onReadyToExecute(messageHash: string, message: SignedMessage, chainName: string) {
+    await this.ensureCorrectExecution(messageHash, chainName);
+    return this.queueService.add(message, chainName);
   }
 
-  private async addSignatureToPendingMessage(messageHash: string, message: SignedMessage) {
+  private async addSignatureToPendingMessage(messageHash: string, message: SignedMessage, chainName: string) {
+    const wallet = this.multiChainProvider.getWallet(chainName)
     const messageItem = await this.messageRepository.get(messageHash);
     ensure(!messageItem.transactionHash, DuplicatedExecution);
     const isContainSignature = await this.messageRepository.containSignature(messageHash, message.signature);
     ensure(!isContainSignature, DuplicatedSignature);
-    await this.ensureCorrectKeyPurpose(message, messageItem.walletAddress, this.wallet);
+    await this.ensureCorrectKeyPurpose(message, messageItem.walletAddress, wallet);
     await this.messageRepository.addSignature(messageHash, message.signature);
   }
 
@@ -59,18 +60,18 @@ export default class PendingMessages {
     ensure(!keyPurpose.eq(INVALID_KEY), InvalidSignature, 'Invalid key purpose');
   }
 
-  async getStatus(messageHash: string) {
-    return this.statusService.getStatus(messageHash);
+  async getStatus(messageHash: string, chainName: string) {
+    return this.statusService.getStatus(messageHash, chainName);
   }
 
-  async ensureCorrectExecution(messageHash: string) {
-    const {required, transactionHash, totalCollected} = await this.statusService.getStatus(messageHash);
+  async ensureCorrectExecution(messageHash: string, chainName: string) {
+    const {required, transactionHash, totalCollected} = await this.statusService.getStatus(messageHash, chainName);
     ensure(!transactionHash, DuplicatedExecution);
-    ensure(await this.isEnoughSignatures(messageHash), NotEnoughSignatures, required, totalCollected);
+    ensure(await this.isEnoughSignatures(messageHash, chainName), NotEnoughSignatures, required, totalCollected);
   }
 
-  async isEnoughSignatures(messageHash: string) : Promise<boolean> {
-    const {totalCollected, required} = await this.getStatus(messageHash);
+  async isEnoughSignatures(messageHash: string, chainName: string) : Promise<boolean> {
+    const {totalCollected, required} = await this.getStatus(messageHash, chainName);
     return totalCollected >= required;
   }
 }

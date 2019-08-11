@@ -22,16 +22,16 @@ class QueueService {
     this.state = 'stopped';
   }
 
-  async add(signedMessage: SignedMessage) {
-    const messageHash = await this.queueStore.add(signedMessage);
+  async add(signedMessage: SignedMessage, chainName: string) {
+    const messageHash = await this.queueStore.add(signedMessage, chainName);
     await this.messageRepository.setMessageState(messageHash, 'Queued');
     return messageHash;
   }
 
-  async execute(messageHash: string) {
+  async execute(messageHash: string, chainName: string) {
     try {
       const signedMessage = await this.messageRepository.getMessage(messageHash);
-      const transactionResponse = await this.messageExecutor.execute(signedMessage);
+      const transactionResponse = await this.messageExecutor.execute(signedMessage, chainName);
       const {hash, wait} = transactionResponse;
       ensureNotNull(hash, TransactionHashNotFound);
       await this.messageRepository.markAsPending(messageHash, hash!);
@@ -56,7 +56,7 @@ class QueueService {
     do {
       const nextMessage = await this.queueStore.getNext();
       if (nextMessage){
-        await this.execute(nextMessage.hash);
+        await this.execute(nextMessage.hash, nextMessage.chainName);
       } else {
         if (this.state === 'stopping'){
           this.state = 'stopped';

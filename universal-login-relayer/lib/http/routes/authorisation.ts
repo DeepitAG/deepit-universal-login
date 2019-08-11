@@ -15,18 +15,18 @@ const request = (authorisationService: AuthorisationService) =>
   };
 
 const getPending = (authorisationService: AuthorisationService) =>
-  async (data: {walletContractAddress: string,  query: {signature: string}}) => {
+  async (data: {walletContractAddress: string,  query: {signature: string}, chainName: string}) => {
     const getAuthorisationRequest: GetAuthorisationRequest = {
       walletContractAddress: data.walletContractAddress,
       signature: data.query.signature
     };
-    const result = await authorisationService.getAuthorisationRequests(getAuthorisationRequest);
+    const result = await authorisationService.getAuthorisationRequests(getAuthorisationRequest, data.chainName);
     return responseOf({response: result});
   };
 
 const denyRequest = (authorisationService: AuthorisationService) =>
-  async (data: {body: {cancelAuthorisationRequest: CancelAuthorisationRequest}}) => {
-    const result = await authorisationService.removeAuthorisationRequest(data.body.cancelAuthorisationRequest);
+  async (data: {body: {cancelAuthorisationRequest: CancelAuthorisationRequest, chainName: string}}) => {
+    const result = await authorisationService.removeAuthorisationRequest(data.body.cancelAuthorisationRequest, data.body.chainName);
     return responseOf(result, 204);
   };
 
@@ -48,7 +48,8 @@ export default (authorisationService: AuthorisationService) => {
       walletContractAddress: asString,
       query: asObject({
         signature: asString
-      })
+      }),
+      chainName: asString
     }),
     getPending(authorisationService)
   ));
@@ -56,7 +57,8 @@ export default (authorisationService: AuthorisationService) => {
   router.post('/:walletContractAddress', asyncHandler(
     sanitize({
       body: asObject({
-        cancelAuthorisationRequest: asCancelAuthorisationRequest
+        cancelAuthorisationRequest: asCancelAuthorisationRequest,
+        chainName: asString
       })
     }),
     denyRequest(authorisationService)

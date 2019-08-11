@@ -9,15 +9,15 @@ class AuthorisationService {
     return this.authorisationStore.addRequest(requestAuthorisation);
   }
 
-  async removeAuthorisationRequest(cancelAuthorisationRequest: CancelAuthorisationRequest) {
-    await this.walletMasterContractService.ensureValidCancelAuthorisationRequestSignature(cancelAuthorisationRequest);
+  async removeAuthorisationRequest(cancelAuthorisationRequest: CancelAuthorisationRequest, chainName: string) {
+    await this.walletMasterContractService.ensureValidCancelAuthorisationRequestSignature(cancelAuthorisationRequest, chainName);
 
     const {walletContractAddress, publicKey} = cancelAuthorisationRequest;
     return this.authorisationStore.removeRequest(walletContractAddress, publicKey);
   }
 
-  async getAuthorisationRequests(getAuthorisationRequest: GetAuthorisationRequest) {
-    await this.walletMasterContractService.ensureValidGetAuthorisationRequestSignature(getAuthorisationRequest);
+  async getAuthorisationRequests(getAuthorisationRequest: GetAuthorisationRequest, chainName: string) {
+    await this.walletMasterContractService.ensureValidGetAuthorisationRequestSignature(getAuthorisationRequest, chainName);
 
     const {walletContractAddress} = getAuthorisationRequest;
     return this.authorisationStore.getPendingAuthorisations(walletContractAddress);

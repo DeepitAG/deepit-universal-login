@@ -1,6 +1,7 @@
 import {providers, Wallet, Contract} from 'ethers';
 import {NetworkConfig} from '../../core/models/relayer';
 import ProxyCounterfactualFactory from '@universal-login/contracts/build/ProxyCounterfactualFactory.json';
+import Token from '../../contracts/Token.json';
 
 export class MultiChainProvider {
 
@@ -41,5 +42,11 @@ export class MultiChainProvider {
 
   getContractWhiteList(chainName: string) {
     return this.config[chainName].contractWhiteList;
+  }
+
+  getTokenContract(chainName: string) {
+    const tokenAddress = this.config[chainName].tokenContractAddress as string;
+    const wallet = this.getWallet(chainName);
+    return new Contract(tokenAddress, Token.abi, wallet);
   }
 }

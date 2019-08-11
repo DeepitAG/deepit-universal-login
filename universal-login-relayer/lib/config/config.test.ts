@@ -3,13 +3,6 @@ import {Config} from './relayer';
 
 export const config: Config =  Object.freeze({
   port: 'GENERATED',
-  privateKey: 'GENERATED',
-  ensRegistrars: ['GENERATED'],
-  walletMasterAddress: 'GENERATED',
-  contractWhiteList: {
-    proxy: ['GENERATED'],
-    master: ['GENERATED']
-  },
   localization: {
     language: 'en',
     country: 'any'
@@ -50,6 +43,13 @@ export const config: Config =  Object.freeze({
         address: 'GENERATED',
         minimalAmount: 'GENERATED'
       }],
+      privateKey: 'GENERATED',
+      ensRegistrars: ['GENERATED'],
+      walletMasterAddress: 'GENERATED',
+      contractWhiteList: {
+        proxy: ['GENERATED'],
+        master: ['GENERATED']
+      },
     }
   },
 });

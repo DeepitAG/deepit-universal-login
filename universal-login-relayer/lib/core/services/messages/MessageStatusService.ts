@@ -6,9 +6,9 @@ export class MessageStatusService {
   constructor(private messageRepository: IMessageRepository, private signaturesService: SignaturesService) {
   }
 
-  async getStatus(messageHash: string) {
+  async getStatus(messageHash: string, chainName: string) {
     const message = await this.messageRepository.get(messageHash);
-    const required = await this.signaturesService.getRequiredSignatures(message.walletAddress);
+    const required = await this.signaturesService.getRequiredSignatures(message.walletAddress, chainName);
     const status: MessageStatus =  {
       collectedSignatures: message.collectedSignatureKeyPairs.map((collected) => collected.signature),
       totalCollected: message.collectedSignatureKeyPairs.length,

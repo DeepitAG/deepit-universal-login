@@ -46,18 +46,22 @@ export class RelayerUnderTest extends Relayer {
     ];
     const overrideConfig: DeepPartial<Config> = {
       port,
-      privateKey: wallet.privateKey,
-      chainSpec: {
-        ensAddress: ensBuilder.ens.address,
-      },
-      ensRegistrars: [DOMAIN],
-      walletMasterAddress: walletMaster.address,
-      contractWhiteList,
-      factoryAddress: factoryContract.address,
-      supportedTokens,
+      networkConf: {
+        development: {
+          privateKey: wallet.privateKey,
+          chainSpec: {
+            ensAddress: ensBuilder.ens.address,
+          },
+          ensRegistrars: [DOMAIN],
+          walletMasterAddress: walletMaster.address,
+          contractWhiteList,
+          factoryAddress: factoryContract.address,
+          supportedTokens
+        }
+      }
     };
     const config: Config = deepMerge(getConfig('test'),  overrideConfig);
-    const relayer = new RelayerUnderTest(config, providerWithENS);
+    const relayer = new RelayerUnderTest(config);
     return {relayer, factoryContract, supportedTokens, contractWhiteList, ensAddress, walletMaster, mockToken, provider: providerWithENS};
   }
 
