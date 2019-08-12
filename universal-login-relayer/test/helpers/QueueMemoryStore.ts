@@ -11,8 +11,10 @@ export default class QueueMemoryStore implements IQueueStore {
 
   async add(signedMessage: SignedMessage) {
     const hash = calculateMessageHash(signedMessage);
+    const chainName = 'development';
     this.queueItems.push({
-      hash
+      hash,
+      chainName
     });
     return hash;
   }

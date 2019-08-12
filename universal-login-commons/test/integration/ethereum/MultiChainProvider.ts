@@ -1,6 +1,6 @@
 import chai, {expect} from 'chai';
 import sinonChai from 'sinon-chai';
-import setupMultiChainProvider from '../../fixtures/setupMultiChainProvider.js';
+import {setupMultiChainProvider} from '../../fixtures/setupMultiChainProvider.js';
 import {MultiChainProvider} from '../../../lib/integration/ethereum/MultiChainProvider';
 
 chai.use(require('chai-string'));

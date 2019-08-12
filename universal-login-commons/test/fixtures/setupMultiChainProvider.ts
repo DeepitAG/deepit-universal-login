@@ -10,7 +10,7 @@ const ganacheConfig = {
   accounts: defaultAccounts
 }
 
-export default async function setupMultiChainProvider() {
+export async function setupMultiChainProvider() {
   const server = ganache.server(ganacheConfig);
   const listenPromise = promisify(server.listen);
   await listenPromise(8545);

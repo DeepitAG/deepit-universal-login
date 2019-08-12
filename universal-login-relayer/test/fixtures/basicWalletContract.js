@@ -1,6 +1,6 @@
 import {utils} from 'ethers';
 import {deployContract} from 'ethereum-waffle';
-import {ACTION_KEY, OPERATION_CALL, TEST_ACCOUNT_ADDRESS} from '@universal-login/commons';
+import {ACTION_KEY, OPERATION_CALL, TEST_ACCOUNT_ADDRESS, setupMultiChainProvider} from '@universal-login/commons';
 import WalletMaster from '@universal-login/contracts/build/WalletMaster.json';
 import defaultPaymentOptions from '../../lib/config/defaultPaymentOptions';
 import createWalletContract from '../helpers/createWalletContract';
@@ -10,12 +10,13 @@ import {deployFactory} from '@universal-login/contracts';
 const {gasPrice, gasLimit} = defaultPaymentOptions;
 
 export default async function basicWalletContract(provider, wallets) {
-  const [ , , wallet] = wallets;
+  const {multiChainProvider} = await setupMultiChainProvider();
+  const wallet = multiChainProvider.getWallet('development');
   const [ensService, provider] = await buildEnsService(wallet, 'mylogin.eth');
   const walletMaster = await deployContract(wallet, WalletMaster);
   const factoryContract = await deployFactory(wallet, walletMaster.address);
   const walletContract = await createWalletContract(wallet, ensService);
-  return {wallet, provider, walletContract, ensService, walletMasterAddress: walletMaster.address, factoryContractAddress: factoryContract.address};
+  return {multiChainProvider, wallet, provider, walletContract, ensService, walletMasterAddress: walletMaster.address, factoryContractAddress: factoryContract.address};
 }
 
 export const transferMessage = {

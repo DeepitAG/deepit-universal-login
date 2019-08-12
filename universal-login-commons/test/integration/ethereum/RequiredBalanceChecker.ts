@@ -7,7 +7,7 @@ import {ETHER_NATIVE_TOKEN} from '../../../lib/core/constants/constants';
 import {TEST_ACCOUNT_ADDRESS} from '../../../lib/core/constants/test';
 import MockToken from '../../fixtures/MockToken.json';
 import {SupportedToken} from '../../../lib';
-import setupMultiChainProvider from '../../fixtures/setupMultiChainProvider.js';
+import {setupMultiChainProvider} from '../../fixtures/setupMultiChainProvider.js';
 import {MultiChainProvider} from '../../../lib/integration/ethereum/MultiChainProvider';
 
 describe('INT: RequiredBalanceChecker', () => {

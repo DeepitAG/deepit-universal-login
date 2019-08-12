@@ -1,7 +1,6 @@
 import {utils, Contract} from 'ethers';
 import ENS from '@universal-login/contracts/build/ENS.json';
-import {parseDomain, resolveName, ENSDomainInfo} from '@universal-login/commons';
-import MultiChainProvider from '@universal-login/commons';
+import {parseDomain, resolveName, ENSDomainInfo, MultiChainProvider} from '@universal-login/commons';
 
 class ENSService {
 

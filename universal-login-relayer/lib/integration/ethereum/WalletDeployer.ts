@@ -1,5 +1,4 @@
-import {TransactionOverrides} from '@universal-login/commons';
-import MultiChainProvider from '@universal-login/commons';
+import {TransactionOverrides, MultiChainProvider} from '@universal-login/commons';
 
 interface DeployFactoryArgs {
   publicKey: string;

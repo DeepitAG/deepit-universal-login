@@ -18,7 +18,7 @@ class WalletService {
   }
 
   async create(key: string, ensName: string, overrideOptions = {}, chainName: string) {
-    const ensArgs = this.ensService.argsFor(ensName, chainName);
+    const ensArgs = await this.ensService.argsFor(ensName, chainName);
     if (ensArgs !== null) {
       let args = [key, ...ensArgs] as string[];
       const initData = encodeInitializeWithENSData(args);

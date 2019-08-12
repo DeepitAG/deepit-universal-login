@@ -5,7 +5,7 @@ import {BalanceChecker} from '../../../lib/integration/ethereum/BalanceChecker';
 import {ETHER_NATIVE_TOKEN} from '../../../lib/core/constants/constants';
 import MockToken from '../../fixtures/MockToken.json';
 import {TEST_ACCOUNT_ADDRESS} from '../../../lib/core/constants/test';
-import setupMultiChainProvider from '../../fixtures/setupMultiChainProvider.js';
+import {setupMultiChainProvider} from '../../fixtures/setupMultiChainProvider.js';
 import {MultiChainProvider} from '../../../lib/integration/ethereum/MultiChainProvider';
 import {WeiPerEther} from 'ethers/constants';
 
