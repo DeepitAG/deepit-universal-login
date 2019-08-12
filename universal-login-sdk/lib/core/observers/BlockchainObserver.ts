@@ -9,12 +9,12 @@ const eventInterface = new utils.Interface(WalletContract.interface).events;
 class BlockchainObserver extends ObserverBase {
   private lastBlock?: number;
 
-  constructor(private blockchainService: BlockchainService) {
+  constructor(private blockchainService: BlockchainService, private chainName: string) {
     super();
   }
 
   async start() {
-    this.lastBlock = await this.blockchainService.getBlockNumber();
+    this.lastBlock = await this.blockchainService.getBlockNumber(this.chainName);
     await super.start();
   }
 
@@ -25,7 +25,7 @@ class BlockchainObserver extends ObserverBase {
   async fetchEvents() {
     await this.fetchEventsOfType('KeyAdded');
     await this.fetchEventsOfType('KeyRemoved');
-    this.lastBlock = await this.blockchainService.getBlockNumber();
+    this.lastBlock = await this.blockchainService.getBlockNumber(this.chainName);
   }
 
   async fetchEventsOfType(type: string) {
@@ -33,7 +33,7 @@ class BlockchainObserver extends ObserverBase {
     for (const emitter of Object.keys(this.emitters)) {
       const filter = JSON.parse(emitter);
       const eventsFilter = {fromBlock: this.lastBlock, address: filter.contractAddress, topics};
-      const events = await this.blockchainService.getLogs(eventsFilter);
+      const events = await this.blockchainService.getLogs(eventsFilter, this.chainName);
       for (const event of events) {
         const {key} = this.parseArgs(type, event);
         if (filter.key === 'undefined' || filter.key === key) {

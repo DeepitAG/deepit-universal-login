@@ -44,8 +44,6 @@ class Relayer {
   private authorisationStore: AuthorisationStore = {} as AuthorisationStore;
   private authorisationService: AuthorisationService = {} as AuthorisationService;
   private walletMasterContractService: WalletMasterContractService = {} as WalletMasterContractService;
-  private balanceChecker: BalanceChecker = {} as BalanceChecker;
-  private requiredBalanceChecker: RequiredBalanceChecker = {} as RequiredBalanceChecker;
   private walletContractService: WalletService = {} as WalletService;
   private queueStore: IQueueStore = {} as IQueueStore;
   private messageHandler: MessageHandler = {} as MessageHandler;
@@ -81,9 +79,7 @@ class Relayer {
     this.ensService = new ENSService(this.multiChainProvider);
     this.authorisationStore = new AuthorisationStore(this.database);
     this.walletDeployer = new WalletDeployer(this.multiChainProvider);
-    this.balanceChecker = new BalanceChecker(this.multiChainProvider);
-    this.requiredBalanceChecker = new RequiredBalanceChecker(this.balanceChecker);
-    this.walletContractService = new WalletService(this.multiChainProvider, this.ensService, this.hooks, this.walletDeployer, this.requiredBalanceChecker);
+    this.walletContractService = new WalletService(this.multiChainProvider, this.ensService, this.hooks, this.walletDeployer);
     this.walletMasterContractService = new WalletMasterContractService(this.multiChainProvider);
     this.authorisationService = new AuthorisationService(this.authorisationStore, this.walletMasterContractService);
     this.messageRepository = new MessageSQLRepository(this.database);

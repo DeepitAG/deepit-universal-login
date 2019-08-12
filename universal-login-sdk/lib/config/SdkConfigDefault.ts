@@ -15,5 +15,5 @@ export const SdkConfigDefault: SdkConfig = {
     'USD',
     'EUR',
     'BTC'
-  ]
+  ],
 };

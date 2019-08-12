@@ -1,32 +1,37 @@
 import {Contract, providers} from 'ethers';
 import ProxyCounterfactualFactory from '@universal-login/contracts/build/ProxyCounterfactualFactory.json';
 import {computeContractAddress, createKeyPair} from '@universal-login/commons';
+import {ProvidersRecord} from '../../config/ProvidersRecord';
 
 
 export class BlockchainService {
-  constructor(private provider: providers.Provider){
+  constructor(private providersRecord: ProvidersRecord){
   }
 
-  getCode(contractAddress: string) {
-    return this.provider.getCode(contractAddress);
+  getCode(contractAddress: string, chainName: string) {
+    const provider = this.providersRecord[chainName];
+    return provider.getCode(contractAddress);
   }
 
-  getBlockNumber() {
-    return this.provider.getBlockNumber();
+  getBlockNumber(chainName: string) {
+    const provider = this.providersRecord[chainName];
+    return provider.getBlockNumber();
   }
 
-  getLogs(filter: providers.Filter) {
-    return this.provider.getLogs(filter);
+  getLogs(filter: providers.Filter, chainName: string) {
+    const provider = this.providersRecord[chainName];
+    return provider.getLogs(filter);
   }
 
-  getInitCode = async (factoryAddress: string) => {
-    const factoryContract = new Contract(factoryAddress, ProxyCounterfactualFactory.interface, this.provider);
+  getInitCode = async (factoryAddress: string, chainName: string) => {
+    const provider = this.providersRecord[chainName];
+    const factoryContract = new Contract(factoryAddress, ProxyCounterfactualFactory.interface, provider);
     return factoryContract.initCode();
   }
 
-  createFutureWallet = async (factoryAddress: string) => {
+  createFutureWallet = async (factoryAddress: string, chainName: string) => {
     const {privateKey, publicKey} = createKeyPair();
-    const futureContractAddress = computeContractAddress(factoryAddress, publicKey, await this.getInitCode(factoryAddress));
+    const futureContractAddress = computeContractAddress(factoryAddress, publicKey, await this.getInitCode(factoryAddress, chainName));
     return [privateKey, futureContractAddress, publicKey];
   }
 }

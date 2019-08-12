@@ -1,5 +1,5 @@
 import {providers} from 'ethers';
-import {PublicRelayerConfig, calculateInitializeSignature} from '@universal-login/commons';
+import {NetworkData, calculateInitializeSignature} from '@universal-login/commons';
 import {DeploymentReadyObserver} from '../core/observers/DeploymentReadyObserver';
 import {DeploymentObserver} from '../core/observers/DeploymentObserver';
 import {BlockchainService} from '../integration/ethereum/BlockchainService';
@@ -16,10 +16,10 @@ export type FutureWallet = {
   privateKey: string,
   contractAddress: string,
   waitForBalance: () => Promise<BalanceDetails>,
-  deploy: (ensName: string, gasPrice: string) => Promise<string>
+  deploy: (ensName: string, gasPrice: string, chainName: string) => Promise<string>
 };
 
-type FutureFactoryConfig = Pick<PublicRelayerConfig, 'supportedTokens' | 'factoryAddress' | 'contractWhiteList' | 'chainSpec'>;
+type FutureFactoryConfig = Pick<NetworkData, 'supportedTokens' | 'factoryAddress' | 'contractWhiteList' | 'chainSpec'>;
 
 export class FutureWalletFactory {
   private ensService: ENSService;
@@ -27,6 +27,7 @@ export class FutureWalletFactory {
   constructor(
     private config: FutureFactoryConfig,
     private provider: providers.Provider,
+    private chainName: string,
     private blockchainService: BlockchainService,
     private relayerApi: RelayerApi) {
       this.ensService = new ENSService(provider, config.chainSpec.ensAddress);
@@ -38,8 +39,8 @@ export class FutureWalletFactory {
     return encodeInitializeWithRefundData(initArgs);
   }
 
-  async createFutureWallet(network: string): Promise<FutureWallet> {
-    const [privateKey, contractAddress, publicKey] = await this.blockchainService.createFutureWallet(this.config.factoryAddress);
+  async createFutureWallet(): Promise<FutureWallet> {
+    const [privateKey, contractAddress, publicKey] = await this.blockchainService.createFutureWallet(this.config.factoryAddress, this.chainName);
     const waitForBalance = async () => new Promise(
       (resolve) => {
         const onReadyToDeploy = (tokenAddress: string, contractAddress: string) => resolve({tokenAddress, contractAddress});
@@ -54,7 +55,7 @@ export class FutureWalletFactory {
       await this.relayerApi.deploy(publicKey, ensName, gasPrice, signature);
       return new Promise(
         (resolve) => {
-          const deploymentObserver = new DeploymentObserver(this.blockchainService, this.config.contractWhiteList);
+          const deploymentObserver = new DeploymentObserver(this.blockchainService, this.config.contractWhiteList, this.chainName);
           const onContractDeployed = (contractAddress: string) => resolve(contractAddress);
           deploymentObserver.startAndSubscribe(contractAddress, onContractDeployed);
         }

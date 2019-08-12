@@ -21,7 +21,7 @@ export interface OnRampConfig {
   ramp: RampConfig;
 }
 
-interface NetworkData {
+export interface NetworkData {
   jsonRpcUrl: string;
   factoryAddress: string;
   chainSpec: ChainSpec;

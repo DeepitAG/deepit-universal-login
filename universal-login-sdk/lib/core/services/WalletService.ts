@@ -23,8 +23,8 @@ export class WalletService {
     return this.walletDeployed();
   }
 
-  async createFutureWallet(): Promise<FutureWallet> {
-    const futureWallet = await this.sdk.createFutureWallet();
+  async createFutureWallet(chainName: string): Promise<FutureWallet> {
+    const futureWallet = await this.sdk.createFutureWallet(chainName);
     this.setFutureWallet(futureWallet);
     return futureWallet;
   }
@@ -52,10 +52,10 @@ export class WalletService {
     this.applicationWallet = applicationWallet;
   }
 
-  async recover(name: string, passphrase: string) {
-    const contractAddress = await this.sdk.getWalletContractAddress(name);
+  async recover(name: string, passphrase: string, chainName: string) {
+    const contractAddress = await this.sdk.getWalletContractAddress(name, chainName);
     const wallet = await this.walletFromPassphrase(name, passphrase);
-    ensure(await this.sdk.getKeyPurpose(contractAddress, wallet.address) === MANAGEMENT_KEY, InvalidPassphrase);
+    ensure(await this.sdk.getKeyPurpose(contractAddress, wallet.address, chainName) === MANAGEMENT_KEY, InvalidPassphrase);
     this.connect({
       name,
       privateKey: wallet.privateKey,

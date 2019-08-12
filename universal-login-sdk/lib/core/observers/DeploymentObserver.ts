@@ -12,7 +12,7 @@ export class DeploymentObserver extends ObserverRunner {
   private onContractDeployed?: OnContractDeployed;
   private futureContractAddress?: string;
 
-  constructor(private blockchainService: BlockchainService, private contractWhiteList: ContractWhiteList) {
+  constructor(private blockchainService: BlockchainService, private contractWhiteList: ContractWhiteList, private chainName: string) {
     super();
   }
 
@@ -30,8 +30,8 @@ export class DeploymentObserver extends ObserverRunner {
     await this.checkContract(this.futureContractAddress!);
   }
 
-  private async checkContract(futureContractAddress: string){
-    const bytecode = await this.blockchainService.getCode(futureContractAddress);
+  private async checkContract(futureContractAddress: string) {
+    const bytecode = await this.blockchainService.getCode(futureContractAddress, this.chainName);
     if (isContractExist(bytecode)){
       ensure(this.contractWhiteList.proxy.includes(utils.keccak256(bytecode)), UnsupportedBytecode);
       await this.onContractDeployed!(futureContractAddress);
