@@ -26,6 +26,7 @@ describe('UNIT: Queue Service', async () => {
   const executorReturnsNull: any = {
     execute: sinon.fake.returns(null),
   };
+  const chainName = 'development';
   let signedMessage: SignedMessage;
   let messageHash: string;
 
@@ -44,7 +45,7 @@ describe('UNIT: Queue Service', async () => {
 
   it('signedMessage round trip', async () => {
     queueService.start();
-    await queueService.add(signedMessage);
+    await queueService.add(signedMessage, chainName);
     await waitExpect(() => expect(executor.execute).to.be.calledOnce);
     expect(wait).to.be.calledAfter(executor.execute);
     expect(onTransactionSent).to.be.calledImmediatelyAfter(wait);
@@ -53,7 +54,7 @@ describe('UNIT: Queue Service', async () => {
   });
 
   it('should execute pending signedMessage after start', async () => {
-    await queueService.add(signedMessage);
+    await queueService.add(signedMessage, chainName);
     queueService.start();
     await waitExpect(() => expect(executor.execute).to.be.calledOnce);
     expect(wait).to.be.calledAfter(executor.execute);
@@ -66,7 +67,7 @@ describe('UNIT: Queue Service', async () => {
     messageRepository.markAsError = markAsErrorSpy;
     queueMemoryStore.remove = sinon.spy(queueMemoryStore.remove);
     await messageRepository.add(messageHash, createMessageItem(signedMessage));
-    messageHash = await queueService.add(signedMessage);
+    messageHash = await queueService.add(signedMessage, chainName);
     await waitExpect(() => expect(messageRepository.markAsError).calledWith(messageHash, 'TypeError: Cannot read property \'hash\' of null'));
     expect(queueMemoryStore.remove).to.be.calledOnce;
     expect(queueMemoryStore.remove).to.be.calledAfter(markAsErrorSpy);

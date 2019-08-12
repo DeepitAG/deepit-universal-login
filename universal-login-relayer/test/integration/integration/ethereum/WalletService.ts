@@ -15,6 +15,7 @@ describe('INT: WalletService', async () => {
   let wallet: Wallet;
   let callback: sinon.SinonSpy;
   let walletContract: Contract;
+  const chainName = 'development';
 
   before(async () => {
     ({wallet, provider, walletService, callback, walletContract} = await setupWalletService());
@@ -34,12 +35,12 @@ describe('INT: WalletService', async () => {
     });
 
     it('should emit created event', async () => {
-      const transaction = await walletService.create(wallet.address, 'example.mylogin.eth');
+      const transaction = await walletService.create(wallet.address, 'example.mylogin.eth', undefined, chainName);
       expect(callback).to.be.calledWith(sinon.match(transaction));
     });
 
     it('should fail with not existing ENS name', async () => {
-      const creationPromise = walletService.create(wallet.address, 'alex.non-existing-id.eth');
+      const creationPromise = walletService.create(wallet.address, 'alex.non-existing-id.eth', undefined, chainName);
       await expect(creationPromise)
         .to.be.eventually.rejectedWith('ENS domain alex.non-existing-id.eth does not exist or is not compatible with Universal Login');
     });
