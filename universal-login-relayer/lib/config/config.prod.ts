@@ -31,17 +31,12 @@ export const config: Config =  Object.freeze({
   networkConf: {
     kovan: {
       jsonRpcUrl: getEnv('JSON_RPC_URL', ''),
-      factoryAddress: getEnv('FACTORY_ADDRESS', ''),
+      privateKey: getEnv('PRIVATE_KEY', ''),
       chainSpec: Object.freeze({
         ensAddress: getEnv('ENS_ADDRESS', ''),
         chainId: 0,
         name: 'ganache'
       }),
-      supportedTokens: [{
-        address: ETHER_NATIVE_TOKEN.address,
-        minimalAmount: utils.parseEther('0.005').toString()
-      }],
-      privateKey: getEnv('PRIVATE_KEY', ''),
       ensRegistrars: [
         getEnv('ENS_DOMAIN_1', ''),
         getEnv('ENS_DOMAIN_2', ''),
@@ -50,8 +45,13 @@ export const config: Config =  Object.freeze({
       walletMasterAddress: getEnv('WALLET_MASTER_ADDRESS', ''),
       contractWhiteList: {
         master: [],
-        proxy: ['0xca33d06bff615ad98056f8f720c57042cd3e820985235a3f77b73067c451cd3e']
+        proxy: ['0xca33d06bff615ad98056f8f720c57042cd3e820985235a3f77b73067c451cd3e', '0xcb0b7ef2bf016035e985e68079f3979acda20f6e746b0019bbc9393bb4521ade']
       },
+      factoryAddress: getEnv('FACTORY_ADDRESS', ''),
+      supportedTokens: [{
+        address: ETHER_NATIVE_TOKEN.address,
+        minimalAmount: utils.parseEther('0.005').toString()
+      }],
     }
   },
 });

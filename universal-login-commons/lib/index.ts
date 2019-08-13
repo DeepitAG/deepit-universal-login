@@ -28,7 +28,7 @@ export {bignumberifySignedMessageFields, stringifySignedMessageFields} from './c
 export {resolveName} from './integration/ethereum/resolveName';
 export {calculateMessageSignature, calculateMessageSignatures, concatenateSignatures, calculateMessageHash, sortPrivateKeysByAddress} from './core/utils/messages/calculateMessageSignature';
 export {createSignedMessage, getMessageWithSignatures} from './core/utils/messages/signMessage';
-export {executionComparator, sortSignatureKeyPairsByKey, sign} from './core/utils/signatures';
+export {executionComparator, sortSignatureKeyPairsByKey, sign, signString} from './core/utils/signatures';
 export {waitToBeMined, waitForContractDeploy, sendAndWaitForTransaction} from './integration/ethereum/wait';
 export {getDeployTransaction, defaultDeployOptions} from './integration/ethereum/transaction';
 export {sleep, waitUntil, waitExpect} from './core/utils/wait';
@@ -54,4 +54,5 @@ export {ObservedToken, TokenDetails, TokenDetailsWithBalance} from './core/model
 export {normalizeBigNumber} from './core/utils/bigNumbers';
 export {stringToEther} from './integration/ethereum/stringToEther';
 export {isValidAmount} from './core/utils/isValidAmount';
-export {ObservedCurrency} from './core/models/CurrencyData';
+export {ObservedCurrency, CurrencyToValue, TokensPrices} from './core/models/CurrencyData';
+export {TokensValueConverter} from './core/services/TokensValueConverter';

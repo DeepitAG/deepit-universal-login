@@ -1,6 +1,10 @@
 import {utils, Contract, providers, Wallet} from 'ethers';
 import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
+<<<<<<< HEAD
 import {TokenDetails, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, MANAGEMENT_KEY, waitForContractDeploy, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signCancelAuthorisationRequest, signGetAuthorisationRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage, MultiChainProvider} from '@universal-login/commons';
+=======
+import {TokensValueConverter, TokenDetails, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, MANAGEMENT_KEY, waitForContractDeploy, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signCancelAuthorisationRequest, signGetAuthorisationRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage} from '@universal-login/commons';
+>>>>>>> upstream/master
 import AuthorisationsObserver from '../core/observers/AuthorisationsObserver';
 import BlockchainObserver from '../core/observers/BlockchainObserver';
 import {DeploymentReadyObserver} from '../core/observers/DeploymentReadyObserver';
@@ -14,7 +18,6 @@ import {BalanceObserver} from '../core/observers/BalanceObserver';
 import {SdkConfigDefault} from '../config/SdkConfigDefault';
 import {SdkConfig} from '../config/SdkConfig';
 import {AggregateBalanceObserver} from '../core/observers/AggregateBalanceObserver';
-import {PriceOracle} from '../core/services/PriceOracle';
 import {PriceObserver} from '../core/observers/PriceObserver';
 import {ProviderDict, Chains} from '../config/Chains';
 import {Provider} from 'ethers/providers';
@@ -25,6 +28,7 @@ class UniversalLoginSDK {
   chains: Chains = {};
   executionFactory: ExecutionFactory;
   balanceObserver?: BalanceObserver;
+  tokensValueConverter: TokensValueConverter;
   aggregateBalanceObserver?: AggregateBalanceObserver;
   priceObserver: PriceObserver;
   blockchainService: BlockchainService;
@@ -47,6 +51,7 @@ class UniversalLoginSDK {
     this.blockchainService = new BlockchainService();
     this.sdkConfig = deepMerge(SdkConfigDefault, sdkConfig);
     this.priceObserver = new PriceObserver(this.sdkConfig.observedTokens, this.sdkConfig.observedCurrencies);
+    this.tokensValueConverter = new TokensValueConverter(this.sdkConfig.observedCurrencies);
   }
 
   async create(ensName: string, chainName: string = 'default'): Promise<[string, string]> {
@@ -120,8 +125,13 @@ class UniversalLoginSDK {
     if (this.aggregateBalanceObserver) {
       return;
     }
+<<<<<<< HEAD
     await this.fetchBalanceObserver(ensName, chainName);
     this.aggregateBalanceObserver = new AggregateBalanceObserver(this.balanceObserver!, new PriceOracle());
+=======
+    await this.fetchBalanceObserver(ensName);
+    this.aggregateBalanceObserver = new AggregateBalanceObserver(this.balanceObserver!, this.priceObserver, this.tokensValueConverter);
+>>>>>>> upstream/master
   }
 
   async getTokensDetails(chainName: string = 'default') {
@@ -228,9 +238,9 @@ class UniversalLoginSDK {
     return this.balanceObserver!.subscribe(callback);
   }
 
-  async subscribeToAggregatedBalance(ensName: string, callback: Function, currencySymbol: string, chainName: string = 'default') {
+  async subscribeToAggregatedBalance(ensName: string, callback: Function, chainName: string = 'default') {
     await this.fetchAggregateBalanceObserver(ensName, chainName);
-    return this.aggregateBalanceObserver!.subscribe(callback, currencySymbol);
+    return this.aggregateBalanceObserver!.subscribe(callback);
   }
 
   subscribeAuthorisations(walletContractAddress: string, privateKey: string, callback: Function) {
