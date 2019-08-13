@@ -1,37 +1,33 @@
 import {Contract, providers} from 'ethers';
 import ProxyCounterfactualFactory from '@universal-login/contracts/build/ProxyCounterfactualFactory.json';
 import {computeContractAddress, createKeyPair} from '@universal-login/commons';
-import {ProvidersRecord} from '../../config/ProvidersRecord';
+import {Provider} from 'ethers/providers';
 
 
 export class BlockchainService {
-  constructor(private providersRecord: ProvidersRecord){
+  constructor(){
   }
 
-  getCode(contractAddress: string, chainName: string) {
-    const provider = this.providersRecord[chainName];
+  getCode(contractAddress: string, provider: Provider) {
     return provider.getCode(contractAddress);
   }
 
-  getBlockNumber(chainName: string) {
-    const provider = this.providersRecord[chainName];
+  getBlockNumber(provider: Provider) {
     return provider.getBlockNumber();
   }
 
-  getLogs(filter: providers.Filter, chainName: string) {
-    const provider = this.providersRecord[chainName];
+  getLogs(filter: providers.Filter, provider: Provider) {
     return provider.getLogs(filter);
   }
 
-  getInitCode = async (factoryAddress: string, chainName: string) => {
-    const provider = this.providersRecord[chainName];
+  getInitCode = async (factoryAddress: string, provider: Provider) => {
     const factoryContract = new Contract(factoryAddress, ProxyCounterfactualFactory.interface, provider);
     return factoryContract.initCode();
   }
 
-  createFutureWallet = async (factoryAddress: string, chainName: string) => {
+  createFutureWallet = async (factoryAddress: string, provider: Provider) => {
     const {privateKey, publicKey} = createKeyPair();
-    const futureContractAddress = computeContractAddress(factoryAddress, publicKey, await this.getInitCode(factoryAddress, chainName));
+    const futureContractAddress = computeContractAddress(factoryAddress, publicKey, await this.getInitCode(factoryAddress, provider));
     return [privateKey, futureContractAddress, publicKey];
   }
 }

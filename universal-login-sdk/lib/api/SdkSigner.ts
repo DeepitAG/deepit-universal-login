@@ -11,10 +11,10 @@ export class SdkSigner extends ethers.Signer {
     private sdk: UniversalLoginSDK,
     public contractAddress: string,
     privateKey: string,
-    private chainName: string
+    private chainName: string = 'default'
   ) {
     super();
-    this.provider = this.sdk.providersRecord[chainName];
+    this.provider = this.sdk.chains[chainName].provider;
     this.wallet = new Wallet(privateKey, this.provider);
   }
 

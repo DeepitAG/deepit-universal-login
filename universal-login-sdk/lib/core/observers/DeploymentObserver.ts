@@ -3,6 +3,7 @@ import {ContractWhiteList, ensure, isContractExist} from '@universal-login/commo
 import {ConcurrentDeployment, UnsupportedBytecode} from '../utils/errors';
 import {BlockchainService} from '../../integration/ethereum/BlockchainService';
 import ObserverRunner from './ObserverRunner';
+import {Provider} from 'ethers/providers';
 
 export type OnContractDeployed = (
   contractAddress: string,
@@ -12,7 +13,7 @@ export class DeploymentObserver extends ObserverRunner {
   private onContractDeployed?: OnContractDeployed;
   private futureContractAddress?: string;
 
-  constructor(private blockchainService: BlockchainService, private contractWhiteList: ContractWhiteList, private chainName: string) {
+  constructor(private blockchainService: BlockchainService, private contractWhiteList: ContractWhiteList, private provider: Provider) {
     super();
   }
 
@@ -31,7 +32,7 @@ export class DeploymentObserver extends ObserverRunner {
   }
 
   private async checkContract(futureContractAddress: string) {
-    const bytecode = await this.blockchainService.getCode(futureContractAddress, this.chainName);
+    const bytecode = await this.blockchainService.getCode(futureContractAddress, this.provider);
     if (isContractExist(bytecode)){
       ensure(this.contractWhiteList.proxy.includes(utils.keccak256(bytecode)), UnsupportedBytecode);
       await this.onContractDeployed!(futureContractAddress);

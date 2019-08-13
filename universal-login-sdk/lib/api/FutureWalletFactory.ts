@@ -16,7 +16,7 @@ export type FutureWallet = {
   privateKey: string,
   contractAddress: string,
   waitForBalance: () => Promise<BalanceDetails>,
-  deploy: (ensName: string, gasPrice: string, chainName: string) => Promise<string>
+  deploy: (ensName: string, gasPrice: string) => Promise<string>
 };
 
 type FutureFactoryConfig = Pick<NetworkData, 'supportedTokens' | 'factoryAddress' | 'contractWhiteList' | 'chainSpec'>;
@@ -27,7 +27,6 @@ export class FutureWalletFactory {
   constructor(
     private config: FutureFactoryConfig,
     private provider: providers.Provider,
-    private chainName: string,
     private blockchainService: BlockchainService,
     private relayerApi: RelayerApi) {
       this.ensService = new ENSService(provider, config.chainSpec.ensAddress);
@@ -40,7 +39,7 @@ export class FutureWalletFactory {
   }
 
   async createFutureWallet(): Promise<FutureWallet> {
-    const [privateKey, contractAddress, publicKey] = await this.blockchainService.createFutureWallet(this.config.factoryAddress, this.chainName);
+    const [privateKey, contractAddress, publicKey] = await this.blockchainService.createFutureWallet(this.config.factoryAddress, this.provider);
     const waitForBalance = async () => new Promise(
       (resolve) => {
         const onReadyToDeploy = (tokenAddress: string, contractAddress: string) => resolve({tokenAddress, contractAddress});
@@ -55,7 +54,7 @@ export class FutureWalletFactory {
       await this.relayerApi.deploy(publicKey, ensName, gasPrice, signature);
       return new Promise(
         (resolve) => {
-          const deploymentObserver = new DeploymentObserver(this.blockchainService, this.config.contractWhiteList, this.chainName);
+          const deploymentObserver = new DeploymentObserver(this.blockchainService, this.config.contractWhiteList, this.provider);
           const onContractDeployed = (contractAddress: string) => resolve(contractAddress);
           deploymentObserver.startAndSubscribe(contractAddress, onContractDeployed);
         }

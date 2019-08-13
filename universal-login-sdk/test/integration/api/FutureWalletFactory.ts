@@ -38,7 +38,7 @@ describe('INT: FutureWalletFactory', async () => {
         name: ''
       }
     };
-    const blockchainService = new BlockchainService(provider);
+    const blockchainService = new BlockchainService();
     const relayerApi = new RelayerApi(relayerUrl);
     futureWalletFactory = new FutureWalletFactory(
       futureWalletConfig,
@@ -50,7 +50,7 @@ describe('INT: FutureWalletFactory', async () => {
 
   it('deploy contract', async () => {
     const ensName = 'name.mylogin.eth';
-    const {waitForBalance, contractAddress, deploy} = (await futureWalletFactory.createFutureWallet('development'));
+    const {waitForBalance, contractAddress, deploy} = (await futureWalletFactory.createFutureWallet());
     await wallet.sendTransaction({to: contractAddress, value: utils.parseEther('2')});
     const result = await waitForBalance();
     expect(result.contractAddress).be.eq(contractAddress);

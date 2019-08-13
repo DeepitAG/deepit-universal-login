@@ -12,7 +12,7 @@ describe('UNIT: DeploymentObserver', async () => {
   let deploymentObserver: DeploymentObserver;
 
   beforeEach(() => {
-    deploymentObserver = new DeploymentObserver(blockchainService as any, contractWhiteList);
+    deploymentObserver = new DeploymentObserver(blockchainService as any, contractWhiteList, {} as any);
     deploymentObserver.step = 10;
   });
 

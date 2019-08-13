@@ -16,16 +16,13 @@ import {SdkConfig} from '../config/SdkConfig';
 import {AggregateBalanceObserver} from '../core/observers/AggregateBalanceObserver';
 import {PriceOracle} from '../core/services/PriceOracle';
 import {PriceObserver} from '../core/observers/PriceObserver';
-import {ProvidersRecord} from '../config/ProvidersRecord';
-
-declare type BlockchainObserverRecord = Record<string, BlockchainObserver>;
-declare type DeploymentObserverRecord = Record<string, DeploymentObserver | DeploymentReadyObserver>;
+import {ProviderDict, Chains} from '../config/Chains';
+import {Provider} from 'ethers/providers';
 
 class UniversalLoginSDK {
   relayerApi: RelayerApi;
   authorisationsObserver: AuthorisationsObserver;
-  blockchainObserverRecord: BlockchainObserverRecord = {};
-  deploymentObserverRecord: DeploymentObserverRecord = {} as DeploymentObserverRecord;
+  chains: Chains = {};
   executionFactory: ExecutionFactory;
   balanceObserver?: BalanceObserver;
   aggregateBalanceObserver?: AggregateBalanceObserver;
@@ -38,21 +35,24 @@ class UniversalLoginSDK {
 
   constructor(
     relayerUrl: string,
-    public providersRecord: ProvidersRecord,
+    providerOrProviderDict: Provider | ProviderDict,
     sdkConfig?: DeepPartial<SdkConfig>
   ) {
+    providerOrProviderDict.on ?
+      this.chains['default'].provider = providerOrProviderDict as Provider
+      : this.chains = deepMerge(this.chains, providerOrProviderDict)
     this.relayerApi = new RelayerApi(relayerUrl);
     this.authorisationsObserver = new AuthorisationsObserver(this.relayerApi);
     this.executionFactory = new ExecutionFactory(this.relayerApi);
-    this.blockchainService = new BlockchainService(providersRecord);
+    this.blockchainService = new BlockchainService();
     this.sdkConfig = deepMerge(SdkConfigDefault, sdkConfig);
     this.priceObserver = new PriceObserver(this.sdkConfig.observedTokens, this.sdkConfig.observedCurrencies);
   }
 
-  async create(ensName: string, chainName: string): Promise<[string, string]> {
+  async create(ensName: string, chainName: string = 'default'): Promise<[string, string]> {
     const {publicKey, privateKey} = createKeyPair();
     const result = await this.relayerApi.createWallet(publicKey, ensName);
-    const provider = this.providersRecord[chainName];
+    const provider = this.chains[chainName].provider;
     const contract = await waitForContractDeploy(
       provider,
       WalletContract,
@@ -61,26 +61,26 @@ class UniversalLoginSDK {
     return [privateKey, contract.address];
   }
 
-  async createFutureWallet(chainName: string) {
+  async createFutureWallet(chainName: string = 'default') {
     await this.getRelayerConfig();
     this.fetchFutureWalletFactory(chainName);
     return this.futureWalletFactory!.createFutureWallet();
   }
 
-  async addKey(to: string, publicKey: string, privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY, chainName: string) {
+  async addKey(to: string, publicKey: string, privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY, chainName: string = 'default') {
     return this.selfExecute(to, 'addKey', [publicKey, keyPurpose], privateKey, transactionDetails, chainName);
   }
 
-  async addKeys(to: string, publicKeys: string[], privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY, chainName: string) {
+  async addKeys(to: string, publicKeys: string[], privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY, chainName: string = 'default') {
     const keyRoles = new Array(publicKeys.length).fill(keyPurpose);
     return this.selfExecute(to, 'addKeys', [publicKeys, keyRoles], privateKey, transactionDetails, chainName);
   }
 
-  async removeKey(to: string, key: string, privateKey: string, transactionDetails: Message, chainName: string) {
+  async removeKey(to: string, key: string, privateKey: string, transactionDetails: Message, chainName: string = 'default') {
     return this.selfExecute(to, 'removeKey', [key, MANAGEMENT_KEY], privateKey, transactionDetails, chainName);
   }
 
-  async setRequiredSignatures(to: string, requiredSignatures: number, privateKey: string, transactionDetails: Message, chainName: string) {
+  async setRequiredSignatures(to: string, requiredSignatures: number, privateKey: string, transactionDetails: Message, chainName: string = 'default') {
     return this.selfExecute(to, 'setRequiredSignatures', [requiredSignatures], privateKey, transactionDetails, chainName);
   }
 
@@ -94,18 +94,19 @@ class UniversalLoginSDK {
   }
 
   async fetchDeploymentReadyObserver(chainName: string) {
-    const provider = this.providersRecord[chainName];
+    const provider = this.chains[chainName].provider;
     ensureNotNull(this.relayerConfig, MissingConfiguration);
-    this.deploymentObserverRecord[chainName] = this.deploymentObserverRecord[chainName] || new DeploymentReadyObserver(this.relayerConfig!.networkConf[chainName].supportedTokens, provider);
+    this.chains[chainName].deploymentReadyObserver = this.chains[chainName].deploymentReadyObserver || new DeploymentReadyObserver(this.relayerConfig!.networkConf[chainName].supportedTokens, provider);
   }
 
   async fetchDeploymentObserver(chainName: string) {
+    const provider = this.chains[chainName].provider;
     ensureNotNull(this.relayerConfig, MissingConfiguration);
-    this.deploymentObserverRecord[chainName] = this.deploymentObserverRecord[chainName] || new DeploymentObserver(this.blockchainService, this.relayerConfig!.networkConf[chainName].contractWhiteList, chainName);
+    this.chains[chainName].deploymentObserver = this.chains[chainName].deploymentObserver || new DeploymentObserver(this.blockchainService, this.relayerConfig!.networkConf[chainName].contractWhiteList, provider);
   }
 
   async fetchBalanceObserver(ensName: string, chainName: string) {
-    const provider = this.providersRecord[chainName];
+    const provider = this.chains[chainName].provider;
     const balanceChecker = new BalanceChecker(provider);
     const walletContractAddress = await this.getWalletContractAddress(ensName, chainName);
     ensureNotNull(walletContractAddress, InvalidContract);
@@ -123,8 +124,8 @@ class UniversalLoginSDK {
     this.aggregateBalanceObserver = new AggregateBalanceObserver(this.balanceObserver!, new PriceOracle());
   }
 
-  async getTokensDetails(chainName: string) {
-    const provider = this.providersRecord[chainName];
+  async getTokensDetails(chainName: string = 'default') {
+    const provider = this.chains[chainName].provider;
     const tokenDetailsService = new TokenDetailsService(provider);
     const tokenDetails: TokenDetails[] = [];
     for (const token of this.sdkConfig.observedTokens) {
@@ -143,11 +144,11 @@ class UniversalLoginSDK {
       contractWhiteList: this.relayerConfig!.networkConf[chainName].contractWhiteList,
       chainSpec: this.relayerConfig!.networkConf[chainName].chainSpec
     };
-    const provider = this.providersRecord[chainName];
-    this.futureWalletFactory = new FutureWalletFactory(futureWalletConfig, provider, chainName ,this.blockchainService, this.relayerApi);
+    const provider = this.chains[chainName].provider;
+    this.futureWalletFactory = new FutureWalletFactory(futureWalletConfig, provider, this.blockchainService, this.relayerApi);
   }
 
-  async execute(message: Message, privateKey: string, chainName: string): Promise<Execution> {
+  async execute(message: Message, privateKey: string, chainName: string = 'default'): Promise<Execution> {
     const unsignedMessage = {
       ...this.sdkConfig.paymentOptions,
       ...message,
@@ -168,35 +169,36 @@ class UniversalLoginSDK {
     return this.execute(message, privateKey, chainName);
   }
 
-  async getKeyPurpose(walletContractAddress: string, key: string, chainName: string) {
-    const provider = this.providersRecord[chainName];
+  async getKeyPurpose(walletContractAddress: string, key: string, chainName: string = 'default') {
+    const provider = this.chains[chainName].provider;
     const walletContract = new Contract(walletContractAddress, WalletContract.interface, provider);
     return walletContract.getKeyPurpose(key);
   }
 
-  async getNonce(walletContractAddress: string, chainName: string) {
-    const provider = this.providersRecord[chainName];
+  async getNonce(walletContractAddress: string, chainName: string = 'default') {
+    const provider = this.chains[chainName].provider;
     const contract = new Contract(walletContractAddress, WalletContract.interface, provider);
     return contract.lastNonce();
   }
 
-  async getWalletContractAddress(ensName: string, chainName: string) {
+  async getWalletContractAddress(ensName: string, chainName: string = 'default') {
     const walletContractAddress = await this.resolveName(ensName, chainName);
-    if (walletContractAddress && await this.blockchainService.getCode(walletContractAddress, chainName)) {
+    const provider = this.chains[chainName].provider;
+    if (walletContractAddress && await this.blockchainService.getCode(walletContractAddress, provider)) {
       return walletContractAddress;
     }
     return null;
   }
 
-  async walletContractExist(ensName: string, chainName: string) {
+  async walletContractExist(ensName: string, chainName: string = 'default') {
     const walletContractAddress = await this.getWalletContractAddress(ensName, chainName);
     return walletContractAddress !== null;
   }
 
-  async resolveName(ensName: string, chainName: string) {
+  async resolveName(ensName: string, chainName: string = 'default') {
     await this.getRelayerConfig();
     const {ensAddress} = this.relayerConfig!.networkConf[chainName].chainSpec;
-    const provider = this.providersRecord[chainName];
+    const provider = this.chains[chainName].provider;
     return resolveName(provider, ensAddress, ensName);
   }
 
@@ -218,15 +220,15 @@ class UniversalLoginSDK {
 
   subscribe(eventType: string, filter: any, chainName: string, callback: Function) {
     ensure(['KeyAdded', 'KeyRemoved'].includes(eventType), InvalidEvent, eventType);
-    return this.blockchainObserverRecord[chainName].subscribe(eventType, filter, callback);
+    return this.chains[chainName].blockchainObserver.subscribe(eventType, filter, callback);
   }
 
-  async subscribeToBalances(ensName: string, callback: Function, chainName: string) {
+  async subscribeToBalances(ensName: string, callback: Function, chainName: string = 'default') {
     await this.fetchBalanceObserver(ensName, chainName);
     return this.balanceObserver!.subscribe(callback);
   }
 
-  async subscribeToAggregatedBalance(ensName: string, callback: Function, currencySymbol: string, chainName: string) {
+  async subscribeToAggregatedBalance(ensName: string, callback: Function, currencySymbol: string, chainName: string = 'default') {
     await this.fetchAggregateBalanceObserver(ensName, chainName);
     return this.aggregateBalanceObserver!.subscribe(callback, currencySymbol);
   }
@@ -238,18 +240,19 @@ class UniversalLoginSDK {
     );
   }
 
-  async start(chainName: string) {
-    const blockchainObserver = new BlockchainObserver(this.blockchainService, chainName);
-    this.blockchainObserverRecord[chainName] = blockchainObserver;
-    await this.blockchainObserverRecord[chainName].start();
+  async start(chainName: string = 'default') {
+    const provider = this.chains[chainName].provider;
+    const blockchainObserver = new BlockchainObserver(this.blockchainService, provider);
+    this.chains[chainName].blockchainObserver = blockchainObserver;
+    await this.chains[chainName].blockchainObserver.start();
   }
 
-  stop(chainName: string) {
-    this.blockchainObserverRecord[chainName].stop();
+  stop(chainName: string = 'default') {
+    this.chains[chainName].blockchainObserver.stop();
   }
 
-  async finalizeAndStop(chainName: string) {
-    await this.blockchainObserverRecord[chainName].finalizeAndStop();
+  async finalizeAndStop(chainName: string = 'defualt') {
+    await this.chains[chainName].blockchainObserver.finalizeAndStop();
   }
 }
 
