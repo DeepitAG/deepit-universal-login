@@ -15,24 +15,27 @@ export default class QueueSQLStore implements IQueueStore {
       .insert({
         hash: messageHash,
         type: 'Mesasge',
-        created_at: this.database.fn.now()
+        created_at: this.database.fn.now(),
+        chain: chainName
       })
       .into(this.tableName);
     return messageHash;
   }
 
   async getNext() {
-    const next = await this.database(this.tableName)
+    const hash = await this.database(this.tableName)
       .first()
       .orderBy('created_at', 'asc')
       .column('hash', 'type')
       .select();
-    const chain = await this.database(this.tableName)
+    const chainName = await this.database(this.tableName)
       .first()
       .orderBy('created_at', 'asc')
       .column('chain', 'type')
       .select();
-    return {hash: next.hash, chainName: chain.chainName};
+    let next;
+    hash && chainName? next = {hash: hash.hash, chainName: chainName.chainName}: undefined;
+    return next;
   }
 
   async remove(hash: string) {
