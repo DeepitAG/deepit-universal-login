@@ -4,9 +4,8 @@ import {Config} from '../../config/relayer';
 import {PublicRelayerConfig} from '@universal-login/commons';
 
 export function getPublicConfig(config: Config): PublicRelayerConfig {
-  const {networkConf, localization, onRampProviders} = config;
+  const {localization, onRampProviders} = config;
   return {
-    networkConf,
     localization,
     onRampProviders
   };

@@ -13,12 +13,8 @@ describe('E2E: Relayer - Config routes', async () => {
   });
 
   it('should return public config', async () => {
-    const {supportedTokens, chainSpec, factoryAddress, contractWhiteList, localization, onRampProviders} = relayer.config;
+    const {localization, onRampProviders} = relayer.config;
     const expectedConfig = {
-      supportedTokens,
-      chainSpec,
-      factoryAddress,
-      contractWhiteList,
       localization,
       onRampProviders
     };
@@ -29,12 +25,8 @@ describe('E2E: Relayer - Config routes', async () => {
 
 
   it('getPublicConfig should return PublicConfig', () => {
-    const {supportedTokens, chainSpec, factoryAddress, contractWhiteList, localization, onRampProviders} = relayer.config;
+    const {localization, onRampProviders} = relayer.config;
     const expectedConfig = {
-      supportedTokens,
-      chainSpec,
-      factoryAddress,
-      contractWhiteList,
       localization,
       onRampProviders
     };

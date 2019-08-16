@@ -1,25 +1,17 @@
 import React from 'react';
-import logoIcon from '../assets/icons/U.svg';
-import {createModalService} from '../../core/services/createModalService';
-import {UDashboard} from '../Modals/UDashboard';
-import {ReactUModalType, ReactUModalProps, ReactUModalContext} from '../../core/models/ReactUModalContext';
+import {UDashboard} from './UDashboard';
 import {ApplicationWallet} from '@universal-login/commons';
+import UniversalLoginSDK from '@universal-login/sdk';
 
 export interface LogoButtonProps {
+  sdk: UniversalLoginSDK;
   applicationWallet: ApplicationWallet;
 }
 
-export const LogoButton = ({applicationWallet}: LogoButtonProps) => {
-  const modalService = createModalService<ReactUModalType, ReactUModalProps>();
+export const LogoButton = ({applicationWallet, sdk}: LogoButtonProps) => {
+
 
   return (
-    <>
-      <ReactUModalContext.Provider value={modalService}>
-        <button onClick={() => modalService.showModal('funds')}>
-          <img src={logoIcon} alt="U"/>
-        </button>
-        <UDashboard applicationWallet={applicationWallet}/>
-      </ReactUModalContext.Provider>
-    </>
+    <UDashboard applicationWallet={applicationWallet} sdk={sdk}/>
   );
 };

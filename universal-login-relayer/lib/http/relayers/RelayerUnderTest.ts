@@ -1,7 +1,7 @@
 import Knex from 'knex';
 import {providers, Wallet, utils, Contract} from 'ethers';
 const ENSBuilder = require('ens-builder');
-import {withENS, getContractHash, ContractJSON, ETHER_NATIVE_TOKEN, deployContract, deepMerge, DeepPartial, ChainSpec} from '@universal-login/commons';
+import {withENS, getContractHash, ContractJSON, ETHER_NATIVE_TOKEN, deployContract, ChainSpec} from '@universal-login/commons';
 import {deployFactory} from '@universal-login/contracts';
 import WalletMasterWithRefund from '@universal-login/contracts/build/WalletMasterWithRefund.json';
 import ProxyContract from '@universal-login/contracts/build/Proxy.json';
@@ -51,7 +51,7 @@ export class RelayerUnderTest extends Relayer {
       onRampProviders: testConfig.onRampProviders,
       localization: testConfig.localization,
       networkConf: {
-        development: {
+        default: {
           privateKey: wallet.privateKey,
           chainSpec: providerWithENS.network as ChainSpec,
           ensRegistrars: [DOMAIN],
@@ -65,6 +65,78 @@ export class RelayerUnderTest extends Relayer {
     };
     const relayer = new RelayerUnderTest(config);
     return {relayer, factoryContract, supportedTokens, contractWhiteList, ensAddress, walletMaster, mockToken, provider: providerWithENS};
+  }
+
+  static async createPreconfiguredMultiChainRelayer(port: string, wallet1: Wallet, wallet2: Wallet) {
+    const provider1 = await this.configureENSProvider(wallet1);
+    const provider2 = await this.configureENSProvider(wallet2);
+    const contractWhiteList = getContractWhiteList();
+    const mockToken1 = await deployContract(wallet1, MockToken as any);
+    const mockToken2 = await deployContract(wallet2, MockToken as any);
+    const walletMaster1 = await deployContract(wallet1, WalletMasterWithRefund as any);
+    const walletMaster2 = await deployContract(wallet2, WalletMasterWithRefund as any);
+    const factoryContract1 = await deployFactory(wallet2, walletMaster1.address);
+    const factoryContract2 = await deployFactory(wallet2, walletMaster2.address);
+    const supportedTokens1 = [
+      {
+        address: mockToken1.address,
+        minimalAmount: utils.parseEther('0.05').toString()
+      },
+      {
+        address: ETHER_NATIVE_TOKEN.address,
+        minimalAmount: utils.parseEther('0.05').toString()
+      }
+    ];
+    const supportedTokens2 = [
+      {
+        address: mockToken2.address,
+        minimalAmount: utils.parseEther('0.05').toString()
+      },
+      {
+        address: ETHER_NATIVE_TOKEN.address,
+        minimalAmount: utils.parseEther('0.05').toString()
+      }
+    ];
+    const testConfig = getConfig('test');
+    const config: Config = {
+      port,
+      database: testConfig.database,
+      onRampProviders: testConfig.onRampProviders,
+      localization: testConfig.localization,
+      networkConf: {
+        default: {
+          privateKey: wallet1.privateKey,
+          chainSpec: provider1.network as ChainSpec,
+          ensRegistrars: [DOMAIN],
+          walletMasterAddress: walletMaster1.address,
+          contractWhiteList,
+          factoryAddress: factoryContract1.address,
+          supportedTokens: supportedTokens1,
+          provider: provider1,
+        },
+        otherChain: {
+          privateKey: wallet2.privateKey,
+          chainSpec: provider2.network as ChainSpec,
+          ensRegistrars: [DOMAIN],
+          walletMasterAddress: walletMaster2.address,
+          contractWhiteList,
+          factoryAddress: factoryContract2.address,
+          supportedTokens: supportedTokens2,
+          provider: provider2,
+        }
+      }
+    };
+    const ensAddress1 = provider1.network.ensAddress;
+    const ensAddress2 = provider2.network.ensAddress;
+    const relayer = new RelayerUnderTest(config);
+    return {relayer, factoryContract1, factoryContract2, supportedTokens1, supportedTokens2, contractWhiteList,
+            ensAddress1, ensAddress2, walletMaster1, walletMaster2, mockToken1, mockToken2, provider1, provider2};
+  }
+
+  static async configureENSProvider(wallet: Wallet) {
+    const ensBuilder = new ENSBuilder(wallet);
+    const ensAddress = await ensBuilder.bootstrapWith(DOMAIN_LABEL, DOMAIN_TLD);
+    return withENS(wallet.provider as providers.Web3Provider, ensAddress);
   }
 
   url() {

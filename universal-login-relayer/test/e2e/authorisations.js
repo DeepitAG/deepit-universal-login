@@ -6,7 +6,7 @@ import {utils} from 'ethers';
 
 chai.use(chaiHttp);
 
-const chainName = 'development';
+const chainName = 'default';
 
 async function postAuthorisationRequest(relayer, contract, wallet) {
   const result = await chai.request(relayer.server)

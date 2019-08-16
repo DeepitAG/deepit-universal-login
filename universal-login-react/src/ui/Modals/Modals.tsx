@@ -2,7 +2,7 @@ import React, {useContext} from 'react';
 import {ModalWrapper} from './ModalWrapper';
 import WaitingFor from '../commons/WaitingFor';
 import {ReactModalContext, TopUpProps} from '../../core/models/ReactModalContext';
-import {ChooseTopUpMethod} from '../TopUp/ChooseTopUpMethod';
+import {TopUp} from '../TopUp/TopUp';
 
 export interface ModalsProps {
   modalClassName?: string;
@@ -13,15 +13,12 @@ const Modals = ({modalClassName}: ModalsProps) => {
   switch (modalService.modalState) {
     case 'topUpAccount':
       return (
-        <ModalWrapper
-          modalClassName={modalClassName}
+        <TopUp
           hideModal={modalService.hideModal}
-        >
-          <ChooseTopUpMethod
-            hideModal={modalService.hideModal}
-            {...modalService.modalProps as TopUpProps}
-          />
-        </ModalWrapper>
+          modalClassName={modalClassName}
+          {...modalService.modalProps as TopUpProps}
+          isModal
+        />
       );
     case 'waitingForDeploy':
       return (

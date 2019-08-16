@@ -1,6 +1,5 @@
 import React, {useState} from 'react';
 import {Emoji} from '../commons/Emoji';
-import {getStyleForTopLevelComponent} from '../../core/utils/getStyleForTopLevelComponent';
 import '../styles/emoji.css';
 import '../styles/emojiDefaults.css';
 import {generateCodeWithFakes} from '@universal-login/commons';
@@ -22,13 +21,8 @@ export const EmojiPanelWithFakes = ({publicKey, onEmojiClicked, className}: Emoj
   ));
 
   return (
-    <div className={getStyleForTopLevelComponent(className)}>
-      <p>Security code</p>
-      <div className="universal-login-emoji">
-        <ul>
-          {emojis}
-        </ul>
-      </div>
-    </div>
+    <ul className="emojis-fakes-list">
+      {emojis}
+    </ul>
   );
 };

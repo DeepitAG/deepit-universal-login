@@ -17,7 +17,16 @@ export const startRelayer = async (port = '33111') => {
   return {provider, wallet, otherWallet, relayer, deployer, factoryContract, walletMaster, mockToken, ensAddress};
 };
 
-export const createWalletContract = async (provider, relayerUrlOrServer, publicKey, ensName = 'marek.mylogin.eth', chainName = 'development') => {
+export const startMultiChainRelayer = async (port = '33111') => {
+  const provider = createMockProvider();
+  const [deployer1, deployer2] = getWallets(provider);
+  const {relayer, factoryContract1, factoryContract2, supportedTokens1, supportedTokens2, contractWhiteList,
+    ensAddress1, ensAddress2, walletMaster1, walletMaster2, mockToken1, mockToken2, provider1, provider2} = await RelayerUnderTest.createPreconfiguredMultiChainRelayer(deployer1, deployer2, port);
+  await relayer.start();
+  return {relayer, factoryContract1, factoryContract2, supportedTokens1, supportedTokens2, contractWhiteList,
+    ensAddress1, ensAddress2, walletMaster1, walletMaster2, mockToken1, mockToken2, provider1, provider2};
+};
+export const createWalletContract = async (provider, relayerUrlOrServer, publicKey, ensName = 'marek.mylogin.eth', chainName = 'default') => {
   const result = await chai.request(relayerUrlOrServer)
   .post('/wallet')
   .send({
@@ -29,7 +38,7 @@ export const createWalletContract = async (provider, relayerUrlOrServer, publicK
   return waitForContractDeploy(provider, WalletContract, transaction.hash);
 };
 
-export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, keyPair, walletMasterAddress, factoryContractAddress, ensAddress, ensName = 'marek.mylogin.eth', chainName = 'development') => {
+export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, keyPair, walletMasterAddress, factoryContractAddress, ensAddress, ensName = 'marek.mylogin.eth', chainName = 'default') => {
   const futureAddress = getFutureAddress(walletMasterAddress, factoryContractAddress, keyPair.publicKey);
   await wallet.sendTransaction({to: futureAddress, value: utils.parseEther('1.0')});
   const initData = await getInitData(keyPair, ensName, ensAddress, wallet.provider, TEST_GAS_PRICE);

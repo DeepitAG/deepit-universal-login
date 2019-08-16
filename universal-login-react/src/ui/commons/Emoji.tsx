@@ -1,28 +1,16 @@
 import React from 'react';
+import {getEmojiColor, getEmojiNumber} from '@universal-login/commons';
 import {getEmojiCodePoint} from '../../core/utils/emojiCodePoint';
 
 interface EmojiProps {
   code: number;
 }
 
-const colors = [
-  'red',
-  'black',
-  'blue',
-  'green',
-  'yellow',
-  'orange',
-  'aqua',
-  'fuchsia',
-  'lime',
-  'gray'
-];
-
 export const Emoji = ({code}: EmojiProps) => {
-  const emojiNumber = Math.floor(code / colors.length);
-  const colorCode = code % colors.length;
+  const emojiNumber = getEmojiNumber(code);
+  const color = getEmojiColor(code);
   return (
-    <i className="fa" style={{color: colors[colorCode]}}>
+    <i className="fa" style={{color}}>
       {String.fromCodePoint(getEmojiCodePoint(emojiNumber))}
     </i>
   );

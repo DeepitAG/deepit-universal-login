@@ -23,6 +23,7 @@ describe('E2E: Relayer - counterfactual deployment', () => {
   const relayerPort = '33511';
   const relayerUrl = `http://localhost:${relayerPort}`;
   const ensName = 'myname.mylogin.eth';
+  const chainName = 'default';
   let signature: string;
 
   beforeEach(async () => {
@@ -43,7 +44,8 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         publicKey: keyPair.publicKey,
         ensName,
         gasPrice: TEST_GAS_PRICE,
-        signature
+        signature,
+        chainName
       });
     expect(result.status).to.eq(201);
     expect(await provider.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
@@ -64,7 +66,8 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         publicKey: newKeyPair.publicKey,
         ensName,
         gasPrice: TEST_GAS_PRICE,
-        signature
+        signature,
+        chainName
       });
     expect(result.body.error).to.eq(`Error: ENS name ${ensName} already taken`);
   });
@@ -79,7 +82,8 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         publicKey: keyPair.publicKey,
         ensName,
         gasPrice: TEST_GAS_PRICE,
-        signature
+        signature,
+        chainName
       });
     expect(result.status).to.eq(201);
     expect(await provider.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
@@ -92,7 +96,8 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         publicKey: keyPair.publicKey,
         ensName,
         gasPrice: TEST_GAS_PRICE,
-        signature
+        signature,
+        chainName
       });
     expect(result.status).to.eq(402);
     expect(result.body.type).to.eq('NotEnoughBalance');
@@ -109,7 +114,8 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         publicKey: keyPair.publicKey,
         ensName: invalidEnsName,
         gasPrice: TEST_GAS_PRICE,
-        signature
+        signature,
+        chainName
       });
     expect(result.status).to.eq(404);
     expect(result.body.type).to.eq('NotFound');
@@ -127,7 +133,8 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         publicKey: keyPair.publicKey,
         ensName,
         gasPrice: TEST_GAS_PRICE,
-        signature
+        signature,
+        chainName
       });
     expect(result.body.type).to.eq('InvalidSignature');
     expect(result.body.error).to.eq(`Error: Invalid signature `);

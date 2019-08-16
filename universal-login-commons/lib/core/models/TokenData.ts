@@ -2,11 +2,12 @@ import {utils} from 'ethers';
 
 export type ObservedToken = {
   address: string;
+  chainName?: string;
 };
 
 export type TokenDetails = ObservedToken & {
-  symbol: string;
   name: string;
+  symbol: string;
 };
 
 export type TokenDetailsWithBalance = TokenDetails & {

@@ -23,7 +23,7 @@ export class WalletService {
     return this.walletDeployed();
   }
 
-  async createFutureWallet(chainName: string): Promise<FutureWallet> {
+  async createFutureWallet(chainName: string = 'default'): Promise<FutureWallet> {
     const futureWallet = await this.sdk.createFutureWallet(chainName);
     this.setFutureWallet(futureWallet);
     return futureWallet;

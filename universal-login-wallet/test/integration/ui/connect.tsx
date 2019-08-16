@@ -27,9 +27,9 @@ describe('UI: Connection flow', () => {
     const [wallet] = getWallets(createMockProvider());
     ({relayer, provider} = await setupSdk(wallet, '33113'));
     services = await createPreconfiguredServices(provider, relayer, [ETHER_NATIVE_TOKEN.address]);
-    await services.tokensDetailsStore.fetchTokensDetails();
+    await services.sdk.tokensDetailsStore.fetchTokensDetails();
     services.balanceService.start();
-    services.sdk.start();
+    await services.sdk.start();
     [privateKey, contractAddress] = await services.sdk.create(name);
     await wallet.sendTransaction({to: contractAddress, value: utils.parseEther('2.0')});
     appWrapper = mountWithContext(<App/>, services, ['/']);
@@ -45,7 +45,7 @@ describe('UI: Connection flow', () => {
     const publicKey = (new Wallet(services.walletService.applicationWallet!.privateKey)).address;
     await services.sdk.addKey(contractAddress, publicKey, privateKey, {gasToken: ETHER_NATIVE_TOKEN.address});
     await appPage.login().waitForHomeView('');
-    expect(appPage.dashboard().getWalletBalance()).to.startWith('1.9999');
+    expect(appPage.dashboard().getWalletBalance()).to.startWith('1.9997');
   });
 
   after(async () => {

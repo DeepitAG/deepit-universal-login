@@ -46,7 +46,7 @@ class WalletService {
     const balanceChecker = new BalanceChecker(provider);
     const requiredBalanceChecker = new RequiredBalanceChecker(balanceChecker);
     ensure(!await this.ensService.resolveName(ensName, chainName), EnsNameTaken, ensName);
-    const ensArgs = this.ensService.argsFor(ensName, chainName);
+    const ensArgs = await this.ensService.argsFor(ensName, chainName);
     ensureNotNull(ensArgs, InvalidENSDomain, ensName);
     const contractAddress = computeContractAddress(factoryContract.address, publicKey, await walletDeployer.getInitCode());
     const supportedTokens = this.multiChainProvider.getSupportedTokens(chainName);

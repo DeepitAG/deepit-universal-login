@@ -7,9 +7,9 @@ export declare type ProviderDict = Record<string, Provider>;
 
 interface Chain {
   provider : Provider;
-  blockchainObserver: BlockchainObserver;
-  deploymentObserver: DeploymentObserver;
-  deploymentReadyObserver: DeploymentReadyObserver;
+  blockchainObserver?: BlockchainObserver;
+  deploymentObserver?: DeploymentObserver;
+  deploymentReadyObserver?: DeploymentReadyObserver;
 }
 
 export declare type Chains = Record<string, Chain>;

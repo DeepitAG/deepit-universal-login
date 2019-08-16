@@ -37,12 +37,13 @@ const Modal = () => {
       );
     case 'topUpAccount':
       return (
-        <ModalWrapper modalClassName="topup-modal-wrapper">
-          <TopUp
-            onRampConfig={config!.onRampProviders}
-            contractAddress={walletPresenter.getContractAddress()}
-          />
-        </ModalWrapper>
+        <TopUp
+          modalClassName="topup-modal-wrapper"
+          topUpClassName="jarvis-topup"
+          onRampConfig={config!.onRampProviders}
+          contractAddress={walletPresenter.getContractAddress()}
+          isModal
+        />
       );
     case 'personalInfo':
       return (
@@ -59,23 +60,23 @@ const Modal = () => {
     case 'waitingForDeploy':
       return (
         <ModalWrapper modalClassName="jarvis-modal">
-          <ModalWaitingFor action={'Txn pending'}/>
+          <ModalWaitingFor action={'Txn pending'} />
         </ModalWrapper>
       );
     case 'waitingForTransfer':
       return (
         <ModalWrapperWithoutClose>
-          <ModalWaitingFor action={'Transferring funds'}/>
+          <ModalWaitingFor action={'Transferring funds'} />
         </ModalWrapperWithoutClose>
       );
     case 'transactionSuccess':
       return (
         <ModalWrapper modalClassName="jarvis-modal">
-          <ModalTxnSuccess hideModal={modalService.hideModal}/>
+          <ModalTxnSuccess hideModal={modalService.hideModal} />
         </ModalWrapper>
       );
     case 'safello':
-      return config ?  (
+      return config ? (
         <ModalWrapperWithoutClose>
           <Safello
             localizationConfig={config.localization}

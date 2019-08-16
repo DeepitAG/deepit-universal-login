@@ -38,7 +38,6 @@ export interface NetworkData {
 export declare type NetworkConfig = Record<string, NetworkData>;
 
 export interface PublicRelayerConfig {
-  networkConf: NetworkConfig;
   localization: LocalizationConfig;
   onRampProviders: OnRampConfig;
 }
