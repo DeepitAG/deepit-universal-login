@@ -1,4 +1,5 @@
 import {LocalizationConfig, SafelloConfig, RampConfig} from './onRamp';
+import {Provider} from 'ethers/providers';
 
 export interface SupportedToken {
   address: string;
@@ -22,7 +23,8 @@ export interface OnRampConfig {
 }
 
 export interface NetworkData {
-  jsonRpcUrl: string;
+  provider?: Provider;
+  jsonRpcUrl?: string;
   factoryAddress: string;
   chainSpec: ChainSpec;
   supportedTokens: SupportedToken[];

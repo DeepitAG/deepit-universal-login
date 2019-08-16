@@ -1,59 +1,52 @@
-import chai, {expect} from 'chai';
-import {providers, Wallet, utils, Contract, ethers} from 'ethers';
-import {createMockProvider, getWallets, solidity, deployContract} from 'ethereum-waffle';
+import {expect} from 'chai';
+import {utils, Contract} from 'ethers';
+import {createMockProvider, getWallets, deployContract} from 'ethereum-waffle';
 import {BalanceChecker} from '../../../lib/integration/ethereum/BalanceChecker';
+import {RequiredBalanceChecker} from '../../../lib/integration/ethereum/RequiredBalanceChecker';
 import {ETHER_NATIVE_TOKEN} from '../../../lib/core/constants/constants';
-import MockToken from '../../fixtures/MockToken.json';
 import {TEST_ACCOUNT_ADDRESS} from '../../../lib/core/constants/test';
-import {WeiPerEther} from 'ethers/constants';
+import MockToken from '../../fixtures/MockToken.json';
+import {SupportedToken} from '../../../lib';
 
-chai.use(solidity);
 
-describe('INT: BalanceChecker', async () => {
-  let provider: providers.Provider;
-  let balanceChecker: BalanceChecker;
-  let wallet: Wallet;
+describe('INT: RequiredBalanceChecker', () => {
+  const provider = createMockProvider();
+  const balanceChecker = new BalanceChecker(provider);
+  const requiredBalanceChecker = new RequiredBalanceChecker(balanceChecker);
+  const [wallet] = getWallets(provider);
   let mockToken: Contract;
+  let supportedTokens: SupportedToken[];
 
   beforeEach(async () => {
-    provider = createMockProvider();
-    [wallet] = await getWallets(provider);
-    balanceChecker = new BalanceChecker(provider);
+    mockToken = await deployContract(wallet, MockToken);
+    supportedTokens = [
+      {
+        address: ETHER_NATIVE_TOKEN.address,
+        minimalAmount: utils.parseEther('0.5').toString()
+      },
+      {
+        address: mockToken.address,
+        minimalAmount: utils.parseEther('0.3').toString()
+      }
+    ];
   });
 
-  describe('ETH', async () => {
-    it('0 ETH', async () => {
-      const balance = await balanceChecker.getBalance(TEST_ACCOUNT_ADDRESS, ETHER_NATIVE_TOKEN.address);
-      expect(balance).to.equal('0');
-    });
-
-    it('1 ETH', async () => {
-      await wallet.sendTransaction({to: TEST_ACCOUNT_ADDRESS, value: utils.parseEther('1')});
-      const balance = await balanceChecker.getBalance(TEST_ACCOUNT_ADDRESS, ETHER_NATIVE_TOKEN.address);
-      expect(balance).to.equal(WeiPerEther);
-    });
+  it('no tokens with required balance', async () => {
+    expect(await requiredBalanceChecker.findTokenWithRequiredBalance(supportedTokens, TEST_ACCOUNT_ADDRESS)).to.be.null;
   });
 
-  describe('ERC20 token', async () => {
-    beforeEach(async () => {
-      mockToken = await deployContract(wallet, MockToken);
-    });
+  it('one token with just enough balance', async () => {
+    await mockToken.transfer(TEST_ACCOUNT_ADDRESS, utils.parseEther('0.3'));
 
-    it('0 tokens', async () => {
-      const balance = await balanceChecker.getBalance(TEST_ACCOUNT_ADDRESS, mockToken.address);
-      expect(balance).to.equal('0');
-    });
+    const actualTokenAddress = await requiredBalanceChecker.findTokenWithRequiredBalance(supportedTokens, TEST_ACCOUNT_ADDRESS);
+    expect(actualTokenAddress).to.eq(mockToken.address);
+  });
 
-    it('1 token', async () => {
-      await mockToken.transfer(TEST_ACCOUNT_ADDRESS, utils.bigNumberify('1'));
-      const balance = await balanceChecker.getBalance(TEST_ACCOUNT_ADDRESS, mockToken.address);
-      expect(balance).to.equal(ethers.constants.One);
-    });
+  it('two tokens with just enough balance', async () => {
+    await wallet.sendTransaction({to: TEST_ACCOUNT_ADDRESS, value: utils.parseEther('0.5')});
+    await mockToken.transfer(TEST_ACCOUNT_ADDRESS, utils.parseEther('0.3'));
 
-    it('not deployed', async () => {
-      await mockToken.transfer(TEST_ACCOUNT_ADDRESS, utils.bigNumberify('1'));
-      await expect(balanceChecker.getBalance(TEST_ACCOUNT_ADDRESS, '0x000000000000000000000000000000000000DEAD'))
-        .to.be.rejectedWith('contract not deployed');
-    });
+    const actualTokenAddress = await requiredBalanceChecker.findTokenWithRequiredBalance(supportedTokens, TEST_ACCOUNT_ADDRESS);
+    expect(actualTokenAddress).to.eq(ETHER_NATIVE_TOKEN.address);
   });
 });
