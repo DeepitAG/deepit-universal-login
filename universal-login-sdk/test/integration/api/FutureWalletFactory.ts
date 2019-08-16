@@ -38,7 +38,7 @@ describe('INT: FutureWalletFactory', async () => {
         name: ''
       }
     };
-    const blockchainService = new BlockchainService();
+    const blockchainService = new BlockchainService(provider);
     const relayerApi = new RelayerApi(relayerUrl);
     futureWalletFactory = new FutureWalletFactory(
       futureWalletConfig,

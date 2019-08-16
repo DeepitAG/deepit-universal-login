@@ -1,10 +1,6 @@
 import {utils, Contract, providers, Wallet} from 'ethers';
 import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
-<<<<<<< HEAD
-import {TokenDetails, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, MANAGEMENT_KEY, waitForContractDeploy, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signCancelAuthorisationRequest, signGetAuthorisationRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage, MultiChainProvider} from '@universal-login/commons';
-=======
 import {TokensValueConverter, TokenDetails, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, MANAGEMENT_KEY, waitForContractDeploy, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signCancelAuthorisationRequest, signGetAuthorisationRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage} from '@universal-login/commons';
->>>>>>> upstream/master
 import AuthorisationsObserver from '../core/observers/AuthorisationsObserver';
 import BlockchainObserver from '../core/observers/BlockchainObserver';
 import {DeploymentReadyObserver} from '../core/observers/DeploymentReadyObserver';
@@ -125,13 +121,8 @@ class UniversalLoginSDK {
     if (this.aggregateBalanceObserver) {
       return;
     }
-<<<<<<< HEAD
     await this.fetchBalanceObserver(ensName, chainName);
-    this.aggregateBalanceObserver = new AggregateBalanceObserver(this.balanceObserver!, new PriceOracle());
-=======
-    await this.fetchBalanceObserver(ensName);
     this.aggregateBalanceObserver = new AggregateBalanceObserver(this.balanceObserver!, this.priceObserver, this.tokensValueConverter);
->>>>>>> upstream/master
   }
 
   async getTokensDetails(chainName: string = 'default') {
@@ -238,7 +229,7 @@ class UniversalLoginSDK {
     return this.balanceObserver!.subscribe(callback);
   }
 
-  async subscribeToAggregatedBalance(ensName: string, callback: Function, chainName: string = 'default') {
+  async subscribeToAggregatedBalance(ensName: string, chainName: string, callback: Function) {
     await this.fetchAggregateBalanceObserver(ensName, chainName);
     return this.aggregateBalanceObserver!.subscribe(callback);
   }
