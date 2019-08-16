@@ -1,5 +1,6 @@
 import {Wallet, providers} from 'ethers';
-import {SignedMessage, MultiChainProvider} from '@universal-login/commons';
+import {SignedMessage} from '@universal-login/commons';
+import {MultiChainProvider} from './MultiChainProvider';
 import {messageToTransaction} from '../../core/utils/utils';
 import MessageValidator from '../../core/services/messages/MessageValidator';
 

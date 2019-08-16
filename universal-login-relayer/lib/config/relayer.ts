@@ -1,4 +1,4 @@
-import {NetworkConfig, LocalizationConfig, OnRampConfig} from '@universal-login/commons';
+import {LocalizationConfig, OnRampConfig, NetworkConfig} from '@universal-login/commons';
 import {KnexConfig} from './KnexConfig';
 
 export interface Config {

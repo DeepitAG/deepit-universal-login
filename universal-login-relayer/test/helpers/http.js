@@ -17,18 +17,19 @@ export const startRelayer = async (port = '33111') => {
   return {provider, wallet, otherWallet, relayer, deployer, factoryContract, walletMaster, mockToken, ensAddress};
 };
 
-export const createWalletContract = async (provider, relayerUrlOrServer, publicKey, ensName = 'marek.mylogin.eth') => {
+export const createWalletContract = async (provider, relayerUrlOrServer, publicKey, ensName = 'marek.mylogin.eth', chainName = 'development') => {
   const result = await chai.request(relayerUrlOrServer)
   .post('/wallet')
   .send({
     managementKey: publicKey,
-    ensName
+    ensName,
+    chainName
   });
   const {transaction} = result.body;
   return waitForContractDeploy(provider, WalletContract, transaction.hash);
 };
 
-export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, keyPair, walletMasterAddress, factoryContractAddress, ensAddress, ensName = 'marek.mylogin.eth') => {
+export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, keyPair, walletMasterAddress, factoryContractAddress, ensAddress, ensName = 'marek.mylogin.eth', chainName = 'development') => {
   const futureAddress = getFutureAddress(walletMasterAddress, factoryContractAddress, keyPair.publicKey);
   await wallet.sendTransaction({to: futureAddress, value: utils.parseEther('1.0')});
   const initData = await getInitData(keyPair, ensName, ensAddress, wallet.provider, TEST_GAS_PRICE);
@@ -39,7 +40,8 @@ export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, k
     publicKey: keyPair.publicKey,
     ensName,
     gasPrice: TEST_GAS_PRICE,
-    signature
+    signature,
+    chainName
   });
   return new Contract(futureAddress, WalletContract.interface, wallet);
 };

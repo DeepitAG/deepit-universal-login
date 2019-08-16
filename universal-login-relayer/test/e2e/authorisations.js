@@ -6,12 +6,15 @@ import {utils} from 'ethers';
 
 chai.use(chaiHttp);
 
+const chainName = 'development';
+
 async function postAuthorisationRequest(relayer, contract, wallet) {
   const result = await chai.request(relayer.server)
     .post('/authorisation')
     .send({
       walletContractAddress: contract.address,
       key: wallet.address,
+      chainName
     });
   expect(result.status).to.eq(201);
 }
@@ -28,6 +31,7 @@ async function getAuthorisation(relayer, contract, wallet) {
     .get(`/authorisation/${contract.address}?signature=${signature}`)
     .send({
       key: wallet.address,
+      chainName
     });
   return {result, response: result.body.response};
 }
@@ -75,7 +79,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     signCancelAuthorisationRequest(cancelAuthorisationRequest, wallet.privateKey);
     const result = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
-      .send({cancelAuthorisationRequest});
+      .send({cancelAuthorisationRequest, chainName});
     expect(result.status).to.eq(204);
 
 
@@ -95,7 +99,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     signCancelAuthorisationRequest(cancelAuthorisationRequest, wallet.privateKey);
     const {body, status} = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
-      .send({cancelAuthorisationRequest});
+      .send({cancelAuthorisationRequest, chainName});
 
     expect(status).to.eq(204);
     expect(body).to.deep.eq({});
@@ -113,7 +117,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     signCancelAuthorisationRequest(cancelAuthorisationRequest, attackerPrivateKey);
     const {body, status} = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
-      .send({cancelAuthorisationRequest});
+      .send({cancelAuthorisationRequest, chainName});
 
     expect(status).to.eq(401);
     expect(body.type).to.eq('UnauthorisedAddress');
@@ -130,7 +134,8 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     signGetAuthorisationRequest(getAuthorisationRequest, attackerPrivateKey);
 
     const {body, status} = await chai.request(relayer.server)
-      .get(`/authorisation/${contract.address}?signature=${getAuthorisationRequest.signature}`);
+      .get(`/authorisation/${contract.address}?signature=${getAuthorisationRequest.signature}`)
+      .send({chainName});
 
     expect(status).to.eq(401);
     expect(body.type).to.eq('UnauthorisedAddress');

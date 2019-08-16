@@ -8,19 +8,19 @@ import AuthorisationService from '../../core/services/AuthorisationService';
 
 
 const request = (authorisationService: AuthorisationService) =>
-  async (data: {body: {key: string, walletContractAddress: string}}, req: Request) => {
+  async (data: {body: {key: string, walletContractAddress: string, chainName: string}}, req: Request) => {
     const requestAuthorisation: AuthorisationRequest = {...data.body, deviceInfo: getDeviceInfo(req)};
-    const result = await authorisationService.addRequest(requestAuthorisation);
+    const result = await authorisationService.addRequest(requestAuthorisation, data.body.chainName);
     return responseOf({response: result}, 201);
   };
 
 const getPending = (authorisationService: AuthorisationService) =>
-  async (data: {walletContractAddress: string,  query: {signature: string}, chainName: string}) => {
+  async (data: {body: {chainName: string}, walletContractAddress: string, query: {signature: string}}) => {
     const getAuthorisationRequest: GetAuthorisationRequest = {
       walletContractAddress: data.walletContractAddress,
       signature: data.query.signature
     };
-    const result = await authorisationService.getAuthorisationRequests(getAuthorisationRequest, data.chainName);
+    const result = await authorisationService.getAuthorisationRequests(getAuthorisationRequest, data.body.chainName);
     return responseOf({response: result});
   };
 
@@ -37,7 +37,8 @@ export default (authorisationService: AuthorisationService) => {
     sanitize({
       body: asObject({
         walletContractAddress: asString,
-        key: asString
+        key: asString,
+        chainName: asString
       })
     }),
     request(authorisationService)
@@ -45,11 +46,13 @@ export default (authorisationService: AuthorisationService) => {
 
   router.get('/:walletContractAddress', asyncHandler(
     sanitize({
+      body: asObject({
+        chainName: asString,
+      }),
       walletContractAddress: asString,
       query: asObject({
         signature: asString
       }),
-      chainName: asString
     }),
     getPending(authorisationService)
   ));
@@ -66,4 +69,3 @@ export default (authorisationService: AuthorisationService) => {
 
   return router;
 };
-

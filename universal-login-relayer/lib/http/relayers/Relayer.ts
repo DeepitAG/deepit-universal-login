@@ -26,7 +26,7 @@ import {MessageStatusService} from '../../core/services/messages/MessageStatusSe
 import {SignaturesService} from '../../integration/ethereum/SignaturesService';
 import MessageValidator from '../../core/services/messages/MessageValidator';
 import MessageExecutor from '../../integration/ethereum/MessageExecutor';
-import {BalanceChecker, RequiredBalanceChecker, MultiChainProvider} from '@universal-login/commons';
+import {MultiChainProvider} from '../../integration/ethereum/MultiChainProvider';
 
 const defaultPort = '3311';
 
@@ -78,8 +78,7 @@ class Relayer {
     }));
     this.ensService = new ENSService(this.multiChainProvider);
     this.authorisationStore = new AuthorisationStore(this.database);
-    this.walletDeployer = new WalletDeployer(this.multiChainProvider);
-    this.walletContractService = new WalletService(this.multiChainProvider, this.ensService, this.hooks, this.walletDeployer);
+    this.walletContractService = new WalletService(this.multiChainProvider, this.ensService, this.hooks);
     this.walletMasterContractService = new WalletMasterContractService(this.multiChainProvider);
     this.authorisationService = new AuthorisationService(this.authorisationStore, this.walletMasterContractService);
     this.messageRepository = new MessageSQLRepository(this.database);

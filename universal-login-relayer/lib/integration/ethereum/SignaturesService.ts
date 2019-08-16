@@ -1,5 +1,5 @@
 import {Contract, Wallet, utils} from 'ethers';
-import {MultiChainProvider} from '@universal-login/commons';
+import {MultiChainProvider} from './MultiChainProvider';
 import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
 
 

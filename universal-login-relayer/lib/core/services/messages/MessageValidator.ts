@@ -1,7 +1,8 @@
 import {providers, utils} from 'ethers';
-import {SignedMessage, ensure, MultiChainProvider} from '@universal-login/commons';
+import {SignedMessage, ensure} from '@universal-login/commons';
 import {ensureEnoughGas, ensureEnoughToken} from '../../../integration/ethereum/validations';
 import {InvalidProxy} from '../../utils/errors';
+import {MultiChainProvider} from '../../../integration/ethereum/MultiChainProvider';
 
 export class MessageValidator {
   constructor(private multiChainProvider: MultiChainProvider) {

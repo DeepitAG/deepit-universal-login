@@ -2,9 +2,10 @@ import {expect} from 'chai';
 import {loadFixture} from 'ethereum-waffle';
 import MessageExecutor from '../../../../lib/integration/ethereum/MessageExecutor';
 import basicWalletContractWithMockToken from '../../../fixtures/basicWalletContractWithMockToken';
-import {SignedMessage, createSignedMessage, TEST_ACCOUNT_ADDRESS, MultiChainProvider} from '@universal-login/commons';
+import {SignedMessage, createSignedMessage, TEST_ACCOUNT_ADDRESS} from '@universal-login/commons';
 import {providers, Wallet, Contract} from 'ethers';
 import {bigNumberify} from 'ethers/utils';
+import {MultiChainProvider} from '../../../../lib/integration/ethereum/MultiChainProvider';
 
 describe('INT: MessageExecutor', async () => {
   let messageExecutor: MessageExecutor;

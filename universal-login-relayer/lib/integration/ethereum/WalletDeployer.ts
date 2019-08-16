@@ -1,4 +1,6 @@
-import {TransactionOverrides, MultiChainProvider} from '@universal-login/commons';
+import {Contract, Wallet} from 'ethers';
+import {TransactionOverrides} from '@universal-login/commons';
+import ProxyCounterfactualFactory from '@universal-login/contracts/build/ProxyCounterfactualFactory.json';
 
 interface DeployFactoryArgs {
   publicKey: string;
@@ -7,17 +9,15 @@ interface DeployFactoryArgs {
 }
 
 export class WalletDeployer {
+  private factoryContract: Contract;
 
-  constructor(private multiChainProvider: MultiChainProvider) {
+  constructor(factoryAddress: string, private wallet: Wallet) {
+    this.factoryContract = new Contract(factoryAddress, ProxyCounterfactualFactory.interface, this.wallet);
   }
 
-  deploy(deployFactoryArgs: DeployFactoryArgs, overrideOptions: TransactionOverrides, chainName: string) {
-    const factoryContract = this.multiChainProvider.getFactoryContract(chainName);
-    return factoryContract.createContract(deployFactoryArgs.publicKey, deployFactoryArgs.intializeData, deployFactoryArgs.signature, overrideOptions);
+  deploy(deployFactoryArgs: DeployFactoryArgs, overrideOptions: TransactionOverrides) {
+    return this.factoryContract.createContract(deployFactoryArgs.publicKey, deployFactoryArgs.intializeData, deployFactoryArgs.signature, overrideOptions);
   }
 
-  getInitCode(chainName: string) {
-    const factoryContract = this.multiChainProvider.getFactoryContract(chainName);
-    return factoryContract.initCode();
-  }
+  getInitCode = () => this.factoryContract.initCode();
 }

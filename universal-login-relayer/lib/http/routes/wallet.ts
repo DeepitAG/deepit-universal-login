@@ -6,9 +6,9 @@ import {asyncHandler, sanitize, responseOf, asString, asObject, asNumber, asOpti
 import {asBigNumberish, asOverrideOptions, asArrayish} from '../utils/sanitizers';
 
 const create = (walletContractService : WalletService) =>
-  async (data: {body: {managementKey: string, ensName: string, overrideOptions?: {}, chainName: string}}) => {
-    const {managementKey, ensName, overrideOptions} = data.body;
-    const transaction = await walletContractService.create(managementKey, ensName, overrideOptions, data.body.chainName);
+  async (data: {body: {managementKey: string, ensName: string, chainName: string, overrideOptions?: {}}}) => {
+    const {managementKey, ensName, overrideOptions,chainName} = data.body;
+    const transaction = await walletContractService.create(managementKey, ensName, overrideOptions, chainName);
     return responseOf({transaction}, 201);
   };
 
@@ -39,8 +39,8 @@ export default (walletContractService : WalletService, messageHandler: MessageHa
       body: asObject({
         managementKey: asString,
         ensName: asString,
-        overrideOptions: asOptional(asOverrideOptions),
-        chainName: asString
+        chainName: asString,
+        overrideOptions: asOptional(asOverrideOptions)
       })
     }),
     create(walletContractService)

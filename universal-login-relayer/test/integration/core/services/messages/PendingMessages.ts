@@ -2,7 +2,7 @@ import {expect} from 'chai';
 import sinon, {SinonSpy} from 'sinon';
 import {Wallet, Contract} from 'ethers';
 import {loadFixture} from 'ethereum-waffle';
-import {calculateMessageHash, createSignedMessage, SignedMessage, TEST_MESSAGE_HASH, MultiChainProvider} from '@universal-login/commons';
+import {calculateMessageHash, createSignedMessage, SignedMessage, TEST_MESSAGE_HASH} from '@universal-login/commons';
 import PendingMessages from '../../../../../lib/core/services/messages/PendingMessages';
 import basicWalletContractWithMockToken from '../../../../fixtures/basicWalletContractWithMockToken';
 import MessageSQLRepository from '../../../../../lib/integration/sql/services/MessageSQLRepository';
@@ -11,6 +11,7 @@ import {getKnexConfig} from '../../../../helpers/knex';
 import {clearDatabase} from '../../../../../lib/http/relayers/RelayerUnderTest';
 import {MessageStatusService} from '../../../../../lib/core/services/messages/MessageStatusService';
 import {SignaturesService} from '../../../../../lib/integration/ethereum/SignaturesService';
+import {MultiChainProvider} from '../../../../../lib/integration/ethereum/MultiChainProvider';
 
 describe('INT: PendingMessages', () => {
   let pendingMessages : PendingMessages;

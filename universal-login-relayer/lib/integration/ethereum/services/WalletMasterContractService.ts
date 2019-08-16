@@ -1,7 +1,8 @@
-import {recoverFromCancelAuthorisationRequest, recoverFromGetAuthorisationRequest, GetAuthorisationRequest, hashGetAuthorisationRequest, CancelAuthorisationRequest, hashCancelAuthorisationRequest, ensure, MultiChainProvider} from '@universal-login/commons';
-import { ethers, providers} from 'ethers';
+import {recoverFromCancelAuthorisationRequest, recoverFromGetAuthorisationRequest, GetAuthorisationRequest, hashGetAuthorisationRequest, CancelAuthorisationRequest, hashCancelAuthorisationRequest, ensure} from '@universal-login/commons';
+import { ethers,} from 'ethers';
 import WalletMasterWithRefund from '@universal-login/contracts/build/WalletMasterWithRefund.json';
 import { UnauthorisedAddress } from '../../../core/utils/errors';
+import {MultiChainProvider} from '../MultiChainProvider';
 
 const MAGICVALUE = '0x20c13b0b';
 

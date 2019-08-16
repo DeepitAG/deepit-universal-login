@@ -1,6 +1,6 @@
 import {providers} from 'ethers';
 import {EventEmitter} from 'fbemitter';
-import {SignedMessage, MultiChainProvider} from '@universal-login/commons';
+import {SignedMessage} from '@universal-login/commons';
 import {isAddKeyCall, getKeyFromData, isAddKeysCall} from '../utils/utils';
 import AuthorisationStore from '../../integration/sql/services/AuthorisationStore';
 import QueueService from './messages/QueueService';
@@ -10,6 +10,7 @@ import MessageExecutor from '../../integration/ethereum/MessageExecutor';
 import IMessageRepository from './messages/IMessagesRepository';
 import IQueueStore from './messages/IQueueStore';
 import {MessageStatusService} from './messages/MessageStatusService';
+import {MultiChainProvider} from '../../integration/ethereum/MultiChainProvider';
 
 class MessageHandler {
   private pendingMessages: PendingMessages;
@@ -32,12 +33,12 @@ class MessageHandler {
     this.queueService.start();
   }
 
-  async onTransactionSent(sentTransaction: providers.TransactionResponse) {
+  async onTransactionSent(sentTransaction: providers.TransactionResponse, chainName: string) {
     const {data, to} = sentTransaction;
     const message = decodeDataForExecuteSigned(data);
     if (message.to === to) {
       if (isAddKeyCall(message.data as string)) {
-        await this.removeReqFromAuthService({...message, from: to});
+        await this.removeReqFromAuthService({...message, from: to}, chainName);
         this.hooks.emit('added', sentTransaction);
       } else if (isAddKeysCall(message.data as string)) {
         this.hooks.emit('keysAdded', sentTransaction);
@@ -49,9 +50,9 @@ class MessageHandler {
     return this.pendingMessages.add(message, chainName);
   }
 
-  private async removeReqFromAuthService(message: SignedMessage) {
+  private async removeReqFromAuthService(message: SignedMessage, chainName: string) {
     const key = getKeyFromData(message.data as string);
-    return this.authorisationStore.removeRequest(message.from, key);
+    return this.authorisationStore.removeRequest(message.from, key, chainName);
   }
 
   async getStatus(messageHash: string, chainName: string) {

@@ -1,11 +1,12 @@
 import {Wallet, Contract} from 'ethers';
-import {calculateMessageHash, SignedMessage, INVALID_KEY, ensure, MessageStatus, MultiChainProvider} from '@universal-login/commons';
+import {calculateMessageHash, SignedMessage, INVALID_KEY, ensure, MessageStatus} from '@universal-login/commons';
 import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
 import {MessageStatusService} from './MessageStatusService';
 import {DuplicatedSignature, InvalidSignature, DuplicatedExecution, NotEnoughSignatures} from '../../utils/errors';
 import IMessageRepository from './IMessagesRepository';
 import {getKeyFromHashAndSignature, createMessageItem} from '../../utils/utils';
 import QueueService from './QueueService';
+import {MultiChainProvider} from '../../../integration/ethereum/MultiChainProvider';
 
 export default class PendingMessages {
 

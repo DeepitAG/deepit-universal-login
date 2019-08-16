@@ -1,7 +1,7 @@
 import Knex from 'knex';
 import {providers, Wallet, utils, Contract} from 'ethers';
 const ENSBuilder = require('ens-builder');
-import {withENS, getContractHash, ContractJSON, ETHER_NATIVE_TOKEN, deployContract, deepMerge, DeepPartial} from '@universal-login/commons';
+import {withENS, getContractHash, ContractJSON, ETHER_NATIVE_TOKEN, deployContract, deepMerge, DeepPartial, ChainSpec} from '@universal-login/commons';
 import {deployFactory} from '@universal-login/contracts';
 import WalletMasterWithRefund from '@universal-login/contracts/build/WalletMasterWithRefund.json';
 import ProxyContract from '@universal-login/contracts/build/Proxy.json';
@@ -44,23 +44,25 @@ export class RelayerUnderTest extends Relayer {
         minimalAmount: utils.parseEther('0.05').toString()
       }
     ];
-    const overrideConfig: DeepPartial<Config> = {
+    const testConfig = getConfig('test');
+    const config: Config = {
       port,
+      database: testConfig.database,
+      onRampProviders: testConfig.onRampProviders,
+      localization: testConfig.localization,
       networkConf: {
         development: {
           privateKey: wallet.privateKey,
-          chainSpec: {
-            ensAddress: ensBuilder.ens.address,
-          },
+          chainSpec: providerWithENS.network as ChainSpec,
           ensRegistrars: [DOMAIN],
           walletMasterAddress: walletMaster.address,
           contractWhiteList,
           factoryAddress: factoryContract.address,
-          supportedTokens
+          supportedTokens,
+          provider: providerWithENS,
         }
       }
     };
-    const config: Config = deepMerge(getConfig('test'),  overrideConfig);
     const relayer = new RelayerUnderTest(config);
     return {relayer, factoryContract, supportedTokens, contractWhiteList, ensAddress, walletMaster, mockToken, provider: providerWithENS};
   }
