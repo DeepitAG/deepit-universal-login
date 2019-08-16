@@ -1,3 +1,9 @@
+.udashboard-logo-btn {
+  display: inline-block;
+  background: none;
+  border: none;
+}
+
 .udashboard-modal .modal-wrapper {
   width: 970px;
   max-width: 100%;
@@ -156,4 +162,8 @@
   width: 15px;
   background: url('./../assets/icons/forward-arrow.svg') center no-repeat;
   background-size: contain;
+}
+
+.udashboard-content .universal-login-topup .universal-login-default .top-up {
+  background: none;
 }
