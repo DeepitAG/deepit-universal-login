@@ -1,17 +1,18 @@
-import React, {useState} from 'react';
+import React, {useState, useEffect} from 'react';
 import {ModalWrapper} from '../Modals/ModalWrapper';
 import {UHeader} from './UHeader';
 import {Funds} from './Funds';
-import {USettings} from './USettings';
 import {ApplicationWallet, TransferDetails} from '@universal-login/commons';
 import {useAsync} from '../hooks/useAsync';
-import UniversalLoginSDK from '@universal-login/sdk';
+import UniversalLoginSDK, {TransferService} from '@universal-login/sdk';
 import logoIcon from '../assets/icons/U.svg';
 import {dashboardContentType} from '../../core/models/ReactUModalContext';
 import './../styles/udashboard.css';
 import {TopUp} from '../TopUp/TopUp';
 import {ApproveDevice} from './ApproveDevice';
 import {TransferAmount} from '../Transfer/Amount/TransferAmount';
+import {TransferRecipient} from '../Transfer/Recipient/TransferRecipient';
+import {TransferInProgress} from './TransferInProgress';
 
 export interface UDashboardProps {
   applicationWallet: ApplicationWallet;
@@ -24,9 +25,14 @@ export const UDashboard = ({applicationWallet, sdk}: UDashboardProps) => {
   const [dashboardVisibility, setDashboardVisibility] = useState(false);
   const [relayerConfig] = useAsync(() => sdk.getRelayerConfig(), []);
 
+  const [newNotifications, setNewNotifications] = useState([] as Notification[]);
+  useEffect(() => sdk.subscribeAuthorisations(applicationWallet.contractAddress, applicationWallet.privateKey, setNewNotifications), []);
+
   const updateTransferDetailsWith = (args: Partial<TransferDetails>) => {
     setTransferDetails({...transferDetalis, ...args});
   };
+
+  const transferService = new TransferService(sdk, applicationWallet);
 
   const onUButtonClick = () => {
     setDashboardVisibility(true);
@@ -37,12 +43,17 @@ export const UDashboard = ({applicationWallet, sdk}: UDashboardProps) => {
     switch (dashboardContent) {
       case 'funds':
         return (
-          <Funds
-            ensName={applicationWallet.name}
-            sdk={sdk}
-            onTopUpClick={() => setDashboardContent('topup')}
-            onSendClick={() => setDashboardContent('transferAmount')}
-          />
+          <div>
+            <div>
+              <p className="udashboard-name">{applicationWallet.name}</p>
+            </div>
+            <Funds
+              ensName={applicationWallet.name}
+              sdk={sdk}
+              onTopUpClick={() => setDashboardContent('topup')}
+              onSendClick={() => setDashboardContent('transferAmount')}
+            />
+          </div>
         );
       case 'approveDevice':
         return (
@@ -52,8 +63,6 @@ export const UDashboard = ({applicationWallet, sdk}: UDashboardProps) => {
             sdk={sdk}
           />
         );
-      case 'settings':
-        return <USettings />;
       case 'topup':
         return (
           <TopUp
@@ -72,6 +81,23 @@ export const UDashboard = ({applicationWallet, sdk}: UDashboardProps) => {
             currency={transferDetalis.currency}
           />
         );
+      case 'transferRecipient':
+        const onGenerateClick = async () => {
+          setDashboardContent('waitingForTransfer');
+          await transferService.transfer(transferDetalis);
+          setDashboardContent('funds');
+        };
+        return (
+          <TransferRecipient
+            onRecipientChange={event => updateTransferDetailsWith({to: event.target.value})}
+            onSendClick={onGenerateClick}
+            transferDetalis={transferDetalis}
+          />
+        );
+      case 'waitingForTransfer':
+        return (
+          <TransferInProgress />
+        );
       default:
         return null;
     }
@@ -80,7 +106,7 @@ export const UDashboard = ({applicationWallet, sdk}: UDashboardProps) => {
 
   return (
     <>
-      <button className="udashboard-logo-btn" onClick={() => onUButtonClick()}>
+      <button className={`udashboard-logo-btn ${newNotifications.length > 0 ? 'new-notifications' : ''}`} onClick={() => onUButtonClick()}>
         <img src={logoIcon} alt="U"/>
       </button>
       {dashboardVisibility &&

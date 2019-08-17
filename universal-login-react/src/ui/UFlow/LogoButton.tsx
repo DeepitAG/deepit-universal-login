@@ -1,17 +1,25 @@
 import React from 'react';
-import {UDashboard} from './UDashboard';
 import {ApplicationWallet} from '@universal-login/commons';
 import UniversalLoginSDK from '@universal-login/sdk';
+import {UDashboard} from './UDashboard';
+import {getStyleForTopLevelComponent} from '../../core/utils/getStyleForTopLevelComponent';
 
 export interface LogoButtonProps {
   sdk: UniversalLoginSDK;
   applicationWallet: ApplicationWallet;
+  className?: string;
 }
 
-export const LogoButton = ({applicationWallet, sdk}: LogoButtonProps) => {
+export const LogoButton = ({applicationWallet, sdk, className}: LogoButtonProps) => {
 
 
-  return (
-    <UDashboard applicationWallet={applicationWallet} sdk={sdk}/>
-  );
+  if (applicationWallet.contractAddress.length > 10) {
+    return (
+      <div className={getStyleForTopLevelComponent(className)}>
+        <UDashboard applicationWallet={applicationWallet} sdk={sdk}/>
+      </div>
+    );
+  } else {
+    return <></>;
+  }
 };

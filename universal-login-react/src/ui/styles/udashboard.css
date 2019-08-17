@@ -2,6 +2,8 @@
   display: inline-block;
   background: none;
   border: none;
+  cursor: pointer;
+  position: relative;
 }
 
 .udashboard-modal .modal-wrapper {
@@ -164,6 +166,37 @@
   background-size: contain;
 }
 
+.udashboard-progress {
+  max-width: 500px;
+  padding: 50px 20px 20px;
+  margin: 0 auto;
+}
+
+.udashboard-progress-text {
+  color: #fff;
+  font-weight: 700;
+  margin: 0 0 40px;
+  text-align: center;
+  font-size: 20px;
+}
+
 .udashboard-content .universal-login-topup .universal-login-default .top-up {
   background: none;
+}
+
+.new-notifications::after {
+  content: '';
+  position: absolute;
+  top: -1px;
+  right: -4px;
+  width: 11px;
+  height: 11px;
+  background: #0FB989;
+  border-radius: 50%;
+  border: 1px solid transparent;
+}
+
+.udashboard-name {
+  color: #A4A8B4;
+  text-align: center;
 }
