@@ -11,14 +11,14 @@ class AuthorisationStore {
 
   addRequest(request: AuthorisationRequest, chainName: string) {
     const {walletContractAddress, key, deviceInfo} = request;
-    return this.database.insert({walletContractAddress: walletContractAddress.toLowerCase(), key: key.toLowerCase(), deviceInfo, chain: chainName})
+    return this.database.insert({walletContractAddress: walletContractAddress.toLowerCase(), key: key.toLowerCase(), deviceInfo, chainName})
       .into('authorisations')
       .returning('id');
   }
 
   getPendingAuthorisations(walletContractAddress: string, chainName: string) {
     return this.database('authorisations')
-      .where({walletContractAddress: walletContractAddress.toLowerCase(), chain: chainName})
+      .where({walletContractAddress: walletContractAddress.toLowerCase(), chainName})
       .select();
   }
 
@@ -26,7 +26,7 @@ class AuthorisationStore {
     return this.database('authorisations')
       .where('walletContractAddress', walletContractAddress.toLowerCase())
       .where('key', publicKey.toLocaleLowerCase())
-      .where('chain', chainName)
+      .where('chainName', chainName)
       .del();
   }
 }

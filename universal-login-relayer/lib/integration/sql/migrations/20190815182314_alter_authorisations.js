@@ -5,12 +5,12 @@
 */
 exports.up = async (knex) => {
   await knex.schema.alterTable('authorisations', (table) => {
-    table.string('chain', 30);
+    table.string('chainName', 30);
   });
 };
 
 exports.down = async (knex) => {
   await knex.schema.alterTable('authorisations', (table) => {
-    table.dropColumn('chain');
+    table.dropColumn('chainName');
   });
 };

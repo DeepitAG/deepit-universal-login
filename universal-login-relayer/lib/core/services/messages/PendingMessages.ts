@@ -17,15 +17,15 @@ export default class PendingMessages {
     private statusService: MessageStatusService
   ) {}
 
-  async isPresent(messageHash : string) {
-    return this.messageRepository.isPresent(messageHash);
+  async isPresent(messageHash : string, chainName: string) {
+    return this.messageRepository.isPresent(messageHash, chainName);
   }
 
   async add(message: SignedMessage, chainName: string) : Promise<MessageStatus> {
     const messageHash = calculateMessageHash(message);
-    if (!await this.isPresent(messageHash)) {
+    if (!await this.isPresent(messageHash, chainName)) {
       const messageItem = createMessageItem(message);
-      await this.messageRepository.add(messageHash, messageItem);
+      await this.messageRepository.add(messageHash, messageItem, chainName);
     }
     await this.addSignatureToPendingMessage(messageHash, message, chainName);
     const status = await this.getStatus(messageHash, chainName);
@@ -43,12 +43,12 @@ export default class PendingMessages {
 
   private async addSignatureToPendingMessage(messageHash: string, message: SignedMessage, chainName: string) {
     const wallet = this.multiChainProvider.getWallet(chainName)
-    const messageItem = await this.messageRepository.get(messageHash);
+    const messageItem = await this.messageRepository.get(messageHash, chainName);
     ensure(!messageItem.transactionHash, DuplicatedExecution);
-    const isContainSignature = await this.messageRepository.containSignature(messageHash, message.signature);
+    const isContainSignature = await this.messageRepository.containSignature(messageHash, message.signature, chainName);
     ensure(!isContainSignature, DuplicatedSignature);
     await this.ensureCorrectKeyPurpose(message, messageItem.walletAddress, wallet);
-    await this.messageRepository.addSignature(messageHash, message.signature);
+    await this.messageRepository.addSignature(messageHash, message.signature, chainName);
   }
 
   private async ensureCorrectKeyPurpose(message: SignedMessage, walletAddress: string, wallet: Wallet) {

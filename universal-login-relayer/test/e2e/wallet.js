@@ -16,6 +16,7 @@ describe('E2E: Relayer - WalletContract routes', async () => {
   let otherWallet;
   let contract;
   let deployer;
+  const chainName = 'default';
 
   before(async () => {
     ({provider, wallet, otherWallet, relayer, deployer} = await startRelayer());
@@ -27,6 +28,7 @@ describe('E2E: Relayer - WalletContract routes', async () => {
       .send({
         managementKey: wallet.address,
         ensName: 'marek.mylogin.eth',
+        chainName
       });
     const {transaction} = result.body;
     expect(result.status).to.eq(201);
@@ -40,6 +42,7 @@ describe('E2E: Relayer - WalletContract routes', async () => {
       .send({
         managementKey: wallet.address,
         ensName: 'marek.non-existing.eth',
+        chainName
       });
     const {status, body: {type, error}} = result;
     expect(status).to.eq(404);
@@ -73,8 +76,9 @@ describe('E2E: Relayer - WalletContract routes', async () => {
       const signedMessage = createSignedMessage(msg, wallet.privateKey);
       const {status, body} = await chai.request(relayer.server)
         .post('/wallet/execution')
-        .send(signedMessage);
+        .send({signedMessage, chainName});
       expect(status).to.eq(201);
+      console.log(await provider.getBalance(otherWallet.address));
       await waitExpect(async () => expect(await provider.getBalance(otherWallet.address)).to.eq(balanceBefore.add(msg.value)));
       const checkStatusId = async () => {
         const statusById = await chai.request(relayer.server)
@@ -100,9 +104,9 @@ describe('E2E: Relayer - WalletContract routes', async () => {
     };
     const {status, body} = await chai.request(relayer.server)
       .post('/wallet/execution')
-      .send(message);
+      .send({signedMessage: message, chainName});
     expect(status).to.eq(400);
-    expect(body.error).to.deep.eq([{path: 'body.nonce', expected: 'string'}]);
+    expect(body.error).to.deep.eq([{path: 'body.signedMessage.nonce', expected: 'string'}]);
   });
 
   after(async () => {

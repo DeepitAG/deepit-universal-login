@@ -24,23 +24,23 @@ class QueueService {
 
   async add(signedMessage: SignedMessage, chainName: string) {
     const messageHash = await this.queueStore.add(signedMessage, chainName);
-    await this.messageRepository.setMessageState(messageHash, 'Queued');
+    await this.messageRepository.setMessageState(messageHash, 'Queued', chainName);
     return messageHash;
   }
 
   async execute(messageHash: string, chainName: string) {
     try {
-      const signedMessage = await this.messageRepository.getMessage(messageHash);
+      const signedMessage = await this.messageRepository.getMessage(messageHash, chainName);
       const transactionResponse = await this.messageExecutor.execute(signedMessage, chainName);
       const {hash, wait} = transactionResponse;
       ensureNotNull(hash, TransactionHashNotFound);
-      await this.messageRepository.markAsPending(messageHash, hash!);
+      await this.messageRepository.markAsPending(messageHash, hash!, chainName);
       await wait();
       await this.onTransactionSent(transactionResponse, chainName);
-      await this.messageRepository.setMessageState(messageHash, 'Success');
+      await this.messageRepository.setMessageState(messageHash, 'Success', chainName);
     } catch (error) {
       const errorMessage = `${error.name}: ${error.message}`;
-      await this.messageRepository.markAsError(messageHash, errorMessage);
+      await this.messageRepository.markAsError(messageHash, errorMessage, chainName);
     }
     await this.queueStore.remove(messageHash);
   }

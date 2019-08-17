@@ -6,13 +6,12 @@
 
 exports.up = async (knex) => {
     await knex.schema.alterTable('queue_items', (table) => {
-      table.string('chain', 30);
+      table.string('chainName', 30);
     });
   };
-  
+
   exports.down = async (knex) => {
     await knex.schema.alterTable('queue_items', (table) => {
-      table.dropColumn('chain');
+      table.dropColumn('chainName');
     });
   };
-  

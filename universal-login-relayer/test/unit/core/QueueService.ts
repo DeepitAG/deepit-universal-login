@@ -26,7 +26,7 @@ describe('UNIT: Queue Service', async () => {
   const executorReturnsNull: any = {
     execute: sinon.fake.returns(null),
   };
-  const chainName = 'development';
+  const chainName = 'default';
   let signedMessage: SignedMessage;
   let messageHash: string;
 
@@ -38,7 +38,8 @@ describe('UNIT: Queue Service', async () => {
     messageHash = calculateMessageHash(signedMessage);
     await messageRepository.add(
       messageHash,
-      createMessageItem(signedMessage)
+      createMessageItem(signedMessage),
+      chainName
     );
     sinon.resetHistory();
   });
@@ -66,7 +67,7 @@ describe('UNIT: Queue Service', async () => {
     const markAsErrorSpy = sinon.spy(messageRepository.markAsError);
     messageRepository.markAsError = markAsErrorSpy;
     queueMemoryStore.remove = sinon.spy(queueMemoryStore.remove);
-    await messageRepository.add(messageHash, createMessageItem(signedMessage));
+    await messageRepository.add(messageHash, createMessageItem(signedMessage), chainName);
     messageHash = await queueService.add(signedMessage, chainName);
     await waitExpect(() => expect(messageRepository.markAsError).calledWith(messageHash, 'TypeError: Cannot read property \'hash\' of null'));
     expect(queueMemoryStore.remove).to.be.calledOnce;

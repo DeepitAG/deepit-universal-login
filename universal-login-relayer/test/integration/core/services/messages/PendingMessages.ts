@@ -23,7 +23,7 @@ describe('INT: PendingMessages', () => {
   let walletContract: Contract;
   let actionKey: string;
   const knex = getKnexConfig();
-  const chainName = 'development';
+  const chainName = 'default';
   let spy: SinonSpy;
   let messageHash: string;
   let multiChainProvider: MultiChainProvider;
@@ -45,12 +45,12 @@ describe('INT: PendingMessages', () => {
   });
 
   it('not present initally', async () => {
-    expect(await pendingMessages.isPresent(TEST_MESSAGE_HASH)).to.be.false;
+    expect(await pendingMessages.isPresent(TEST_MESSAGE_HASH, chainName)).to.be.false;
   });
 
   it('should be addded', async () => {
     await pendingMessages.add(message, chainName);
-    expect(await pendingMessages.isPresent(messageHash)).to.be.true;
+    expect(await pendingMessages.isPresent(messageHash, chainName)).to.be.true;
   });
 
   it('getStatus should throw error', async () => {
@@ -71,7 +71,7 @@ describe('INT: PendingMessages', () => {
     await pendingMessages.add(message, chainName);
     const key = getKeyFromHashAndSignature(messageHash, message.signature);
     await messageItem.collectedSignatureKeyPairs.push({signature: message.signature, key});
-    expect((await messageRepository.get(messageHash)).toString()).to.eq(messageItem.toString());
+    expect((await messageRepository.get(messageHash, chainName)).toString()).to.eq(messageItem.toString());
   });
 
   describe('Add', async () => {
@@ -109,7 +109,7 @@ describe('INT: PendingMessages', () => {
     it('should throw when pending message already has transaction hash', async () => {
       await walletContract.setRequiredSignatures(1);
       await pendingMessages.add(message, chainName);
-      await messageRepository.markAsPending(messageHash, '0x829751e6e6b484a2128924ce59c2ff518acf07fd345831f0328d117dfac30cec');
+      await messageRepository.markAsPending(messageHash, '0x829751e6e6b484a2128924ce59c2ff518acf07fd345831f0328d117dfac30cec', chainName);
       await expect(pendingMessages.ensureCorrectExecution(messageHash, chainName))
           .to.be.eventually.rejectedWith('Execution request already processed');
     });

@@ -7,7 +7,7 @@ export class MessageStatusService {
   }
 
   async getStatus(messageHash: string, chainName: string) {
-    const message = await this.messageRepository.get(messageHash);
+    const message = await this.messageRepository.get(messageHash, chainName);
     const required = await this.signaturesService.getRequiredSignatures(message.walletAddress, chainName);
     const status: MessageStatus =  {
       collectedSignatures: message.collectedSignatureKeyPairs.map((collected) => collected.signature),

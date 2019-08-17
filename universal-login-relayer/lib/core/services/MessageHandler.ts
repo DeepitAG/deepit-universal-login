@@ -56,7 +56,7 @@ class MessageHandler {
   }
 
   async getStatus(messageHash: string, chainName: string) {
-    if (!await this.pendingMessages.isPresent(messageHash)) {
+    if (!await this.pendingMessages.isPresent(messageHash, chainName)) {
       return null;
     }
     return this.pendingMessages.getStatus(messageHash, chainName);
