@@ -19,6 +19,7 @@ describe('INT: Development Relayer', async () => {
 
   beforeEach(async () => {
     ({relayer, tokenContract} = await startRelayer(wallet, DevelopmentRelayer));
+    console.log('hello');
     sdk = new UniversalLoginSDK(relayerUrl, provider);
     [, walletContractAddress] = await sdk.create('ja.mylogin.eth');
   });
