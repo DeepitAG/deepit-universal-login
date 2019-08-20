@@ -27,6 +27,7 @@ export class FutureWalletFactory {
   constructor(
     private config: FutureFactoryConfig,
     private provider: providers.Provider,
+    private chainName: string,
     private blockchainService: BlockchainService,
     private relayerApi: RelayerApi) {
       this.ensService = new ENSService(provider, config.chainSpec.ensAddress);
@@ -51,7 +52,7 @@ export class FutureWalletFactory {
     const deploy = async (ensName: string, gasPrice: string) => {
       const initData = await this.setupInitData(publicKey, ensName, gasPrice);
       const signature = await calculateInitializeSignature(initData, privateKey);
-      await this.relayerApi.deploy(publicKey, ensName, gasPrice, signature);
+      await this.relayerApi.deploy(publicKey, ensName, gasPrice, signature, this.chainName);
       return new Promise(
         (resolve) => {
           const deploymentObserver = new DeploymentObserver(this.blockchainService, this.config.contractWhiteList, this.provider);

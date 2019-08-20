@@ -7,10 +7,11 @@ export class RelayerApi {
     this.http = http(relayerUrl);
   }
 
-  async createWallet(managementKey: string, ensName: string) {
+  async createWallet(managementKey: string, ensName: string, chainName: string) {
     return this.http('POST', '/wallet', {
       managementKey,
-      ensName
+      ensName,
+      chainName
     }).catch((e: any) => {
       // TODO: Maybe wrap this as a custom Error?
       throw new Error(e !== undefined && e.error);
@@ -21,29 +22,31 @@ export class RelayerApi {
     return this.http('GET', '/config');
   }
 
-  async execute(message: any) {
-    return this.http('POST', '/wallet/execution', message)
+  async execute(signedMessage: any, chainName: string) {
+    return this.http('POST', '/wallet/execution', {signedMessage, chainName})
       .catch((e: any) => {
         // TODO: Maybe wrap this as a custom Error?
         throw new Error(e !== undefined && e.error);
       });
   }
 
-  async getStatus(messageHash: string) {
-    return this.http('GET', `/wallet/execution/${messageHash}`);
+  async getStatus(messageHash: string, chainName: string) {
+    return this.http('GET', `/wallet/execution/${chainName}/${messageHash}`);
   }
 
-  async connect(walletContractAddress: string, key: string) {
+  async connect(walletContractAddress: string, key: string, chainName: string) {
     return this.http('POST', '/authorisation', {
       walletContractAddress,
       key,
+      chainName
     });
   }
 
-  async denyConnection(cancelAuthorisationRequest: CancelAuthorisationRequest) {
+  async denyConnection(cancelAuthorisationRequest: CancelAuthorisationRequest, chainName: string) {
     const {walletContractAddress} = cancelAuthorisationRequest;
     return this.http('POST', `/authorisation/${walletContractAddress}`, {
-      cancelAuthorisationRequest
+      cancelAuthorisationRequest,
+      chainName
     }).catch((e: any) => {
       throw new Error(e.error);
     });
@@ -54,12 +57,13 @@ export class RelayerApi {
     return this.http('GET', `/authorisation/${walletContractAddress}?signature=${signature}`);
   }
 
-  async deploy(publicKey: string, ensName: string, gasPrice: string, signature: string) {
+  async deploy(publicKey: string, ensName: string, gasPrice: string, signature: string, chainName: string) {
     return this.http('POST', '/wallet/deploy', {
       publicKey,
       ensName,
       gasPrice,
-      signature
+      signature,
+      chainName
     });
   }
 }

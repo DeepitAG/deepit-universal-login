@@ -19,11 +19,11 @@ export class ExecutionFactory {
     private tick: number = DEFAULT_EXECUTION_TICK
   ) {}
 
-  async createExecution(signedMessage: SignedMessage): Promise<Execution> {
-    const result = await this.relayerApi.execute(stringifySignedMessageFields(signedMessage));
+  async createExecution(signedMessage: SignedMessage, chainName: string): Promise<Execution> {
+    const result = await this.relayerApi.execute(stringifySignedMessageFields(signedMessage), chainName);
     ensureNotNull(result.status.messageHash, MissingMessageHash);
     const {messageHash, totalCollected, required} = result.status;
-    const waitToBeMined = totalCollected >= required ? this.createWaitToBeMined(messageHash) : async () => result.status;
+    const waitToBeMined = totalCollected >= required ? this.createWaitToBeMined(messageHash, chainName) : async () => result.status;
     const waitToBePending = async () => {
       throw Error('Not implemented');
     };
@@ -38,9 +38,9 @@ export class ExecutionFactory {
     return !!messageStatus.transactionHash || !!messageStatus.error;
   }
 
-  private createWaitToBeMined(messageHash: string) {
+  private createWaitToBeMined(messageHash: string, chainName: string) {
     return async () => {
-      const getStatus = () => this.relayerApi.getStatus(messageHash);
+      const getStatus = () => this.relayerApi.getStatus(messageHash, chainName);
       const isNotExecuted = (messageStatus: MessageStatus) => !this.isExecuted(messageStatus);
       const status = await retry(getStatus, isNotExecuted, this.timeout, this.tick);
       ensure(!status.error, Error, status.error!);

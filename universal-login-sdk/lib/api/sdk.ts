@@ -41,9 +41,9 @@ class UniversalLoginSDK {
     providerOrProviderDict: Provider | ProviderDict,
     sdkConfig?: DeepPartial<SdkConfig>
   ) {
-    providerOrProviderDict.on ?
-      this.chains['default'].provider = providerOrProviderDict as Provider
-      : this.chains = deepMerge(this.chains, providerOrProviderDict)
+    providerOrProviderDict.call ?
+      this.chains['default'] = {provider: providerOrProviderDict as Provider}
+      : this.chains = deepMerge(this.chains, providerOrProviderDict);
     this.relayerApi = new RelayerApi(relayerUrl);
     this.authorisationsObserver = new AuthorisationsObserver(this.relayerApi);
     this.executionFactory = new ExecutionFactory(this.relayerApi);
@@ -56,9 +56,9 @@ class UniversalLoginSDK {
     this.tokensValueConverter = new TokensValueConverter(this.sdkConfig.observedCurrencies);
   }
 
-  async create(ensName: string, chainName: string = 'default'): Promise<[string, string]> {
+  async create(ensName: string, chainName = 'default'): Promise<[string, string]> {
     const {publicKey, privateKey} = createKeyPair();
-    const result = await this.relayerApi.createWallet(publicKey, ensName);
+    const result = await this.relayerApi.createWallet(publicKey, ensName, chainName);
     const provider = this.chains[chainName].provider;
     const contract = await waitForContractDeploy(
       provider,
@@ -68,31 +68,31 @@ class UniversalLoginSDK {
     return [privateKey, contract.address];
   }
 
-  async createFutureWallet(chainName: string = 'default') {
+  async createFutureWallet(chainName = 'default') {
     await this.getRelayerConfig();
     this.fetchFutureWalletFactory(chainName);
     return this.futureWalletFactory!.createFutureWallet();
   }
 
-  async addKey(to: string, publicKey: string, privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY, chainName: string = 'default') {
+  async addKey(to: string, publicKey: string, privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY, chainName = 'default') {
     return this.selfExecute(to, 'addKey', [publicKey, keyPurpose], privateKey, transactionDetails, chainName);
   }
 
-  async addKeys(to: string, publicKeys: string[], privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY, chainName: string = 'default') {
+  async addKeys(to: string, publicKeys: string[], privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY, chainName = 'default') {
     const keyRoles = new Array(publicKeys.length).fill(keyPurpose);
     return this.selfExecute(to, 'addKeys', [publicKeys, keyRoles], privateKey, transactionDetails, chainName);
   }
 
-  async removeKey(to: string, key: string, privateKey: string, transactionDetails: Message, chainName: string = 'default') {
+  async removeKey(to: string, key: string, privateKey: string, transactionDetails: Message, chainName = 'default') {
     return this.selfExecute(to, 'removeKey', [key, MANAGEMENT_KEY], privateKey, transactionDetails, chainName);
   }
 
-  async setRequiredSignatures(to: string, requiredSignatures: number, privateKey: string, transactionDetails: Message, chainName: string = 'default') {
+  async setRequiredSignatures(to: string, requiredSignatures: number, privateKey: string, transactionDetails: Message, chainName = 'default') {
     return this.selfExecute(to, 'setRequiredSignatures', [requiredSignatures], privateKey, transactionDetails, chainName);
   }
 
-  async getMessageStatus(messageHash: string) {
-    return this.relayerApi.getStatus(messageHash);
+  async getMessageStatus(messageHash: string, chainName = 'default') {
+    return this.relayerApi.getStatus(messageHash, chainName);
   }
 
   async getRelayerConfig() {
@@ -103,13 +103,13 @@ class UniversalLoginSDK {
   async fetchDeploymentReadyObserver(chainName: string) {
     const provider = this.chains[chainName].provider;
     ensureNotNull(this.relayerConfig, MissingConfiguration);
-    this.chains[chainName].deploymentReadyObserver = this.chains[chainName].deploymentReadyObserver || new DeploymentReadyObserver(this.relayerConfig!.networkConf[chainName].supportedTokens, provider);
+    this.chains[chainName].deploymentReadyObserver = this.chains[chainName].deploymentReadyObserver || new DeploymentReadyObserver(this.relayerConfig!.networkConfig[chainName].supportedTokens, provider);
   }
 
   async fetchDeploymentObserver(chainName: string) {
     const provider = this.chains[chainName].provider;
     ensureNotNull(this.relayerConfig, MissingConfiguration);
-    this.chains[chainName].deploymentObserver = this.chains[chainName].deploymentObserver || new DeploymentObserver(this.blockchainService, this.relayerConfig!.networkConf[chainName].contractWhiteList, provider);
+    this.chains[chainName].deploymentObserver = this.chains[chainName].deploymentObserver || new DeploymentObserver(this.blockchainService, this.relayerConfig!.networkConfig[chainName].contractWhiteList, provider);
   }
 
   async fetchBalanceObserver(ensName: string, chainName: string) {
@@ -131,7 +131,7 @@ class UniversalLoginSDK {
     this.aggregateBalanceObserver = new AggregateBalanceObserver(this.balanceObserver!, this.priceObserver, this.tokensValueConverter);
   }
 
-  async getTokensDetails(chainName: string = 'default') {
+  async getTokensDetails(chainName = 'default') {
     const provider = this.chains[chainName].provider;
     const tokenDetails: TokenDetails[] = [];
     for (const token of this.sdkConfig.observedTokens) {
@@ -145,23 +145,23 @@ class UniversalLoginSDK {
   private fetchFutureWalletFactory(chainName: string) {
     ensureNotNull(this.relayerConfig, Error, 'Relayer configuration not yet loaded');
     const futureWalletConfig = {
-      supportedTokens: this.relayerConfig!.networkConf[chainName].supportedTokens,
-      factoryAddress: this.relayerConfig!.networkConf[chainName].factoryAddress,
-      contractWhiteList: this.relayerConfig!.networkConf[chainName].contractWhiteList,
-      chainSpec: this.relayerConfig!.networkConf[chainName].chainSpec
+      supportedTokens: this.relayerConfig!.networkConfig[chainName].supportedTokens,
+      factoryAddress: this.relayerConfig!.networkConfig[chainName].factoryAddress,
+      contractWhiteList: this.relayerConfig!.networkConfig[chainName].contractWhiteList,
+      chainSpec: this.relayerConfig!.networkConfig[chainName].chainSpec
     };
     const provider = this.chains[chainName].provider;
-    this.futureWalletFactory = new FutureWalletFactory(futureWalletConfig, provider, this.blockchainService, this.relayerApi);
+    this.futureWalletFactory = new FutureWalletFactory(futureWalletConfig, provider, chainName, this.blockchainService, this.relayerApi);
   }
 
-  async execute(message: Message, privateKey: string, chainName: string = 'default'): Promise<Execution> {
+  async execute(message: Message, privateKey: string, chainName = 'default'): Promise<Execution> {
     const unsignedMessage = {
       ...this.sdkConfig.paymentOptions,
       ...message,
       nonce: message.nonce || parseInt(await this.getNonce(message.from!, chainName), 10),
     } as MessageWithFrom;
     const signedMessage: SignedMessage = createSignedMessage(unsignedMessage, privateKey);
-    return this.executionFactory.createExecution(signedMessage);
+    return this.executionFactory.createExecution(signedMessage, chainName);
   }
 
   protected selfExecute(to: string, method: string , args: any[], privateKey: string, transactionDetails: Message, chainName: string) {
@@ -203,24 +203,24 @@ class UniversalLoginSDK {
 
   async resolveName(ensName: string, chainName: string = 'default') {
     await this.getRelayerConfig();
-    const {ensAddress} = this.relayerConfig!.networkConf[chainName].chainSpec;
+    const {ensAddress} = this.relayerConfig!.networkConfig[chainName].chainSpec;
     const provider = this.chains[chainName].provider;
     return resolveName(provider, ensAddress, ensName);
   }
 
-  async connect(walletContractAddress: string) {
+  async connect(walletContractAddress: string, chainName: string = 'default') {
     const {publicKey, privateKey} = createKeyPair();
-    await this.relayerApi.connect(walletContractAddress, publicKey.toLowerCase());
+    await this.relayerApi.connect(walletContractAddress, publicKey.toLowerCase(), chainName);
     return {
       privateKey,
       securityCode: generateCode(publicKey)
     };
   }
 
-  async denyRequest(walletContractAddress: string, publicKey: string, privateKey: string) {
+  async denyRequest(walletContractAddress: string, publicKey: string, privateKey: string, chainName: string = 'default') {
     const cancelAuthorisationRequest = {walletContractAddress, publicKey};
     signCancelAuthorisationRequest(cancelAuthorisationRequest, privateKey);
-    await this.relayerApi.denyConnection(cancelAuthorisationRequest);
+    await this.relayerApi.denyConnection(cancelAuthorisationRequest, chainName);
     return publicKey;
   }
 
