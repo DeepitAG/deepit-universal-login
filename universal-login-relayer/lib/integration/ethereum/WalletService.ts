@@ -1,4 +1,4 @@
-import {ContractFactory, Wallet, utils} from 'ethers';
+import {ContractFactory, utils} from 'ethers';
 import ProxyContract from '@universal-login/contracts/build/Proxy.json';
 import ENSService from './ensService';
 import {EventEmitter} from 'fbemitter';
@@ -32,7 +32,7 @@ class WalletService {
         ...new ContractFactory(this.abi, this.bytecode).getDeployTransaction(...args),
       };
       const transaction = await wallet.sendTransaction(deployTransaction);
-      this.hooks.emit('created', transaction);
+      this.hooks.emit('created', transaction, chainName);
       return transaction;
     }
     throw new InvalidENSDomain(ensName);

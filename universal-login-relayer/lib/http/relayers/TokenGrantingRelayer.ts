@@ -1,19 +1,12 @@
-import {utils, Contract, providers} from 'ethers';
+import {utils} from 'ethers';
 import {waitToBeMined} from '@universal-login/commons';
-import Token from './abi/Token.json';
 import Relayer from './Relayer';
 import {Config} from '../../config/relayer';
 
-interface TokenGrantingRelayerCongig extends Config {
-  tokenContractAddress : string;
-}
-
 class TokenGrantingRelayer extends Relayer {
-  private readonly tokenContractAddress : string;
 
-  constructor(config : TokenGrantingRelayerCongig, provider? : providers.Provider) {
+  constructor(config : Config) {
     super(config);
-    this.tokenContractAddress = config.tokenContractAddress;
     this.addHooks();
   }
 
@@ -36,7 +29,7 @@ class TokenGrantingRelayer extends Relayer {
       }
     });
 
-     this.hooks.addListener('keysAdded', async (transaction : utils.Transaction, chainName: string) => {
+    this.hooks.addListener('keysAdded', async (transaction : utils.Transaction, chainName: string) => {
       const tokenContract = this.multiChainProvider.getTokenContract(chainName);
       const provider = this.multiChainProvider.getNetworkProvider(chainName);
       const receipt = await waitToBeMined(provider, transaction.hash as string);

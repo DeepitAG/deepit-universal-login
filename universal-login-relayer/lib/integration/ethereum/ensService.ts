@@ -24,7 +24,7 @@ class ENSService {
   }
 
   async findRegistrar(domain: string, chainName: string) {
-    const domainsInfo = await this.getDomainsInfo(chainName)
+    const domainsInfo = await this.getDomainsInfo(chainName);
     return domainsInfo[domain] || null;
   }
 

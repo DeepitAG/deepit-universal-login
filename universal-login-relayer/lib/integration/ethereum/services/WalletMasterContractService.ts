@@ -1,5 +1,5 @@
 import {recoverFromCancelAuthorisationRequest, recoverFromGetAuthorisationRequest, GetAuthorisationRequest, hashGetAuthorisationRequest, CancelAuthorisationRequest, hashCancelAuthorisationRequest, ensure} from '@universal-login/commons';
-import { ethers,} from 'ethers';
+import {Contract} from 'ethers';
 import WalletMasterWithRefund from '@universal-login/contracts/build/WalletMasterWithRefund.json';
 import { UnauthorisedAddress } from '../../../core/utils/errors';
 import {MultiChainProvider} from '../MultiChainProvider';
@@ -11,7 +11,7 @@ class WalletMasterContractService {
 
   async ensureValidSignature(walletContractAddress: string, signature: string, payloadDigest: string, recoveredAddress: string, chainName: string) {
     const provider = this.multiChainProvider.getNetworkProvider(chainName);
-    const contract = new ethers.Contract(walletContractAddress, WalletMasterWithRefund.interface, provider);
+    const contract = new Contract(walletContractAddress, WalletMasterWithRefund.interface, provider);
     const isCorrectAddress = await contract.isValidSignature(payloadDigest, signature);
     ensure(isCorrectAddress === MAGICVALUE, UnauthorisedAddress, recoveredAddress);
   }

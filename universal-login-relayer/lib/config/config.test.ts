@@ -32,8 +32,8 @@ export const config: Config =  Object.freeze({
   },
   networkConf: {
     development: {
-      jsonRpcUrl: "GENERATED",
-      factoryAddress: "GENERATED",
+      jsonRpcUrl: 'GENERATED',
+      factoryAddress: 'GENERATED',
       chainSpec: {
         name: 'test',
         ensAddress: 'GENERATED',

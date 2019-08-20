@@ -1,31 +1,27 @@
-import {providers, utils} from 'ethers';
-import {SignedMessage, ensure} from '@universal-login/commons';
+import {Wallet, providers, utils} from 'ethers';
+import {ContractWhiteList, SignedMessage, ensure} from '@universal-login/commons';
 import {ensureEnoughGas, ensureEnoughToken} from '../../../integration/ethereum/validations';
 import {InvalidProxy} from '../../utils/errors';
-import {MultiChainProvider} from '../../../integration/ethereum/MultiChainProvider';
 
 export class MessageValidator {
-  constructor(private multiChainProvider: MultiChainProvider) {
+  constructor(private wallet: Wallet, private contractWhiteList: ContractWhiteList) {
   }
 
-  async validate(signedMessage: SignedMessage, transactionReq: providers.TransactionRequest, chainName: string) : Promise<void> {
-    const wallet = this.multiChainProvider.getWallet(chainName);
-    await this.ensureCorrectProxy(signedMessage.from, chainName);
-    await ensureEnoughToken(wallet.provider, signedMessage);
-    await ensureEnoughGas(wallet.provider, wallet.address, transactionReq, signedMessage);
+  async validate(signedMessage: SignedMessage, transactionReq: providers.TransactionRequest) : Promise<void> {
+    await this.ensureCorrectProxy(signedMessage.from);
+    await ensureEnoughToken(this.wallet.provider, signedMessage);
+    await ensureEnoughGas(this.wallet.provider, this.wallet.address, transactionReq, signedMessage);
   }
 
-  private async ensureCorrectProxy(from: string, chainName: string) {
-    const contractWhiteList = this.multiChainProvider.getContractWhiteList(chainName);
-    const wallet = this.multiChainProvider.getWallet(chainName);
-    const proxyByteCode = await wallet.provider.getCode(from);
+  private async ensureCorrectProxy(from: string) {
+    const proxyByteCode = await this.wallet.provider.getCode(from);
     const proxyContractHash = utils.keccak256(proxyByteCode);
     ensure(
-      contractWhiteList.proxy.includes(proxyContractHash),
+      this.contractWhiteList.proxy.includes(proxyContractHash),
       InvalidProxy,
       from,
       proxyContractHash,
-      contractWhiteList.proxy);
+      this.contractWhiteList.proxy);
   }
 }
 

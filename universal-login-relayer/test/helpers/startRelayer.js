@@ -5,7 +5,6 @@ import {deployFactory} from '@universal-login/contracts';
 import Token from '../../lib/http/relayers/abi/Token.json';
 import ENSBuilder from 'ens-builder';
 import {getContractWhiteList} from '../../lib/http/relayers/RelayerUnderTest';
-import {deepMerge} from '@universal-login/commons';
 import {getConfig} from '../../lib/index.js';
 
 const defaultDomain = 'mylogin.eth';
@@ -21,25 +20,33 @@ async function startRelayer(wallet, relayerConstructor) {
   const tokenContract = await deployContract(wallet, Token, []);
   const factoryContract = await deployFactory(wallet, walletMaster.address);
   const ensAddress = await depolyEns(wallet);
-  const overrideConfig = Object.freeze({
-    jsonRpcUrl: 'http://localhost:18545',
+  const testConfig = getConfig('test');
+  const config = Object.freeze({
     port: 33511,
-    privateKey: wallet.privateKey,
-    chainSpec: {
-      ensAddress,
-    },
-    ensRegistrars: ['mylogin.eth'],
-    walletMasterAddress: walletMaster.address,
-    tokenContractAddress: tokenContract.address,
-    contractWhiteList: getContractWhiteList(),
-    factoryAddress: factoryContract.address,
-    supportedTokens: [
-      {
-        address: tokenContract.address,
-        minimalAmount: utils.parseEther('0.5').toString()
-    }],
+    database: testConfig.database,
+    onRampProviders: testConfig.onRampProviders,
+    localization: testConfig.localization,
+    networkConf: {
+      default: {
+        provider: wallet.provider,
+        privateKey: wallet.privateKey,
+        chainSpec: {
+          ensAddress,
+        },
+        ensRegistrars: ['mylogin.eth'],
+        walletMasterAddress: walletMaster.address,
+        tokenContractAddress: tokenContract.address,
+        contractWhiteList: getContractWhiteList(),
+        factoryAddress: factoryContract.address,
+        supportedTokens: [
+          {
+            address: tokenContract.address,
+            minimalAmount: utils.parseEther('0.5').toString()
+        }],
+        tokenContractAddress: tokenContract.address
+      }
+    }
   });
-  const config = deepMerge(getConfig('test'), overrideConfig);
   const relayer = new relayerConstructor(config, wallet.provider);
   await relayer.start();
   return {relayer, tokenContract, factoryContract};

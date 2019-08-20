@@ -17,13 +17,13 @@ describe('INT: MultiChainProvider', async () => {
     ({multiChainProvider, factoryAddress} = await setupMultiChainProvider(provider));
   });
 
-  it("should have correct factory address", async () => {
+  it('should have correct factory address', async () => {
     const factory = multiChainProvider.getFactoryContract(chainName);
     expect(factory.address).to.be.eq(factoryAddress);
-  })
+  });
 
-  it("should return correct provider", async () => {
-    const provider = multiChainProvider.getNetworkProvider('development');
+  it('should return correct provider', async () => {
+    const provider = multiChainProvider.getNetworkProvider(chainName);
     expect(provider.network.name).to.be.eq('unknown');
-  })
+  });
 });

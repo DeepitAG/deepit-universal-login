@@ -15,7 +15,6 @@ describe('INT: ENSService', async () => {
     provider = createMockProvider();
     [wallet] = await getWallets(provider);
     [ensService, provider, ensBuilder] = await buildEnsService(wallet, domain);
-    await ensService.start();
   });
 
   describe('findRegistrar', () => {

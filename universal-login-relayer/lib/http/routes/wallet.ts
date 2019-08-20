@@ -7,7 +7,7 @@ import {asBigNumberish, asOverrideOptions, asArrayish} from '../utils/sanitizers
 
 const create = (walletContractService : WalletService) =>
   async (data: {body: {managementKey: string, ensName: string, chainName: string, overrideOptions?: {}}}) => {
-    const {managementKey, ensName, overrideOptions,chainName} = data.body;
+    const {managementKey, ensName, overrideOptions, chainName} = data.body;
     const transaction = await walletContractService.create(managementKey, ensName, overrideOptions, chainName);
     return responseOf({transaction}, 201);
   };
@@ -67,7 +67,7 @@ export default (walletContractService : WalletService, messageHandler: MessageHa
     execution(messageHandler)
   ));
 
-  router.get('/execution/:messageHash', asyncHandler(
+  router.get('/execution/:chainName/:messageHash', asyncHandler(
     sanitize({
       messageHash: asString,
       chainName: asString

@@ -82,7 +82,7 @@ describe('E2E: Relayer - WalletContract routes', async () => {
       await waitExpect(async () => expect(await provider.getBalance(otherWallet.address)).to.eq(balanceBefore.add(msg.value)));
       const checkStatusId = async () => {
         const statusById = await chai.request(relayer.server)
-          .get(`/wallet/execution/status/${body.transaction}`);
+          .get(`/wallet/execution/status/${chainName}/${body.transaction}`);
         expect(statusById.body.transactionHash).to.not.be.null;
       };
       await waitExpect(() => checkStatusId());

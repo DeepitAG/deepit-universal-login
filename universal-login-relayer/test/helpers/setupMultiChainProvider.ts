@@ -2,7 +2,7 @@ import {MultiChainProvider} from '../../lib/integration/ethereum/MultiChainProvi
 import {NetworkConfig, ChainSpec} from '@universal-login/commons';
 import {ContractFactory} from 'ethers';
 import ProxyCounterfactualFactory from '@universal-login/contracts/build/ProxyCounterfactualFactory.json';
-import {getWallets, createMockProvider} from 'ethereum-waffle';
+import {getWallets} from 'ethereum-waffle';
 import {Provider} from 'ethers/providers';
 import buildEnsService from './buildEnsService';
 import ENSService from '../../lib/integration/ethereum/ensService';
@@ -12,7 +12,7 @@ export async function setupMultiChainProvider(provider: Provider) {
   const wallet = getWallets(provider)[0];
   const contractWhiteList = getContractWhiteList();
   const factoryContractDeployer = new ContractFactory(ProxyCounterfactualFactory.abi, ProxyCounterfactualFactory.bytecode, wallet);
-  let factory = await factoryContractDeployer.deploy(['0x0']);
+  const factory = await factoryContractDeployer.deploy(['0x0']);
   await factory.deployed();
   const factoryAddress = factory.address;
   const configuration: NetworkConfig = {};
@@ -24,7 +24,7 @@ export async function setupMultiChainProvider(provider: Provider) {
     supportedTokens: [],
     privateKey: wallet.privateKey,
     ensRegistrars,
-    walletMasterAddress: "PLACEHOLDER",
+    walletMasterAddress: 'PLACEHOLDER',
     contractWhiteList
   };
   const multiChainProvider = new MultiChainProvider(configuration);

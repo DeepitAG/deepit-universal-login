@@ -1,7 +1,7 @@
 import chai, {expect} from 'chai';
 import chaiHttp from 'chai-http';
 import {startRelayer} from '../helpers/http';
-import {getPublicConfig} from '../../lib/http/routes/config';
+import {getPublicConfig, getPublicNetworkConfig} from '../../lib/http/routes/config';
 
 chai.use(chaiHttp);
 
@@ -14,9 +14,11 @@ describe('E2E: Relayer - Config routes', async () => {
 
   it('should return public config', async () => {
     const {localization, onRampProviders} = relayer.config;
+    const networkConfig = getPublicNetworkConfig(relayer.config);
     const expectedConfig = {
       localization,
-      onRampProviders
+      onRampProviders,
+      networkConfig
     };
     const result = await chai.request(relayer.server)
       .get('/config');
@@ -26,9 +28,11 @@ describe('E2E: Relayer - Config routes', async () => {
 
   it('getPublicConfig should return PublicConfig', () => {
     const {localization, onRampProviders} = relayer.config;
+    const networkConfig = getPublicNetworkConfig(relayer.config);
     const expectedConfig = {
       localization,
-      onRampProviders
+      onRampProviders,
+      networkConfig
     };
     const publicConfig = getPublicConfig(relayer.config);
 

@@ -14,14 +14,11 @@ describe('INT: MessageExecutor', async () => {
   let wallet: Wallet;
   let walletContract: Contract;
   let multiChainProvider: MultiChainProvider;
-  const chainName = 'development'
-  const validator = {
-    validate: async () => {}
-  };
+  const chainName = 'default';
 
   before(async () => {
-    ({wallet, walletContract, provider} = await loadFixture(basicWalletContractWithMockToken));
-    messageExecutor = new MessageExecutor(multiChainProvider, validator as any);
+    ({wallet, walletContract, provider, multiChainProvider} = await loadFixture(basicWalletContractWithMockToken));
+    messageExecutor = new MessageExecutor(multiChainProvider);
     signedMessage = createSignedMessage({from: walletContract.address, to: TEST_ACCOUNT_ADDRESS, value: bigNumberify(2)}, wallet.privateKey);
   });
 

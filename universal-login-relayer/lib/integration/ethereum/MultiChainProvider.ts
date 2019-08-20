@@ -9,9 +9,9 @@ export class MultiChainProvider {
   }
 
   getNetworkProvider(chainName: string) {
-    const jsonRpcUrl = this.config[chainName].jsonRpcUrl;
-    const chainSpec = this.config[chainName].chainSpec;
     if (!this.config[chainName].provider) {
+      const jsonRpcUrl = this.config[chainName].jsonRpcUrl;
+      const chainSpec = this.config[chainName].chainSpec;
       this.config[chainName].provider = new providers.JsonRpcProvider(jsonRpcUrl, chainSpec);
     }
     return this.config[chainName].provider as any;

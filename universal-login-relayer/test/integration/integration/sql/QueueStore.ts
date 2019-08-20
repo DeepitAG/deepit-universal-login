@@ -19,7 +19,7 @@ describe(`INT: IQueueStore: ${config.type.name}`, async () => {
   let signedMessage: SignedMessage;
   let expectedMessageHash: string;
   const knex = getKnexConfig();
-  const chainName = 'development';
+  const chainName = 'default';
 
   before(async () => {
     signedMessage = getTestSignedMessage();

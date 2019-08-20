@@ -75,3 +75,4 @@ export const getInitData = async (keyPair, ensName, ensAddress, provider, gasPri
   const registrarAddress = await ens.owner(utils.namehash(domain));
   return encodeInitializeWithRefundData([keyPair.publicKey, hashLabel, ensName, node, ensAddress, registrarAddress, resolverAddress, gasPrice]);
 };
+

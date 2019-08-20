@@ -94,7 +94,7 @@ describe('INT: MessageHandler', async () => {
     });
 
     it('should remove key', async () => {
-      //await waitExpect(async () => expect((await walletContract.getKeyPurpose(otherWallet.address))).to.eq(ACTION_KEY));
+      // await waitExpect(async () => expect((await walletContract.getKeyPurpose(otherWallet.address))).to.eq(ACTION_KEY));
       const message =  {...removeKeyMessage, from: walletContract.address, gasToken: mockToken.address, to: walletContract.address};
       const signedMessage = createSignedMessage(message, wallet.privateKey);
 

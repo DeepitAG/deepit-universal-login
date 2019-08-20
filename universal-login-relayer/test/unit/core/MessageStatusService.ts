@@ -9,7 +9,7 @@ import {createMessageItem} from '../../../lib/core/utils/utils';
 import getTestSignedMessage from '../../config/message';
 
 describe('UNIT: MessageStatusService', async () => {
-  const chainName = 'development';
+  const chainName = 'default';
   const signaturesService : any = {
     getRequiredSignatures: sinon.stub().returns(utils.bigNumberify(1))
   };
@@ -18,7 +18,7 @@ describe('UNIT: MessageStatusService', async () => {
   let message: SignedMessage;
   let messageItem: MessageItem;
   let messageHash: string;
-  
+
   beforeEach(async () => {
     messageRepository = new MessageMemoryRepository();
     messageStatusService = new MessageStatusService(messageRepository, signaturesService);

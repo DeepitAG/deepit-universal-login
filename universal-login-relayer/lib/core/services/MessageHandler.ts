@@ -39,9 +39,9 @@ class MessageHandler {
     if (message.to === to) {
       if (isAddKeyCall(message.data as string)) {
         await this.removeReqFromAuthService({...message, from: to}, chainName);
-        this.hooks.emit('added', sentTransaction);
+        this.hooks.emit('added', sentTransaction, chainName);
       } else if (isAddKeysCall(message.data as string)) {
-        this.hooks.emit('keysAdded', sentTransaction);
+        this.hooks.emit('keysAdded', sentTransaction, chainName);
       }
     }
   }

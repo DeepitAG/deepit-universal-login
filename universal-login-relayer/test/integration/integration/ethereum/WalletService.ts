@@ -15,7 +15,7 @@ describe('INT: WalletService', async () => {
   let wallet: Wallet;
   let callback: sinon.SinonSpy;
   let walletContract: Contract;
-  const chainName = 'development';
+  const chainName = 'default';
 
   before(async () => {
     ({wallet, provider, walletService, callback, walletContract} = await setupWalletService());

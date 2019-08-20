@@ -19,12 +19,10 @@ import MessageSQLRepository from '../../integration/sql/services/MessageSQLRepos
 import AuthorisationService from '../../core/services/AuthorisationService';
 import IQueueStore from '../../core/services/messages/IQueueStore';
 import IMessageRepository from '../../core/services/messages/IMessagesRepository';
-import {WalletDeployer} from '../../integration/ethereum/WalletDeployer';
 import AuthorisationStore from '../../integration/sql/services/AuthorisationStore';
 import WalletMasterContractService from '../../integration/ethereum/services/WalletMasterContractService';
 import {MessageStatusService} from '../../core/services/messages/MessageStatusService';
 import {SignaturesService} from '../../integration/ethereum/SignaturesService';
-import MessageValidator from '../../core/services/messages/MessageValidator';
 import MessageExecutor from '../../integration/ethereum/MessageExecutor';
 import {MultiChainProvider} from '../../integration/ethereum/MultiChainProvider';
 
@@ -50,11 +48,9 @@ class Relayer {
   private messageRepository: IMessageRepository = {} as IMessageRepository;
   private signaturesService: SignaturesService = {} as SignaturesService;
   private statusService: MessageStatusService = {} as MessageStatusService;
-  private messageValidator: MessageValidator = {} as MessageValidator;
   private messageExecutor: MessageExecutor = {} as MessageExecutor;
   private app: Application = {} as Application;
   protected server: Server = {} as Server;
-  private walletDeployer: WalletDeployer = {} as WalletDeployer;
 
   constructor(protected config: Config) {
     this.port = config.port || defaultPort;
@@ -85,8 +81,7 @@ class Relayer {
     this.queueStore = new QueueSQLStore(this.database);
     this.signaturesService = new SignaturesService(this.multiChainProvider);
     this.statusService = new MessageStatusService(this.messageRepository, this.signaturesService);
-    this.messageValidator = new MessageValidator(this.multiChainProvider);
-    this.messageExecutor = new MessageExecutor(this.multiChainProvider, this.messageValidator);
+    this.messageExecutor = new MessageExecutor(this.multiChainProvider);
     this.messageHandler = new MessageHandler(this.multiChainProvider, this.authorisationStore, this.hooks, this.messageRepository, this.queueStore, this.messageExecutor, this.statusService);
     const publicConfig = getPublicConfig(this.config);
     this.app.use(bodyParser.json());

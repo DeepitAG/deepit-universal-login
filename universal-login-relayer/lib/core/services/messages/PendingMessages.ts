@@ -42,7 +42,7 @@ export default class PendingMessages {
   }
 
   private async addSignatureToPendingMessage(messageHash: string, message: SignedMessage, chainName: string) {
-    const wallet = this.multiChainProvider.getWallet(chainName)
+    const wallet = this.multiChainProvider.getWallet(chainName);
     const messageItem = await this.messageRepository.get(messageHash, chainName);
     ensure(!messageItem.transactionHash, DuplicatedExecution);
     const isContainSignature = await this.messageRepository.containSignature(messageHash, message.signature, chainName);

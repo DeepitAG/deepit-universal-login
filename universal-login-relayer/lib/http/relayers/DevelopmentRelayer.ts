@@ -1,7 +1,6 @@
-import {utils, Contract, providers} from 'ethers';
+import {utils} from 'ethers';
 import {waitToBeMined} from '@universal-login/commons';
 import {Config} from '../../config/relayer';
-import Token from './abi/Token.json';
 import Relayer from './Relayer';
 
 export declare interface DevelopmentRelayerConfig extends Config {
@@ -14,7 +13,7 @@ declare interface Transaction {
 
 class DevelopmentRelayer extends Relayer {
 
-  constructor(config: DevelopmentRelayerConfig, provider?: providers.Provider) {
+  constructor(config: DevelopmentRelayerConfig) {
     super(config);
     this.addHooks();
   }
@@ -22,10 +21,10 @@ class DevelopmentRelayer extends Relayer {
   addHooks() {
     const tokenAmount = utils.parseEther('100');
     const etherAmount = utils.parseEther('100');
-    this.hooks.addListener('created', async (transaction: Transaction) => {
-      const provider = this.multiChainProvider.getNetworkProvider('development');
-      const wallet = this.multiChainProvider.getWallet('development');
-      const tokenContract = this.multiChainProvider.getTokenContract('development');
+    this.hooks.addListener('created', async (transaction: Transaction, chainName: string) => {
+      const provider = this.multiChainProvider.getNetworkProvider(chainName);
+      const wallet = this.multiChainProvider.getWallet(chainName);
+      const tokenContract = this.multiChainProvider.getTokenContract(chainName);
       const receipt = await waitToBeMined(provider, transaction.hash);
       if (receipt.status) {
         const tokenTransaction = await tokenContract.transfer(receipt.contractAddress, tokenAmount);

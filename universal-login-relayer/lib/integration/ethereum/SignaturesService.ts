@@ -1,4 +1,4 @@
-import {Contract, Wallet, utils} from 'ethers';
+import {Contract, utils} from 'ethers';
 import {MultiChainProvider} from './MultiChainProvider';
 import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
 
