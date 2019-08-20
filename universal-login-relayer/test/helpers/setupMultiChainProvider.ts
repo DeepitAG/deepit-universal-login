@@ -1,34 +1,32 @@
 import {MultiChainProvider} from '../../lib/integration/ethereum/MultiChainProvider';
-import {NetworkConfig, ChainSpec} from '@universal-login/commons';
+import {NetworkConfig, ChainSpec, deployContract, ContractJSON} from '@universal-login/commons';
 import {ContractFactory} from 'ethers';
 import ProxyCounterfactualFactory from '@universal-login/contracts/build/ProxyCounterfactualFactory.json';
+import WalletMasterWithRefund from '@universal-login/contracts/build/WalletMasterWithRefund.json';
 import {getWallets} from 'ethereum-waffle';
 import {Provider} from 'ethers/providers';
-import buildEnsService from './buildEnsService';
-import ENSService from '../../lib/integration/ethereum/ensService';
 import {getContractWhiteList} from '../../lib/http/relayers/RelayerUnderTest';
 
-export async function setupMultiChainProvider(provider: Provider) {
-  const wallet = getWallets(provider)[0];
+export async function setupMultiChainProvider(provider: Provider, ensRegistrars = []) {
+  const [wallet] = getWallets(provider);
+  const walletMaster = await deployContract(wallet, WalletMasterWithRefund as ContractJSON);
   const contractWhiteList = getContractWhiteList();
   const factoryContractDeployer = new ContractFactory(ProxyCounterfactualFactory.abi, ProxyCounterfactualFactory.bytecode, wallet);
   const factory = await factoryContractDeployer.deploy(['0x0']);
   await factory.deployed();
   const factoryAddress = factory.address;
   const configuration: NetworkConfig = {};
-  const [providerWithENS, ensRegistrars] = await buildEnsService(wallet, 'mylogin.eth') as any[];
   configuration['default'] = {
-    provider: providerWithENS,
+    provider,
     factoryAddress,
-    chainSpec: await providerWithENS.getNetwork() as ChainSpec,
+    chainSpec: await provider.getNetwork() as ChainSpec,
     supportedTokens: [],
     privateKey: wallet.privateKey,
     ensRegistrars,
-    walletMasterAddress: 'PLACEHOLDER',
+    walletMasterAddress: walletMaster.address,
     contractWhiteList
   };
   const multiChainProvider = new MultiChainProvider(configuration);
-  const ensService = new ENSService(multiChainProvider);
-  return {multiChainProvider, factoryAddress, ensService};
+  return {multiChainProvider, factoryAddress};
 }
 

@@ -10,13 +10,12 @@ import {deployFactory} from '@universal-login/contracts';
 const {gasPrice, gasLimit} = defaultPaymentOptions;
 
 export default async function basicWalletContract(provider, wallets) {
-  const {multiChainProvider} = await setupMultiChainProvider(provider);
-  const wallet = multiChainProvider.getWallet('default');
-  const [ensService, provider] = await buildEnsService(wallet, 'mylogin.eth');
+  const [ , , wallet] = wallets;
+  const [ensService, multiChainProvider] = await buildEnsService(wallet, 'mylogin.eth');
   const walletMaster = await deployContract(wallet, WalletMaster);
   const factoryContract = await deployFactory(wallet, walletMaster.address);
   const walletContract = await createWalletContract(wallet, ensService);
-  return {multiChainProvider, wallet, provider, walletContract, ensService, walletMasterAddress: walletMaster.address, factoryContractAddress: factoryContract.address};
+  return {multiChainProvider, wallet, walletContract, ensService, walletMasterAddress: walletMaster.address, factoryContractAddress: factoryContract.address};
 }
 
 export const transferMessage = {

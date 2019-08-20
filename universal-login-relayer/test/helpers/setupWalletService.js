@@ -4,13 +4,12 @@ import {loadFixture} from 'ethereum-waffle';
 import WalletService from '../../lib/integration/ethereum/WalletService';
 import basicWalletContract from '../fixtures/basicWalletContract';
 
-
 export default async function setupWalletService() {
-  const {wallet, walletContract, provider, ensService, walletMasterAddress, factoryContractAddress} = await loadFixture(basicWalletContract);
+  const {wallet, walletContract, multiChainProvider, ensService, walletMasterAddress, factoryContractAddress} = await loadFixture(basicWalletContract);
   const hooks = new EventEmitter();
   const config = {walletMasterAddress, factoryAddress: factoryContractAddress, supportedTokens: []};
-  const walletService = new WalletService(wallet, config, ensService, hooks);
+  const walletService = new WalletService(multiChainProvider, ensService, hooks);
   const callback = sinon.spy();
   hooks.addListener('created', callback);
-  return {wallet, provider, walletService, callback, walletContract};
+  return {wallet, multiChainProvider, walletService, callback, walletContract};
 }

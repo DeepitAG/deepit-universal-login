@@ -1,9 +1,11 @@
 import chai, {expect} from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import { providers, Wallet, Contract } from 'ethers';
+import {Wallet, Contract} from 'ethers';
 import setupWalletService from '../../../helpers/setupWalletService';
 import WalletService from '../../../../lib/integration/ethereum/WalletService';
+import {MultiChainProvider} from '../../../../lib/integration/ethereum/MultiChainProvider';
+import {Provider} from 'ethers/providers';
 
 chai.use(require('chai-string'));
 chai.use(sinonChai);
@@ -11,14 +13,16 @@ chai.use(sinonChai);
 
 describe('INT: WalletService', async () => {
   let walletService: WalletService;
-  let provider: providers.Provider;
   let wallet: Wallet;
   let callback: sinon.SinonSpy;
   let walletContract: Contract;
+  let provider: Provider;
+  let multiChainProvider: MultiChainProvider;
   const chainName = 'default';
 
   before(async () => {
-    ({wallet, provider, walletService, callback, walletContract} = await setupWalletService());
+    ({wallet, multiChainProvider, walletService, callback, walletContract} = await setupWalletService());
+    provider = multiChainProvider.getNetworkProvider(chainName);
   });
 
   describe('Create', async () => {
@@ -35,12 +39,12 @@ describe('INT: WalletService', async () => {
     });
 
     it('should emit created event', async () => {
-      const transaction = await walletService.create(wallet.address, 'example.mylogin.eth', undefined, chainName);
+      const transaction = await walletService.create(wallet.address, 'example.mylogin.eth', chainName);
       expect(callback).to.be.calledWith(sinon.match(transaction));
     });
 
     it('should fail with not existing ENS name', async () => {
-      const creationPromise = walletService.create(wallet.address, 'alex.non-existing-id.eth', undefined, chainName);
+      const creationPromise = walletService.create(wallet.address, 'alex.non-existing-id.eth', chainName);
       await expect(creationPromise)
         .to.be.eventually.rejectedWith('ENS domain alex.non-existing-id.eth does not exist or is not compatible with Universal Login');
     });

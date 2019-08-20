@@ -18,7 +18,7 @@ class WalletService {
     this.bytecode = `0x${contractJSON.evm.bytecode.object}`;
   }
 
-  async create(key: string, ensName: string, overrideOptions = {}, chainName: string) {
+  async create(key: string, ensName: string, chainName: string, overrideOptions = {}) {
     const ensArgs = await this.ensService.argsFor(ensName, chainName);
     if (ensArgs !== null) {
       let args = [key, ...ensArgs] as string[];

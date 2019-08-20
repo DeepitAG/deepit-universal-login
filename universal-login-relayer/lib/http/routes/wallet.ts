@@ -8,7 +8,7 @@ import {asBigNumberish, asOverrideOptions, asArrayish} from '../utils/sanitizers
 const create = (walletContractService : WalletService) =>
   async (data: {body: {managementKey: string, ensName: string, chainName: string, overrideOptions?: {}}}) => {
     const {managementKey, ensName, overrideOptions, chainName} = data.body;
-    const transaction = await walletContractService.create(managementKey, ensName, overrideOptions, chainName);
+    const transaction = await walletContractService.create(managementKey, ensName, chainName, overrideOptions);
     return responseOf({transaction}, 201);
   };
 
