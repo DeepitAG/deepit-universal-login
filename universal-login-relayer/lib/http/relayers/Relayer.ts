@@ -55,7 +55,7 @@ class Relayer {
   constructor(protected config: Config) {
     this.port = config.port || defaultPort;
     this.hooks = new EventEmitter();
-    this.multiChainProvider = new MultiChainProvider(config.networkConf);
+    this.multiChainProvider = new MultiChainProvider(config.networkConfig);
     this.database = Knex(config.database);
   }
 

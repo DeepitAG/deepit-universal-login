@@ -4,7 +4,7 @@ import {Config} from '../../config/relayer';
 import {PublicRelayerConfig, PublicNetworkConfig} from '@universal-login/commons';
 
 export function getPublicNetworkConfig(config: Config): PublicNetworkConfig {
-  const networkConfig = config.networkConf;
+  const networkConfig = config.networkConfig;
   const publicNetworkConfig: PublicNetworkConfig = {};
   for (const property in networkConfig) {
     const {factoryAddress, chainSpec, supportedTokens, ensRegistrars, walletMasterAddress, contractWhiteList} = networkConfig[property];

@@ -58,7 +58,7 @@ function getRelayerConfig(jsonRpcUrl: string, wallet: Wallet, walletMasterAddres
       }
     },
     database: databaseConfig,
-    networkConf: {
+    networkConfig: {
       default: {
         jsonRpcUrl,
         factoryAddress,

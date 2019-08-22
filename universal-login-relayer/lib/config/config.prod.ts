@@ -28,7 +28,7 @@ export const config: Config =  Object.freeze({
       directory: path.join(__dirname, '../integration/sql/migrations'),
     }
   },
-  networkConf: {
+  networkConfig: {
     default: {
       jsonRpcUrl: getEnv('JSON_RPC_URL', ''),
       privateKey: getEnv('PRIVATE_KEY', ''),

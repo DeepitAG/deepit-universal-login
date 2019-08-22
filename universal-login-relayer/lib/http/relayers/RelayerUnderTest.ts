@@ -50,7 +50,7 @@ export class RelayerUnderTest extends Relayer {
       database: testConfig.database,
       onRampProviders: testConfig.onRampProviders,
       localization: testConfig.localization,
-      networkConf: {
+      networkConfig: {
         default: {
           privateKey: wallet.privateKey,
           chainSpec: providerWithENS.network as ChainSpec,
@@ -103,7 +103,7 @@ export class RelayerUnderTest extends Relayer {
       database: testConfig.database,
       onRampProviders: testConfig.onRampProviders,
       localization: testConfig.localization,
-      networkConf: {
+      networkConfig: {
         default: {
           privateKey: wallet1.privateKey,
           chainSpec: provider1.network as ChainSpec,

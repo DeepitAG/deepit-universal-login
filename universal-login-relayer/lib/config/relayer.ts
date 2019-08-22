@@ -6,5 +6,5 @@ export interface Config {
   localization: LocalizationConfig;
   onRampProviders: OnRampConfig;
   database: KnexConfig;
-  networkConf: NetworkConfig;
+  networkConfig: NetworkConfig;
 }

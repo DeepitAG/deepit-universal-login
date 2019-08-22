@@ -26,7 +26,7 @@ async function startRelayer(wallet, relayerConstructor) {
     database: testConfig.database,
     onRampProviders: testConfig.onRampProviders,
     localization: testConfig.localization,
-    networkConf: {
+    networkConfig: {
       default: {
         provider: wallet.provider,
         privateKey: wallet.privateKey,

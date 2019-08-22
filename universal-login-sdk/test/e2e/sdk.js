@@ -52,11 +52,11 @@ describe('E2E: SDK', async () => {
       });
 
       it('should register ENS name', async () => {
-        expect(await relayer.config.networkConf[chainName].provider.resolveName('alex.mylogin.eth')).to.eq(contractAddress);
+        expect(await relayer.config.networkConfig[chainName].provider.resolveName('alex.mylogin.eth')).to.eq(contractAddress);
       });
 
       it('should return ens config', async () => {
-        const expectedEnsAddress = relayer.config.networkConf[chainName].chainSpec.ensAddress;
+        const expectedEnsAddress = relayer.config.networkConfig[chainName].chainSpec.ensAddress;
         const response = await sdk.getRelayerConfig();
         expect(response.networkConfig[chainName].chainSpec.ensAddress).to.eq(expectedEnsAddress);
       });
