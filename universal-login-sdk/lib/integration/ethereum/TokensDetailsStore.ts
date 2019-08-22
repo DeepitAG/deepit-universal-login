@@ -14,8 +14,8 @@ export class TokensDetailsStore {
     }
   }
 
-  getTokenAddress(symbol: string, chainName: string = 'default') {
-    const token = this.tokensDetails.find((token) => token.symbol === symbol && token.chainName === chainName);
+  getTokenAddress(symbol: string) {
+    const token = this.tokensDetails.find((token) => token.symbol === symbol);
     return token ? token.address : undefined;
   }
 }

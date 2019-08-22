@@ -22,10 +22,12 @@ describe('INT: BlockchainObserver', async () => {
   let otherWallet;
   let otherWallet2;
   let mockToken;
+  const chainName = 'default';
 
   beforeEach(async () => {
     ({relayer, sdk, mockToken, contractAddress, wallet, otherWallet, otherWallet2, privateKey} = await loadFixture(basicSDK));
-    ({blockchainObserver} = sdk);
+    await sdk.start();
+    ({blockchainObserver} = sdk.chains[chainName]);
     blockchainObserver.step = 50;
     blockchainObserver.lastBlock = 0;
   });

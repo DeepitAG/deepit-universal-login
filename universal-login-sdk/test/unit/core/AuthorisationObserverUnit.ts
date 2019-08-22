@@ -24,6 +24,7 @@ describe('UNIT: AuthorisationsObserver', () => {
   let getAuthorisationRequest: GetAuthorisationRequest;
   let fakeGetAuthorisationRequest: GetAuthorisationRequest;
   let privateKey: string;
+  const chainName = 'default';
 
   const createGetAuthorisationRequest = (walletContractAddress: string, privateKey: string) => {
     const getAuthorisationRequest: GetAuthorisationRequest = {
@@ -44,14 +45,14 @@ describe('UNIT: AuthorisationsObserver', () => {
 
   it('should call callback with authorisation', async () => {
     const callback = sinon.spy();
-    authorisationsObserver.subscribe(getAuthorisationRequest, callback);
+    authorisationsObserver.subscribe(getAuthorisationRequest, chainName, callback);
     expect(callback).to.have.been.calledWith([]);
   });
 
   it('new subscription request should be rejected', async () => {
     const callback = sinon.spy();
-    authorisationsObserver.subscribe(getAuthorisationRequest, callback);
-    expect(() => authorisationsObserver.subscribe(fakeGetAuthorisationRequest, callback)).to.throw('Another wallet is subscribed.');
+    authorisationsObserver.subscribe(getAuthorisationRequest, chainName, callback);
+    expect(() => authorisationsObserver.subscribe(fakeGetAuthorisationRequest, chainName, callback)).to.throw('Another wallet is subscribed.');
     await waitUntil(() => !!callback.secondCall);
     expect(callback).to.have.been.calledWith([]);
     expect(callback).to.have.been.calledWith(notifications);
@@ -60,9 +61,9 @@ describe('UNIT: AuthorisationsObserver', () => {
   it('Subscribe. Unsubscribe', async () => {
     const callback = sinon.spy();
     const callback2 = sinon.spy();
-    const unsubscribe = authorisationsObserver.subscribe(getAuthorisationRequest, callback);
+    const unsubscribe = authorisationsObserver.subscribe(getAuthorisationRequest, chainName, callback);
     await unsubscribe();
-    authorisationsObserver.subscribe(getAuthorisationRequest, callback2);
+    authorisationsObserver.subscribe(getAuthorisationRequest, chainName, callback2);
     await waitUntil(() => !!callback2.firstCall);
     expect(callback2).to.have.been.calledOnce;
   });
@@ -70,10 +71,10 @@ describe('UNIT: AuthorisationsObserver', () => {
   it('2 subscriptions', async () => {
     const callback1 = sinon.spy();
     const callback2 = sinon.spy();
-    const unsubscribe1 = authorisationsObserver.subscribe(getAuthorisationRequest, callback1);
+    const unsubscribe1 = authorisationsObserver.subscribe(getAuthorisationRequest, chainName, callback1);
     expect(callback1).to.have.been.calledWith([]);
     await waitUntil(() => !!callback1.secondCall);
-    const unsubscribe2 = authorisationsObserver.subscribe(getAuthorisationRequest, callback2);
+    const unsubscribe2 = authorisationsObserver.subscribe(getAuthorisationRequest, chainName, callback2);
     expect(callback2).to.have.been.calledWith(notifications);
     unsubscribe1();
     unsubscribe2();

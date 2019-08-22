@@ -15,12 +15,12 @@ const request = (authorisationService: AuthorisationService) =>
   };
 
 const getPending = (authorisationService: AuthorisationService) =>
-  async (data: {body: {chainName: string}, walletContractAddress: string, query: {signature: string}}) => {
+  async (data: {chainName: string, walletContractAddress: string, query: {signature: string}}) => {
     const getAuthorisationRequest: GetAuthorisationRequest = {
       walletContractAddress: data.walletContractAddress,
       signature: data.query.signature
     };
-    const result = await authorisationService.getAuthorisationRequests(getAuthorisationRequest, data.body.chainName);
+    const result = await authorisationService.getAuthorisationRequests(getAuthorisationRequest, data.chainName);
     return responseOf({response: result});
   };
 
@@ -44,11 +44,9 @@ export default (authorisationService: AuthorisationService) => {
     request(authorisationService)
   ));
 
-  router.get('/:walletContractAddress', asyncHandler(
+  router.get('/:chainName/:walletContractAddress', asyncHandler(
     sanitize({
-      body: asObject({
-        chainName: asString,
-      }),
+      chainName: asString,
       walletContractAddress: asString,
       query: asObject({
         signature: asString

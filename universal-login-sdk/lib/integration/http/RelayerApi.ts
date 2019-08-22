@@ -52,9 +52,9 @@ export class RelayerApi {
     });
   }
 
-  async getPendingAuthorisations(getAuthorisationRequest: GetAuthorisationRequest) {
+  async getPendingAuthorisations(getAuthorisationRequest: GetAuthorisationRequest, chainName: string) {
     const {walletContractAddress, signature} = getAuthorisationRequest;
-    return this.http('GET', `/authorisation/${walletContractAddress}?signature=${signature}`);
+    return this.http('GET', `/authorisation/${chainName}/${walletContractAddress}?signature=${signature}`);
   }
 
   async deploy(publicKey: string, ensName: string, gasPrice: string, signature: string, chainName: string) {

@@ -1,7 +1,7 @@
 import {dirname, join} from 'path';
 import {getWallets} from 'ethereum-waffle';
 import {providers, Wallet, utils} from 'ethers';
-import {ContractWhiteList, getContractHash, SupportedToken, NetworkConfig, ContractJSON, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
+import {ContractWhiteList, getContractHash, SupportedToken, ContractJSON, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
 import {RelayerClass, Config} from '@universal-login/relayer';
 import ProxyContract from '@universal-login/contracts/build/Proxy.json';
 import {ensureDatabaseExist} from '../common/ensureDatabaseExist';
@@ -31,7 +31,6 @@ const databaseConfig = {
 const ensDomains = ['mylogin.eth', 'universal-id.eth', 'popularapp.eth'];
 
 function getRelayerConfig(jsonRpcUrl: string, wallet: Wallet, walletMasterAddress: string, ensAddress: string, ensRegistrars: string[], contractWhiteList: ContractWhiteList, factoryAddress: string, tokenAddress: string) {
-  const networkConf: NetworkConfig = {};
   const supportedTokens: SupportedToken[] = [{
     address: tokenAddress,
     minimalAmount: utils.parseEther('0.05').toString()
@@ -40,23 +39,8 @@ function getRelayerConfig(jsonRpcUrl: string, wallet: Wallet, walletMasterAddres
     address: ETHER_NATIVE_TOKEN.address,
     minimalAmount: utils.parseEther('0.05').toString()
    }];
-   networkConf['development'] = {
-    jsonRpcUrl,
-    factoryAddress,
-    chainSpec: {
-      name: 'development',
-      ensAddress,
-      chainId: 0
-    },
-    supportedTokens,
-  }
   return {
     port: '3311',
-    privateKey: wallet.privateKey,
-    ensRegistrars,
-    walletMasterAddress,
-    contractWhiteList,
-    tokenContractAddress: tokenAddress,
     localization: {
       language: 'en',
       country: 'any'
@@ -74,10 +58,25 @@ function getRelayerConfig(jsonRpcUrl: string, wallet: Wallet, walletMasterAddres
       }
     },
     database: databaseConfig,
-    networkConf,
+    networkConf: {
+      default: {
+        jsonRpcUrl,
+        factoryAddress,
+        chainSpec: {
+          name: 'development',
+          ensAddress,
+          chainId: 0
+        },
+        supportedTokens,
+        privateKey: wallet.privateKey,
+        ensRegistrars,
+        walletMasterAddress,
+        contractWhiteList,
+        tokenContractAddress: tokenAddress,
+      }
+    },
   };
-};
-
+}
 
 function getProxyContractHash() {
   const proxyContractHash = getContractHash(ProxyContract as ContractJSON);

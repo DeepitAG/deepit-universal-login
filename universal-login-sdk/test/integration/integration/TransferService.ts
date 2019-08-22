@@ -30,9 +30,7 @@ describe('INT: TransferService', () => {
     const {contractAddress} = await createWallet('name.mylogin.eth', walletService, wallet);
     await mockTokenContract.transfer(contractAddress, utils.parseEther('2.0'));
     tokenDetailsService = new TokenDetailsService();
-    const multichainConfig = {
-      default: {provider}
-    }
+    const multichainConfig = { default: {provider} };
     tokenService = new TokensDetailsStore(tokenDetailsService, [{address: mockTokenContract.address, chainName}], multichainConfig);
     await tokenService.fetchTokensDetails();
     sdk.tokensDetailsStore = tokenService;

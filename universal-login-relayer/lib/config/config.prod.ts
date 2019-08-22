@@ -29,7 +29,7 @@ export const config: Config =  Object.freeze({
     }
   },
   networkConf: {
-    kovan: {
+    default: {
       jsonRpcUrl: getEnv('JSON_RPC_URL', ''),
       privateKey: getEnv('PRIVATE_KEY', ''),
       chainSpec: Object.freeze({

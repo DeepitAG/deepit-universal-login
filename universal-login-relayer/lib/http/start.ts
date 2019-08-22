@@ -4,6 +4,7 @@ import {getEnv} from '@universal-login/commons';
 
 export const start = (nodeEnv: string) => {
   const config = getConfig(nodeEnv);
+  console.log(config);
   const relayer = new Relayer(config);
   relayer.start().then(
     () => console.log(`Server listening on port ${config.port}`),

@@ -15,9 +15,7 @@ describe('INT: TokensDetailsStore', () => {
     const provider = createMockProvider();
     const [wallet] = await getWallets(provider);
     mockToken = await deployContract(wallet, MockToken, []);
-    const multichainConfig = {
-      default: {provider}
-    }
+    const multichainConfig = { default: {provider} };
     tokenDetailsService = new TokenDetailsService();
     tokensDetailsStore = new TokensDetailsStore(tokenDetailsService, [{address: mockToken.address, chainName}, {address: ETHER_NATIVE_TOKEN.address, chainName}], multichainConfig);
   });

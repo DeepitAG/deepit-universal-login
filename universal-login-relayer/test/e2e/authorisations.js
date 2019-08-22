@@ -28,10 +28,9 @@ async function getAuthorisation(relayer, contract, wallet) {
   const {signature} = getAuthorisationRequest;
 
   const result = await chai.request(relayer.server)
-    .get(`/authorisation/${contract.address}?signature=${signature}`)
+    .get(`/authorisation/${chainName}/${contract.address}?signature=${signature}`)
     .send({
       key: wallet.address,
-      chainName
     });
   return {result, response: result.body.response};
 }
@@ -134,7 +133,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     signGetAuthorisationRequest(getAuthorisationRequest, attackerPrivateKey);
 
     const {body, status} = await chai.request(relayer.server)
-      .get(`/authorisation/${contract.address}?signature=${getAuthorisationRequest.signature}`)
+      .get(`/authorisation/${chainName}/${contract.address}?signature=${getAuthorisationRequest.signature}`)
       .send({chainName});
 
     expect(status).to.eq(401);
