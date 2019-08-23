@@ -11,15 +11,15 @@ import MessageValidator from '../../lib/core/services/messages/MessageValidator'
 import MessageExecutor from '../../lib/integration/ethereum/MessageExecutor';
 
 export default async function setupMessageService(knex) {
-  const {multiChainProvider, wallet, actionKey, provider, mockToken, walletContract, otherWallet} = await loadFixture(basicWalletContractWithMockToken);
+  const {multiChainService, wallet, actionKey, provider, mockToken, walletContract, otherWallet} = await loadFixture(basicWalletContractWithMockToken);
   const hooks = new EventEmitter();
   const authorisationStore = new AuthorisationStore(knex);
   const messageRepository = new MessageSQLRepository(knex);
   const queueStore = new QueueSQLStore(knex);
-  const signaturesService = new SignaturesService(multiChainProvider);
+  const signaturesService = new SignaturesService(multiChainService);
   const statusService = new MessageStatusService(messageRepository, signaturesService);
-  const messageValidator = new MessageValidator(multiChainProvider);
-  const messageExecutor = new MessageExecutor(multiChainProvider, messageValidator);
-  const messageHandler = new MessageHandler(multiChainProvider, authorisationStore, hooks, messageRepository, queueStore, messageExecutor, statusService);
+  const messageValidator = new MessageValidator(multiChainService);
+  const messageExecutor = new MessageExecutor(multiChainService, messageValidator);
+  const messageHandler = new MessageHandler(multiChainService, authorisationStore, hooks, messageRepository, queueStore, messageExecutor, statusService);
   return { wallet, actionKey, provider, mockToken, authorisationStore, messageHandler, walletContract, otherWallet };
 }

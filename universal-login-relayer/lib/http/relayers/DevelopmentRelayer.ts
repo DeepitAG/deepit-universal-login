@@ -22,9 +22,9 @@ class DevelopmentRelayer extends Relayer {
     const tokenAmount = utils.parseEther('100');
     const etherAmount = utils.parseEther('100');
     this.hooks.addListener('created', async (transaction: Transaction, chainName: string) => {
-      const provider = this.multiChainProvider.getNetworkProvider(chainName);
-      const wallet = this.multiChainProvider.getWallet(chainName);
-      const tokenContract = this.multiChainProvider.getTokenContract(chainName);
+      const provider = this.multiChainService.getNetworkProvider(chainName);
+      const wallet = this.multiChainService.getWallet(chainName);
+      const tokenContract = this.multiChainService.getTokenContract(chainName);
       const receipt = await waitToBeMined(provider, transaction.hash);
       if (receipt.status) {
         const tokenTransaction = await tokenContract.transfer(receipt.contractAddress, tokenAmount);

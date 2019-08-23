@@ -1,29 +1,29 @@
 import chai, {expect} from 'chai';
 import sinonChai from 'sinon-chai';
-import {setupMultiChainProvider} from '../../../helpers/setupMultiChainProvider';
-import {MultiChainProvider} from '../../../../lib/integration/ethereum/MultiChainProvider';
+import {setupMultiChainService} from '../../../helpers/setupMultiChainService';
+import {MultiChainService} from '../../../../lib/core/services/MultiChainService';
 import {createMockProvider} from 'ethereum-waffle';
 
 chai.use(require('chai-string'));
 chai.use(sinonChai);
 
-describe('INT: MultiChainProvider', async () => {
-  let multiChainProvider: MultiChainProvider;
+describe('INT: MultiChainService', async () => {
+  let multiChainService: MultiChainService;
   let factoryAddress: string;
   const provider = createMockProvider();
   const chainName = 'default';
 
   before(async () => {
-    ({multiChainProvider, factoryAddress} = await setupMultiChainProvider(provider));
+    ({multiChainService, factoryAddress} = await setupMultiChainService(provider));
   });
 
   it('should have correct factory address', async () => {
-    const factory = multiChainProvider.getFactoryContract(chainName);
+    const factory = multiChainService.getFactoryContract(chainName);
     expect(factory.address).to.be.eq(factoryAddress);
   });
 
   it('should return correct provider', async () => {
-    const provider = multiChainProvider.getNetworkProvider(chainName);
+    const provider = multiChainService.getNetworkProvider(chainName);
     expect(provider.network.name).to.be.eq('unknown');
   });
 });

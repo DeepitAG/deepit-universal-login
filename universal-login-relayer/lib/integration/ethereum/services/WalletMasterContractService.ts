@@ -2,15 +2,15 @@ import {recoverFromCancelAuthorisationRequest, recoverFromGetAuthorisationReques
 import {Contract} from 'ethers';
 import WalletMasterWithRefund from '@universal-login/contracts/build/WalletMasterWithRefund.json';
 import { UnauthorisedAddress } from '../../../core/utils/errors';
-import {MultiChainProvider} from '../MultiChainProvider';
+import {MultiChainService} from '../../../core/services/MultiChainService';
 
 const MAGICVALUE = '0x20c13b0b';
 
 class WalletMasterContractService {
-  constructor(private multiChainProvider: MultiChainProvider) {}
+  constructor(private multiChainService: MultiChainService) {}
 
   async ensureValidSignature(walletContractAddress: string, signature: string, payloadDigest: string, recoveredAddress: string, chainName: string) {
-    const provider = this.multiChainProvider.getNetworkProvider(chainName);
+    const provider = this.multiChainService.getNetworkProvider(chainName);
     const contract = new Contract(walletContractAddress, WalletMasterWithRefund.interface, provider);
     const isCorrectAddress = await contract.isValidSignature(payloadDigest, signature);
     ensure(isCorrectAddress === MAGICVALUE, UnauthorisedAddress, recoveredAddress);

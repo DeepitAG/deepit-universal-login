@@ -1,4 +1,4 @@
-type ErrorType = 'NotFound' | 'StatusNotFound' | 'MessageNotFound' | 'TransactionHashNotFound' | 'NodeEnvNotSpecified' | 'InvalidENSDomain' |  'PaymentError' | 'NotEnoughGas' | 'NotEnoughBalance' | 'InvalidExecution' | 'InvalidProxy' | 'InvalidSignature' | 'DuplicatedSignature' | 'DuplicatedExecution' | 'NotEnoughSignatures' | 'InvalidTransaction' | 'InvalidHexData' | 'DuplicatedEnsName' | 'UnauthorisedAddress';
+type ErrorType = 'NotFound' | 'StatusNotFound' | 'MessageNotFound' | 'TransactionHashNotFound' | 'NodeEnvNotSpecified' | 'InvalidENSDomain' |  'PaymentError' | 'NotEnoughGas' | 'NotEnoughBalance' | 'InvalidExecution' | 'InvalidProxy' | 'InvalidSignature' | 'DuplicatedSignature' | 'DuplicatedExecution' | 'NotEnoughSignatures' | 'InvalidTransaction' | 'InvalidHexData' | 'DuplicatedEnsName' | 'UnauthorisedAddress' | 'ChainNotSupported';
 
 export class RelayerError extends Error {
   errorType : ErrorType;
@@ -179,6 +179,13 @@ export class DuplicatedSignature extends Conflict {
 export class DuplicatedExecution extends Conflict {
   constructor () {
     super('Execution request already processed', 'DuplicatedExecution');
+    Object.setPrototypeOf(this, DuplicatedExecution.prototype);
+  }
+}
+
+export class ChainNotSupported extends NotFound {
+  constructor (chainName: string) {
+    super(`Chain ${chainName} is not supported`, 'ChainNotSupported');
     Object.setPrototypeOf(this, DuplicatedExecution.prototype);
   }
 }

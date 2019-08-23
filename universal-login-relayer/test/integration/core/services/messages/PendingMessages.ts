@@ -11,7 +11,7 @@ import {getKnexConfig} from '../../../../helpers/knex';
 import {clearDatabase} from '../../../../../lib/http/relayers/RelayerUnderTest';
 import {MessageStatusService} from '../../../../../lib/core/services/messages/MessageStatusService';
 import {SignaturesService} from '../../../../../lib/integration/ethereum/SignaturesService';
-import {MultiChainProvider} from '../../../../../lib/integration/ethereum/MultiChainProvider';
+import {MultiChainService} from '../../../../../lib/core/services/MultiChainService';
 
 describe('INT: PendingMessages', () => {
   let pendingMessages : PendingMessages;
@@ -26,15 +26,15 @@ describe('INT: PendingMessages', () => {
   const chainName = 'default';
   let spy: SinonSpy;
   let messageHash: string;
-  let multiChainProvider: MultiChainProvider;
+  let multiChainService: MultiChainService;
 
   beforeEach(async () => {
-    ({ multiChainProvider, wallet, walletContract, actionKey } = await loadFixture(basicWalletContractWithMockToken));
+    ({ multiChainService, wallet, walletContract, actionKey } = await loadFixture(basicWalletContractWithMockToken));
     messageRepository = new MessageSQLRepository(knex);
     spy = sinon.fake.returns({hash: '0x0000000000000000000000000000000000000000000000000000000000000000'});
-    signaturesService = new SignaturesService(multiChainProvider);
+    signaturesService = new SignaturesService(multiChainService);
     statusService = new MessageStatusService(messageRepository, signaturesService);
-    pendingMessages = new PendingMessages(multiChainProvider, messageRepository, {add: spy} as any, statusService);
+    pendingMessages = new PendingMessages(multiChainService, messageRepository, {add: spy} as any, statusService);
     message = createSignedMessage({from: walletContract.address, to: '0x'}, wallet.privateKey);
     messageHash = calculateMessageHash(message);
     await walletContract.setRequiredSignatures(2);

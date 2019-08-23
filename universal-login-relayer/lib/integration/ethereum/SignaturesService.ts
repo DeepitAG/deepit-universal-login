@@ -1,10 +1,10 @@
 import {Contract, utils} from 'ethers';
-import {MultiChainProvider} from './MultiChainProvider';
+import {MultiChainService} from '../../core/services/MultiChainService';
 import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
 
 
 export class SignaturesService {
-  constructor(private multiChainProvider: MultiChainProvider) {
+  constructor(private multiChainProvider: MultiChainService) {
   }
 
   async getRequiredSignatures(walletAddress: string, chainName: string): Promise<utils.BigNumber> {

@@ -10,14 +10,15 @@ import MessageExecutor from '../../integration/ethereum/MessageExecutor';
 import IMessageRepository from './messages/IMessagesRepository';
 import IQueueStore from './messages/IQueueStore';
 import {MessageStatusService} from './messages/MessageStatusService';
-import {MultiChainProvider} from '../../integration/ethereum/MultiChainProvider';
+import {MultiChainService} from '../../core/services/MultiChainService';
+import {ensureChainSupport} from '../../integration/ethereum/validations';
 
 class MessageHandler {
   private pendingMessages: PendingMessages;
   private queueService: QueueService;
 
   constructor(
-    multiChainProvider: MultiChainProvider,
+    private multiChainService: MultiChainService,
     private authorisationStore: AuthorisationStore,
     private hooks: EventEmitter,
     messageRepository: IMessageRepository,
@@ -26,7 +27,7 @@ class MessageHandler {
     statusService: MessageStatusService
   ) {
     this.queueService = new QueueService(messageExecutor, queueStore, messageRepository, this.onTransactionSent.bind(this));
-    this.pendingMessages = new PendingMessages(multiChainProvider, messageRepository, this.queueService, statusService);
+    this.pendingMessages = new PendingMessages(multiChainService, messageRepository, this.queueService, statusService);
   }
 
   start() {
@@ -47,6 +48,7 @@ class MessageHandler {
   }
 
   async handleMessage(message: SignedMessage, chainName: string) {
+    ensureChainSupport(this.multiChainService.networkConfig, chainName);
     return this.pendingMessages.add(message, chainName);
   }
 

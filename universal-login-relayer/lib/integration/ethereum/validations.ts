@@ -1,7 +1,7 @@
 import ERC20 from '@universal-login/contracts/build/ERC20.json';
 import {utils, providers, Contract} from 'ethers';
-import {SignedMessage, ETHER_NATIVE_TOKEN, ensure, isContractExist} from '@universal-login/commons';
-import {InvalidContract, NotEnoughTokens, NotEnoughGas} from '../../core/utils/errors';
+import {SignedMessage, ETHER_NATIVE_TOKEN, ensure, isContractExist, NetworkConfig, ensureNotNull} from '@universal-login/commons';
+import {InvalidContract, NotEnoughTokens, NotEnoughGas, ChainNotSupported} from '../../core/utils/errors';
 
 export const isContract = async (provider : providers.Provider, contractAddress : string) => {
   // TODO: Only whitelisted contracts
@@ -30,3 +30,6 @@ export const ensureEnoughGas = async (provider: providers.Provider, walletAddres
   const estimateGas = await provider.estimateGas({ ...transaction, from: walletAddress });
   ensure(utils.bigNumberify(message.gasLimit as utils.BigNumberish).gte(estimateGas), NotEnoughGas);
 };
+
+export const ensureChainSupport = (networkConfig: NetworkConfig, chainName: string) =>
+  ensureNotNull(networkConfig[chainName], ChainNotSupported, chainName);

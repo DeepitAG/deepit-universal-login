@@ -4,7 +4,7 @@ import sinonChai from 'sinon-chai';
 import {Wallet, Contract} from 'ethers';
 import setupWalletService from '../../../helpers/setupWalletService';
 import WalletService from '../../../../lib/integration/ethereum/WalletService';
-import {MultiChainProvider} from '../../../../lib/integration/ethereum/MultiChainProvider';
+import {MultiChainService} from '../../../../lib/core/services/MultiChainService';
 import {Provider} from 'ethers/providers';
 
 chai.use(require('chai-string'));
@@ -17,12 +17,12 @@ describe('INT: WalletService', async () => {
   let callback: sinon.SinonSpy;
   let walletContract: Contract;
   let provider: Provider;
-  let multiChainProvider: MultiChainProvider;
+  let multiChainService: MultiChainService;
   const chainName = 'default';
 
   before(async () => {
-    ({wallet, multiChainProvider, walletService, callback, walletContract} = await setupWalletService());
-    provider = multiChainProvider.getNetworkProvider(chainName);
+    ({wallet, multiChainService, walletService, callback, walletContract} = await setupWalletService());
+    provider = multiChainService.getNetworkProvider(chainName);
   });
 
   describe('Create', async () => {

@@ -5,7 +5,7 @@ import basicWalletContractWithMockToken from '../../../fixtures/basicWalletContr
 import {SignedMessage, createSignedMessage, TEST_ACCOUNT_ADDRESS} from '@universal-login/commons';
 import {providers, Wallet, Contract} from 'ethers';
 import {bigNumberify} from 'ethers/utils';
-import {MultiChainProvider} from '../../../../lib/integration/ethereum/MultiChainProvider';
+import {MultiChainService} from '../../../../lib/core/services/MultiChainService';
 
 describe('INT: MessageExecutor', async () => {
   let messageExecutor: MessageExecutor;
@@ -13,12 +13,12 @@ describe('INT: MessageExecutor', async () => {
   let provider: providers.Provider;
   let wallet: Wallet;
   let walletContract: Contract;
-  let multiChainProvider: MultiChainProvider;
+  let multiChainService: MultiChainService;
   const chainName = 'default';
 
   before(async () => {
-    ({wallet, walletContract, provider, multiChainProvider} = await loadFixture(basicWalletContractWithMockToken));
-    messageExecutor = new MessageExecutor(multiChainProvider);
+    ({wallet, walletContract, provider, multiChainService} = await loadFixture(basicWalletContractWithMockToken));
+    messageExecutor = new MessageExecutor(multiChainService);
     signedMessage = createSignedMessage({from: walletContract.address, to: TEST_ACCOUNT_ADDRESS, value: bigNumberify(2)}, wallet.privateKey);
   });
 

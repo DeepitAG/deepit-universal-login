@@ -12,8 +12,8 @@ class TokenGrantingRelayer extends Relayer {
 
   addHooks() {
     this.hooks.addListener('created', async (transaction : utils.Transaction, chainName: string) => {
-      const tokenContract = this.multiChainProvider.getTokenContract(chainName);
-      const provider = this.multiChainProvider.getNetworkProvider(chainName);
+      const tokenContract = this.multiChainService.getTokenContract(chainName);
+      const provider = this.multiChainService.getNetworkProvider(chainName);
       const receipt = await waitToBeMined(provider, transaction.hash as string);
       if (receipt.status) {
         tokenContract.transfer(receipt.contractAddress, utils.parseEther('100'));
@@ -21,8 +21,8 @@ class TokenGrantingRelayer extends Relayer {
     });
 
     this.hooks.addListener('added', async (transaction : utils.Transaction, chainName: string) => {
-      const tokenContract = this.multiChainProvider.getTokenContract(chainName);
-      const provider = this.multiChainProvider.getNetworkProvider(chainName);
+      const tokenContract = this.multiChainService.getTokenContract(chainName);
+      const provider = this.multiChainService.getNetworkProvider(chainName);
       const receipt = await waitToBeMined(provider, transaction.hash as string);
       if (receipt.status) {
         tokenContract.transfer(transaction.to, utils.parseEther('5'));
@@ -30,8 +30,8 @@ class TokenGrantingRelayer extends Relayer {
     });
 
     this.hooks.addListener('keysAdded', async (transaction : utils.Transaction, chainName: string) => {
-      const tokenContract = this.multiChainProvider.getTokenContract(chainName);
-      const provider = this.multiChainProvider.getNetworkProvider(chainName);
+      const tokenContract = this.multiChainService.getTokenContract(chainName);
+      const provider = this.multiChainService.getNetworkProvider(chainName);
       const receipt = await waitToBeMined(provider, transaction.hash as string);
       if (receipt.status) {
         tokenContract.transfer(transaction.to, utils.parseEther('15'));

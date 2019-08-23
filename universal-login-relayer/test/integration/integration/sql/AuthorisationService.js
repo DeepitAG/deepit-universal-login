@@ -9,7 +9,7 @@ import {EventEmitter} from 'fbemitter';
 import {getKnexConfig} from '../../../helpers/knex';
 import deviceInfo from '../../../config/defaults';
 import {deployFactory} from '@universal-login/contracts';
-import { MultiChainProvider } from '../../../../lib/integration/ethereum/MultiChainProvider';
+import { MultiChainService } from '../../../../lib/integration/ethereum/MultiChainService';
 
 
 chai.use(require('chai-string'));
@@ -17,7 +17,7 @@ chai.use(require('chai-string'));
 describe('INT: Authorisation Service', async () => {
   let authorisationStore;
   let provider;
-  let multiChainProvider;
+  let multiChainService;
   let managementKey;
   let wallet;
   let ensDeployer;
@@ -30,11 +30,11 @@ describe('INT: Authorisation Service', async () => {
   beforeEach(async () => {
     provider = createMockProvider();
     [wallet, managementKey, otherWallet, ensDeployer] = await getWallets(provider);
-    [ensService, multiChainProvider] = await buildEnsService(ensDeployer, 'mylogin.eth');
-    provider = multiChainProvider.getNetworkProvider(chainName);
+    [ensService, multiChainService] = await buildEnsService(ensDeployer, 'mylogin.eth');
+    provider = multiChainService.getNetworkProvider(chainName);
     const database = getKnexConfig();
     authorisationStore = new AuthorisationStore(database);
-    walletContractService = new WalletService(multiChainProvider, ensService, new EventEmitter());
+    walletContractService = new WalletService(multiChainService, ensService, new EventEmitter());
     const transaction = await walletContractService.create(managementKey.address, 'alex.mylogin.eth', chainName);
     walletContract = await waitForContractDeploy(managementKey, WalletMaster, transaction.hash);
   });

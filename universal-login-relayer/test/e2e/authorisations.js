@@ -1,39 +1,11 @@
 import chai, {expect} from 'chai';
 import chaiHttp from 'chai-http';
-import {startRelayer, createWalletContract} from '../helpers/http';
+import {startRelayer, createWalletContract, getAuthorisation, postAuthorisationRequest} from '../helpers/http';
 import {signCancelAuthorisationRequest, signGetAuthorisationRequest, createKeyPair} from '@universal-login/commons';
 import {utils} from 'ethers';
 
 chai.use(chaiHttp);
 
-const chainName = 'default';
-
-async function postAuthorisationRequest(relayer, contract, wallet) {
-  const result = await chai.request(relayer.server)
-    .post('/authorisation')
-    .send({
-      walletContractAddress: contract.address,
-      key: wallet.address,
-      chainName
-    });
-  expect(result.status).to.eq(201);
-}
-
-async function getAuthorisation(relayer, contract, wallet) {
-  const getAuthorisationRequest = {
-    walletContractAddress: contract.address,
-    signature: ''
-  };
-  signGetAuthorisationRequest(getAuthorisationRequest, wallet.privateKey);
-  const {signature} = getAuthorisationRequest;
-
-  const result = await chai.request(relayer.server)
-    .get(`/authorisation/${chainName}/${contract.address}?signature=${signature}`)
-    .send({
-      key: wallet.address,
-    });
-  return {result, response: result.body.response};
-}
 
 describe('E2E: Relayer - Authorisation routes', async () => {
   let relayer;
@@ -41,6 +13,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
   let wallet;
   let otherWallet;
   let contract;
+  const chainName = 'default';
 
   beforeEach(async () => {
     ({provider, wallet, otherWallet, relayer} = await startRelayer());
@@ -48,14 +21,14 @@ describe('E2E: Relayer - Authorisation routes', async () => {
   });
 
   it('get empty pending authorisations', async () => {
-    const {result, response} = await getAuthorisation(relayer, contract, wallet);
+    const {result, response} = await getAuthorisation(relayer, contract, wallet, chainName);
     expect(result.status).to.eq(200);
     expect(result.body.response).to.deep.eq([]);
   });
 
   it('create and get authorisation', async () => {
-    await postAuthorisationRequest(relayer, contract, wallet);
-    const {result, response} = await getAuthorisation(relayer, contract, wallet);
+    await postAuthorisationRequest(relayer, contract, wallet, chainName);
+    const {result, response} = await getAuthorisation(relayer, contract, wallet, chainName);
     expect(result.status).to.eq(200);
     expect(response[0]).to.include({
       key: wallet.address,
@@ -68,7 +41,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
   });
 
   it('deny request', async () => {
-    await postAuthorisationRequest(relayer, contract, wallet);
+    await postAuthorisationRequest(relayer, contract, wallet, chainName);
 
     const cancelAuthorisationRequest = {
       walletContractAddress: contract.address,
@@ -82,7 +55,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     expect(result.status).to.eq(204);
 
 
-    const {result, response} = await getAuthorisation(relayer, contract, wallet);
+    const {result, response} = await getAuthorisation(relayer, contract, wallet, chainName);
     expect(response).to.deep.eq([]);
   });
 
@@ -97,7 +70,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
     signCancelAuthorisationRequest(cancelAuthorisationRequest, wallet.privateKey);
     const {body, status} = await chai.request(relayer.server)
-      .post(`/authorisation/${contract.address}`)
+      .post(`/authorisation//${contract.address}`)
       .send({cancelAuthorisationRequest, chainName});
 
     expect(status).to.eq(204);

@@ -24,7 +24,7 @@ import WalletMasterContractService from '../../integration/ethereum/services/Wal
 import {MessageStatusService} from '../../core/services/messages/MessageStatusService';
 import {SignaturesService} from '../../integration/ethereum/SignaturesService';
 import MessageExecutor from '../../integration/ethereum/MessageExecutor';
-import {MultiChainProvider} from '../../integration/ethereum/MultiChainProvider';
+import {MultiChainService} from '../../core/services/MultiChainService';
 
 const defaultPort = '3311';
 
@@ -36,7 +36,7 @@ export type RelayerClass = {
 class Relayer {
   protected readonly port: string;
   protected readonly hooks: EventEmitter;
-  public multiChainProvider: MultiChainProvider;
+  public multiChainService: MultiChainService;
   public readonly database: Knex;
   private ensService: ENSService = {} as ENSService;
   private authorisationStore: AuthorisationStore = {} as AuthorisationStore;
@@ -55,7 +55,7 @@ class Relayer {
   constructor(protected config: Config) {
     this.port = config.port || defaultPort;
     this.hooks = new EventEmitter();
-    this.multiChainProvider = new MultiChainProvider(config.networkConfig);
+    this.multiChainService = new MultiChainService(config.networkConfig);
     this.database = Knex(config.database);
   }
 
@@ -72,17 +72,17 @@ class Relayer {
       origin : '*',
       credentials: true,
     }));
-    this.ensService = new ENSService(this.multiChainProvider);
+    this.ensService = new ENSService(this.multiChainService);
     this.authorisationStore = new AuthorisationStore(this.database);
-    this.walletContractService = new WalletService(this.multiChainProvider, this.ensService, this.hooks);
-    this.walletMasterContractService = new WalletMasterContractService(this.multiChainProvider);
-    this.authorisationService = new AuthorisationService(this.authorisationStore, this.walletMasterContractService);
+    this.walletContractService = new WalletService(this.multiChainService, this.ensService, this.hooks);
+    this.walletMasterContractService = new WalletMasterContractService(this.multiChainService);
+    this.authorisationService = new AuthorisationService(this.authorisationStore, this.walletMasterContractService, this.multiChainService);
     this.messageRepository = new MessageSQLRepository(this.database);
     this.queueStore = new QueueSQLStore(this.database);
-    this.signaturesService = new SignaturesService(this.multiChainProvider);
+    this.signaturesService = new SignaturesService(this.multiChainService);
     this.statusService = new MessageStatusService(this.messageRepository, this.signaturesService);
-    this.messageExecutor = new MessageExecutor(this.multiChainProvider);
-    this.messageHandler = new MessageHandler(this.multiChainProvider, this.authorisationStore, this.hooks, this.messageRepository, this.queueStore, this.messageExecutor, this.statusService);
+    this.messageExecutor = new MessageExecutor(this.multiChainService);
+    this.messageHandler = new MessageHandler(this.multiChainService, this.authorisationStore, this.hooks, this.messageRepository, this.queueStore, this.messageExecutor, this.statusService);
     const publicConfig = getPublicConfig(this.config);
     this.app.use(bodyParser.json());
     this.app.use('/wallet', WalletRouter(this.walletContractService, this.messageHandler));

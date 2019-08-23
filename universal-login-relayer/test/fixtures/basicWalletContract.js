@@ -1,6 +1,6 @@
 import {utils} from 'ethers';
 import {deployContract} from 'ethereum-waffle';
-import {ACTION_KEY, OPERATION_CALL, TEST_ACCOUNT_ADDRESS, setupMultiChainProvider} from '@universal-login/commons';
+import {ACTION_KEY, OPERATION_CALL, TEST_ACCOUNT_ADDRESS, setupMultiChainService} from '@universal-login/commons';
 import WalletMaster from '@universal-login/contracts/build/WalletMaster.json';
 import defaultPaymentOptions from '../../lib/config/defaultPaymentOptions';
 import createWalletContract from '../helpers/createWalletContract';
@@ -11,11 +11,11 @@ const {gasPrice, gasLimit} = defaultPaymentOptions;
 
 export default async function basicWalletContract(provider, wallets) {
   const [ , , wallet] = wallets;
-  const [ensService, multiChainProvider] = await buildEnsService(wallet, 'mylogin.eth');
+  const [ensService, multiChainService] = await buildEnsService(wallet, 'mylogin.eth');
   const walletMaster = await deployContract(wallet, WalletMaster);
   const factoryContract = await deployFactory(wallet, walletMaster.address);
   const walletContract = await createWalletContract(wallet, ensService);
-  return {multiChainProvider, wallet, walletContract, ensService, walletMasterAddress: walletMaster.address, factoryContractAddress: factoryContract.address};
+  return {multiChainService, wallet, walletContract, ensService, walletMasterAddress: walletMaster.address, factoryContractAddress: factoryContract.address};
 }
 
 export const transferMessage = {

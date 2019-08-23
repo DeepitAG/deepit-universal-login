@@ -1,17 +1,17 @@
 import {utils, Contract} from 'ethers';
 import ENS from '@universal-login/contracts/build/ENS.json';
 import {parseDomain, resolveName, ENSDomainInfo} from '@universal-login/commons';
-import {MultiChainProvider} from './MultiChainProvider';
+import {MultiChainService} from '../../core/services/MultiChainService';
 
 class ENSService {
 
-  constructor(private multiChainProvider: MultiChainProvider) {
+  constructor(private multiChainService: MultiChainService) {
   }
 
   async getDomainsInfo(chainName: string) {
-    const ensRegistrars = this.multiChainProvider.getRegistrars(chainName);
-    const chainSpec = this.multiChainProvider.getChainSpec(chainName);
-    const provider = this.multiChainProvider.getNetworkProvider(chainName);
+    const ensRegistrars = this.multiChainService.getRegistrars(chainName);
+    const chainSpec = this.multiChainService.getChainSpec(chainName);
+    const provider = this.multiChainService.getNetworkProvider(chainName);
     const ens = new Contract(chainSpec.ensAddress, ENS.interface, provider);
     const domainsInfo : Record<string, ENSDomainInfo>  = {};
     for (let count = 0; count < ensRegistrars.length; count++) {
@@ -29,7 +29,7 @@ class ENSService {
   }
 
   async argsFor(ensName: string, chainName: string) {
-    const chainSpec = this.multiChainProvider.getChainSpec(chainName);
+    const chainSpec = this.multiChainService.getChainSpec(chainName);
     const [label, domain] = parseDomain(ensName);
     const hashLabel = utils.keccak256(utils.toUtf8Bytes(label));
     const node = utils.namehash(`${label}.${domain}`);
@@ -43,8 +43,8 @@ class ENSService {
   }
 
   resolveName = async (ensName: string, chainName: string) => {
-    const provider = this.multiChainProvider.getNetworkProvider(chainName);
-    const chainSpec = this.multiChainProvider.getChainSpec(chainName);
+    const provider = this.multiChainService.getNetworkProvider(chainName);
+    const chainSpec = this.multiChainService.getChainSpec(chainName);
     return resolveName(provider, chainSpec.ensAddress, ensName);
   }
 }

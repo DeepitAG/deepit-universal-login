@@ -6,12 +6,12 @@ import {DuplicatedSignature, InvalidSignature, DuplicatedExecution, NotEnoughSig
 import IMessageRepository from './IMessagesRepository';
 import {getKeyFromHashAndSignature, createMessageItem} from '../../utils/utils';
 import QueueService from './QueueService';
-import {MultiChainProvider} from '../../../integration/ethereum/MultiChainProvider';
+import {MultiChainService} from '../MultiChainService';
 
 export default class PendingMessages {
 
   constructor(
-    private multiChainProvider : MultiChainProvider,
+    private multiChainService : MultiChainService,
     private messageRepository: IMessageRepository,
     private queueService: QueueService,
     private statusService: MessageStatusService
@@ -42,7 +42,7 @@ export default class PendingMessages {
   }
 
   private async addSignatureToPendingMessage(messageHash: string, message: SignedMessage, chainName: string) {
-    const wallet = this.multiChainProvider.getWallet(chainName);
+    const wallet = this.multiChainService.getWallet(chainName);
     const messageItem = await this.messageRepository.get(messageHash, chainName);
     ensure(!messageItem.transactionHash, DuplicatedExecution);
     const isContainSignature = await this.messageRepository.containSignature(messageHash, message.signature, chainName);
