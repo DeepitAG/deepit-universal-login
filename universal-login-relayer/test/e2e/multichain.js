@@ -113,7 +113,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
       .post('/wallet/execution')
       .send({signedMessage, chainName: 'giulioChain'});
     expect(result.status).to.eq(409);
-    expect(result.error.text).to.be.eq('{"error":"Error: Chain giulioChain is not supported","type":"ChainNotSupported"}')
+    expect(result.error.text).to.be.eq('{"error":"Error: Chain giulioChain is not supported","type":"ChainNotSupported"}');
   });
 
   afterEach(async () => {

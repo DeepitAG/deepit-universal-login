@@ -20,7 +20,7 @@ describe('UI: Notifications',  () => {
     const [wallet] = await getWallets(createMockProvider());
     ({relayer, provider} = await setupSdk(wallet, '33113'));
     ({mockTokenContract} = await createFixtureLoader(provider as providers.Web3Provider)(deployMockToken));
-    ({appWrapper, appPage, services} = await setupUI(relayer, mockTokenContract.address));
+    ({appWrapper, appPage, services} = await setupUI(relayer, {address: mockTokenContract.address, chainName: 'default'}));
      await services.sdk.start();
   });
 

@@ -12,7 +12,7 @@ export async function startDevelopmentRelayer(
   provider: providers.JsonRpcProvider,
   relayerConstructor: RelayerClass = DevelopmentRelayer
 ) {
-  const providerWithENS = withENS(provider, configuration.chainSpec.ensAddress);
+  const providerWithENS = withENS(provider, configuration.networkConfig['default'].chainSpec.ensAddress);
   const relayer = new relayerConstructor(configuration, providerWithENS);
   await relayer.start();
   console.log(`         Relayer url: http://localhost:${configuration.port}`);

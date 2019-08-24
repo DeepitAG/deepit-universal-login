@@ -2,6 +2,7 @@ import React from 'react';
 import {classesForElement} from '@universal-login/commons';
 import {useToggler} from '@universal-login/react';
 import {useServices} from '../../hooks';
+import {TokenDetails} from '@universal-login/commons/lib';
 
 interface InputProps {
   onChange: (...args: any[]) => void;
@@ -19,7 +20,7 @@ const classesForInputWithDropdown = classesForElement('input', 'input-with-dropd
 const InputWithDropdown = ({onChange, placeholder, autoFocus, id, className, currency, setCurrency}: InputProps) => {
   const {visible, toggle} = useToggler();
   const {sdk} = useServices();
-  const symbols = sdk.tokensDetailsStore.tokensDetails.map(element => element.symbol);
+  const symbols = sdk.tokensDetailsStore.tokensDetails.map((element: TokenDetails) => element.symbol);
   const onDropdownItemClick = (currency: string) => {
     if (setCurrency) { setCurrency(currency); }
     toggle();
@@ -39,7 +40,7 @@ const InputWithDropdown = ({onChange, placeholder, autoFocus, id, className, cur
         <button onClick={toggle} className="currency-dropdown-btn">{currency}</button>
         {visible ?
           <ul className="currency-dropdown-list">
-            {symbols.map((currency, i) => (
+            {symbols.map((currency: any, i: any) => (
               <li key={i} className="currency-item">
                 <button className="currency-item-btn" onClick={() => onDropdownItemClick(currency)}>
                   {currency}

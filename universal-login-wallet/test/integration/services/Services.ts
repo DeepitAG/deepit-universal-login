@@ -5,7 +5,7 @@ import {ETHER_NATIVE_TOKEN} from '@universal-login/commons';
 
 describe('Services', () => {
   it('Should create services', () => {
-    const config = {...getConfig(), tokens: [ETHER_NATIVE_TOKEN.address]};
+    const config = {...getConfig(), tokens: [{...ETHER_NATIVE_TOKEN, chainName: 'default'}]};
     const services = createServices(config);
     expect(services).to.not.be.null;
     expect(services.sdk).to.not.be.null;

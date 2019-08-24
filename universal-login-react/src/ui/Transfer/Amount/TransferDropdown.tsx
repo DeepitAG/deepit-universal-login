@@ -19,7 +19,6 @@ interface TransferDropdownProps {
 export const TransferDropdown = ({sdk, ensName, currency, setCurrency}: TransferDropdownProps) => {
   const [tokenDetailsWithBalance, setTokenDetailsWithBalance] = useState<TokenDetailsWithBalance[]>([]);
   const {visible, toggle} = useToggler();
-
   useAsyncEffect(() => sdk.subscribeToBalances(ensName, setTokenDetailsWithBalance), []);
 
   const onClick = (currency: string) => {

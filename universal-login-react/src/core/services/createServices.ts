@@ -14,8 +14,8 @@ export interface Overrides {
 }
 
 export const createServices = (config: Config, {provider} : Overrides = {}) => {
-  const providerOrProviderUrl = provider ? provider : config.jsonRpcUrl;
-  const sdk = new UniversalLoginSDK(config.relayerUrl, providerOrProviderUrl);
+  const sdkProvider = provider ? provider : new providers.JsonRpcProvider(config.jsonRpcUrl);
+  const sdk = new UniversalLoginSDK(config.relayerUrl, sdkProvider);
   return {
     sdk,
     config

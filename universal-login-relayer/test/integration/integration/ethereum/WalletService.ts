@@ -1,7 +1,6 @@
 import chai, {expect} from 'chai';
 import sinon from 'sinon';
 import sinonChai from 'sinon-chai';
-import {MultiChainService} from '../../../../lib/core/services/MultiChainService';
 import {providers, Wallet, Contract, utils} from 'ethers';
 import {createMockProvider, getWallets} from 'ethereum-waffle';
 import {createKeyPair, TEST_GAS_PRICE} from '@universal-login/commons';

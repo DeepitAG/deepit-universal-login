@@ -4,12 +4,13 @@ import UniversalLoginSDK, {WalletService} from '@universal-login/sdk';
 import UserDropdownService from '../core/app/UserDropdownService';
 import connectToWallet from '../core/services/ConnectToWallet';
 import WalletPresenter from '../core/presenters/WalletPresenter';
+import {ObservedToken} from '@universal-login/commons/lib';
 
 interface Config {
   domains: string[];
   relayerUrl: string;
   jsonRpcUrl: string;
-  tokens: string[];
+  tokens: ObservedToken[];
 }
 
 interface Overrides {
@@ -17,13 +18,13 @@ interface Overrides {
 }
 
 export const createServices = (config: Config, {provider} : Overrides = {}) => {
-  const providerOrProviderUrl = provider ? provider : config.jsonRpcUrl;
+  const sdkProvider = provider ? provider : new providers.JsonRpcProvider(config.jsonRpcUrl);
   const sdk = new UniversalLoginSDK(
     config.relayerUrl,
-    providerOrProviderUrl,
+    sdkProvider,
     {
       paymentOptions: {},
-      observedTokensAddresses: config.tokens
+      observedTokens: config.tokens
     }
   );
   const userDropdownService = new UserDropdownService();

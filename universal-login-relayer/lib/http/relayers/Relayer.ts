@@ -25,7 +25,7 @@ import {MessageStatusService} from '../../core/services/messages/MessageStatusSe
 import {SignaturesService} from '../../integration/ethereum/SignaturesService';
 import MessageExecutor from '../../integration/ethereum/MessageExecutor';
 import {MultiChainService} from '../../core/services/MultiChainService';
-import {BalanceChecker, RequiredBalanceChecker, PublicRelayerConfig} from '@universal-login/commons';
+import {PublicRelayerConfig} from '@universal-login/commons';
 
 const defaultPort = '3311';
 

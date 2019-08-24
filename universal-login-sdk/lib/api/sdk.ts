@@ -124,11 +124,15 @@ class UniversalLoginSDK {
   }
 
   async fetchAggregateBalanceObserver(ensName: string, chainName: string) {
-    if (this.aggregateBalanceObserver) {
-      return;
-    }
     await this.fetchBalanceObserver(ensName, chainName);
     this.aggregateBalanceObserver = new AggregateBalanceObserver(this.balanceObserver!, this.priceObserver, this.tokensValueConverter);
+  }
+
+  getBlockchainObserver(chainName = 'default') {
+    const provider = this.chains[chainName].provider;
+    const blockchainObserver = new BlockchainObserver(this.blockchainService, provider);
+    this.chains[chainName].blockchainObserver = this.chains[chainName].blockchainObserver || blockchainObserver;
+    return this.chains[chainName].blockchainObserver;
   }
 
   private fetchFutureWalletFactory(chainName: string) {
@@ -242,9 +246,7 @@ class UniversalLoginSDK {
 
   async start() {
     for (const chainName in this.chains) {
-      const provider = this.chains[chainName].provider;
-      const blockchainObserver = new BlockchainObserver(this.blockchainService, provider);
-      this.chains[chainName].blockchainObserver = blockchainObserver;
+      this.getBlockchainObserver(chainName);
       await this.chains[chainName].blockchainObserver!.start();
     }
     await this.tokensDetailsStore.fetchTokensDetails();

@@ -1,7 +1,6 @@
 import {MultiChainService} from '../../lib/core/services/MultiChainService';
 import {NetworkConfig, ChainSpec, deployContract, ContractJSON, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
-import {ContractFactory, utils} from 'ethers';
-import ProxyCounterfactualFactory from '@universal-login/contracts/build/ProxyCounterfactualFactory.json';
+import {utils} from 'ethers';
 import WalletMasterWithRefund from '@universal-login/contracts/build/WalletMasterWithRefund.json';
 import {getWallets} from 'ethereum-waffle';
 import {Provider} from 'ethers/providers';

@@ -30,6 +30,7 @@ const ModalTransfer = () => {
   };
 
   if (modal === 'transferAmount') {
+    console.log(updateTransferDetailsWith);
     return (
       <ModalTransferAmount
         sdk={sdk}
