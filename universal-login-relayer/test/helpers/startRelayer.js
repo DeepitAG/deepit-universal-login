@@ -1,10 +1,11 @@
 import {utils} from 'ethers';
 import {deployContract} from 'ethereum-waffle';
-import WalletMaster from '@universal-login/contracts/build/WalletMaster.json';
+import WalletMaster from '@universal-login/contracts/build/WalletMasterWithRefund.json';
 import {deployFactory} from '@universal-login/contracts';
 import Token from '../../lib/http/relayers/abi/Token.json';
 import ENSBuilder from 'ens-builder';
 import {getContractWhiteList} from '../../lib/http/relayers/RelayerUnderTest';
+import {ETHER_NATIVE_TOKEN} from '@universal-login/commons';
 import {getConfig} from '../../lib/index.js';
 
 const defaultDomain = 'mylogin.eth';
@@ -16,7 +17,7 @@ async function depolyEns(wallet) {
 }
 
 async function startRelayer(wallet, relayerConstructor) {
-  const walletMaster = await deployContract(wallet, WalletMaster);
+  const walletMaster = await deployContract(wallet, WalletMaster, [], {gasLimit: 5000000});
   const tokenContract = await deployContract(wallet, Token, []);
   const factoryContract = await deployFactory(wallet, walletMaster.address);
   const ensAddress = await depolyEns(wallet);
@@ -42,12 +43,17 @@ async function startRelayer(wallet, relayerConstructor) {
           {
             address: tokenContract.address,
             minimalAmount: utils.parseEther('0.5').toString()
-        }],
-        tokenContractAddress: tokenContract.address
+          },
+          {
+            address: ETHER_NATIVE_TOKEN.address,
+            minimalAmount: utils.parseEther('0.5').toString()
+          }
+        ],
       }
     }
   });
   const relayer = new relayerConstructor(config, wallet.provider);
+  relayer.url = () => `http://localhost:${config.port}`;
   await relayer.start();
   return {relayer, tokenContract, factoryContract};
 }

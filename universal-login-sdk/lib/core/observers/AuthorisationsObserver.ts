@@ -44,7 +44,7 @@ class AuthorisationsObserver extends ObserverRunner {
     this.getAuthorisationRequest = getAuthorisationRequest;
     this.chainName = chainName;
     this.callbacks.push(callback);
-    if (!this.isRunning()) {
+    if (this.isStopped()) {
       this.start();
     }
 

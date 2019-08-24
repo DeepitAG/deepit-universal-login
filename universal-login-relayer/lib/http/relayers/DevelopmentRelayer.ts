@@ -11,6 +11,12 @@ declare interface Transaction {
   hash: string;
 }
 
+export interface CallbackArgs {
+  transaction: Transaction;
+  contractAddress: string;
+  chainName: string;
+}
+
 class DevelopmentRelayer extends Relayer {
 
   constructor(config: DevelopmentRelayerConfig) {
@@ -21,16 +27,16 @@ class DevelopmentRelayer extends Relayer {
   addHooks() {
     const tokenAmount = utils.parseEther('100');
     const etherAmount = utils.parseEther('100');
-    this.hooks.addListener('created', async (transaction: Transaction, chainName: string) => {
+    this.hooks.addListener('created', async ({transaction, contractAddress, chainName}: CallbackArgs) => {
       const provider = this.multiChainService.getProvider(chainName);
       const wallet = this.multiChainService.getWallet(chainName);
       const tokenContract = this.multiChainService.getTokenContract(chainName);
       const receipt = await waitToBeMined(provider, transaction.hash);
       if (receipt.status) {
-        const tokenTransaction = await tokenContract.transfer(receipt.contractAddress, tokenAmount);
+        const tokenTransaction = await tokenContract.transfer(contractAddress, tokenAmount);
         await waitToBeMined(provider, tokenTransaction.hash);
         const transaction = {
-          to: receipt.contractAddress,
+          to: contractAddress,
           value: etherAmount
         };
         await wallet.sendTransaction(transaction);

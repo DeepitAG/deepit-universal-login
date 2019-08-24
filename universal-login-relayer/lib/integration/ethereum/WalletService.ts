@@ -55,7 +55,7 @@ class WalletService {
     const initWithENS = encodeInitializeWithRefundData(args);
     ensure(getInitializeSigner(initWithENS, signature) === publicKey, InvalidSignature);
     const transaction = await walletDeployer.deploy({publicKey, signature, intializeData: initWithENS}, {gasLimit: DEPLOY_GAS_LIMIT, gasPrice: utils.bigNumberify(gasPrice)});
-    this.hooks.emit('created', transaction, chainName);
+    this.hooks.emit('created', {transaction, contractAddress, chainName});
     return transaction;
   }
 }
