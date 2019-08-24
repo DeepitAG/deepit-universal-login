@@ -10,7 +10,7 @@ export const SdkConfigDefault: SdkConfig = {
   },
   observedTokens: [
     {
-      ...ETHER_NATIVE_TOKEN,
+      address: ETHER_NATIVE_TOKEN.address,
       chainName: 'default'
     }
   ],

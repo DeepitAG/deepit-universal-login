@@ -9,7 +9,7 @@ export class MultiChainService {
   constructor(public networkConfig: NetworkConfig) {
   }
 
-  getNetworkProvider(chainName: string) {
+  getProvider(chainName: string) {
     ensureChainSupport(this.networkConfig, chainName);
     if (!this.networkConfig[chainName].provider) {
       const jsonRpcUrl = this.networkConfig[chainName].jsonRpcUrl;
@@ -27,7 +27,7 @@ export class MultiChainService {
   getWallet(chainName: string) {
     ensureChainSupport(this.networkConfig, chainName);
     const privateKey = this.networkConfig[chainName].privateKey;
-    return new Wallet(privateKey, this.getNetworkProvider(chainName));
+    return new Wallet(privateKey, this.getProvider(chainName));
   }
 
   getRegistrars(chainName: string) {

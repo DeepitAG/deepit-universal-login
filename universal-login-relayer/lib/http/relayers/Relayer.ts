@@ -25,6 +25,7 @@ import {MessageStatusService} from '../../core/services/messages/MessageStatusSe
 import {SignaturesService} from '../../integration/ethereum/SignaturesService';
 import MessageExecutor from '../../integration/ethereum/MessageExecutor';
 import {MultiChainService} from '../../core/services/MultiChainService';
+import {BalanceChecker, RequiredBalanceChecker, PublicRelayerConfig} from '@universal-login/commons';
 
 const defaultPort = '3311';
 
@@ -51,12 +52,14 @@ class Relayer {
   private messageExecutor: MessageExecutor = {} as MessageExecutor;
   private app: Application = {} as Application;
   protected server: Server = {} as Server;
+  public publicConfig: PublicRelayerConfig;
 
   constructor(protected config: Config) {
     this.port = config.port || defaultPort;
     this.hooks = new EventEmitter();
     this.multiChainService = new MultiChainService(config.networkConfig);
     this.database = Knex(config.database);
+    this.publicConfig = getPublicConfig(this.config);
   }
 
   async start() {
@@ -83,10 +86,10 @@ class Relayer {
     this.statusService = new MessageStatusService(this.messageRepository, this.signaturesService);
     this.messageExecutor = new MessageExecutor(this.multiChainService);
     this.messageHandler = new MessageHandler(this.multiChainService, this.authorisationStore, this.hooks, this.messageRepository, this.queueStore, this.messageExecutor, this.statusService);
-    const publicConfig = getPublicConfig(this.config);
+    this.publicConfig = getPublicConfig(this.config);
     this.app.use(bodyParser.json());
     this.app.use('/wallet', WalletRouter(this.walletContractService, this.messageHandler));
-    this.app.use('/config', ConfigRouter(publicConfig));
+    this.app.use('/config', ConfigRouter(this.publicConfig));
     this.app.use('/authorisation', RequestAuthorisationRouter(this.authorisationService));
     this.app.use(errorHandler);
     this.server = this.app.listen(this.port);

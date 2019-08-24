@@ -1,10 +1,10 @@
+import {EventEmitter} from 'fbemitter';
 import {ContractFactory, utils} from 'ethers';
+import {Abi, defaultDeployOptions, ensureNotNull, ensure, RequiredBalanceChecker, BalanceChecker, computeContractAddress, DeployArgs, getInitializeSigner, DEPLOY_GAS_LIMIT} from '@universal-login/commons';
+import {encodeInitializeWithENSData, encodeInitializeWithRefundData} from '@universal-login/contracts';
 import ProxyContract from '@universal-login/contracts/build/Proxy.json';
 import ENSService from './ensService';
-import {EventEmitter} from 'fbemitter';
-import {Abi, defaultDeployOptions, ensureNotNull, ensure, BalanceChecker, RequiredBalanceChecker, computeContractAddress, DeployArgs, getInitializeSigner, DEPLOY_GAS_LIMIT} from '@universal-login/commons';
 import {InvalidENSDomain, NotEnoughBalance, EnsNameTaken, InvalidSignature} from '../../core/utils/errors';
-import {encodeInitializeWithENSData, encodeInitializeWithRefundData} from '@universal-login/contracts';
 import {WalletDeployer} from '../ethereum/WalletDeployer';
 import {MultiChainService} from '../../core/services/MultiChainService';
 
@@ -40,7 +40,7 @@ class WalletService {
 
   async deploy({publicKey, ensName, gasPrice, signature, chainName}: DeployArgs) {
     const factoryContract = this.multiChainService.getFactoryContract(chainName);
-    const provider = this.multiChainService.getNetworkProvider(chainName);
+    const provider = this.multiChainService.getProvider(chainName);
     const wallet = this.multiChainService.getWallet(chainName);
     const walletDeployer = new WalletDeployer(factoryContract.address, wallet);
     const balanceChecker = new BalanceChecker(provider);
@@ -54,7 +54,9 @@ class WalletService {
     const args = [publicKey, ...ensArgs as unknown as string[], gasPrice];
     const initWithENS = encodeInitializeWithRefundData(args);
     ensure(getInitializeSigner(initWithENS, signature) === publicKey, InvalidSignature);
-    return walletDeployer.deploy({publicKey, signature, intializeData: initWithENS}, {gasLimit: DEPLOY_GAS_LIMIT, gasPrice: utils.bigNumberify(gasPrice)});
+    const transaction = await walletDeployer.deploy({publicKey, signature, intializeData: initWithENS}, {gasLimit: DEPLOY_GAS_LIMIT, gasPrice: utils.bigNumberify(gasPrice)});
+    this.hooks.emit('created', transaction, chainName);
+    return transaction;
   }
 }
 

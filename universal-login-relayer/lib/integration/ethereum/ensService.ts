@@ -11,7 +11,7 @@ class ENSService {
   async getDomainsInfo(chainName: string) {
     const ensRegistrars = this.multiChainService.getRegistrars(chainName);
     const chainSpec = this.multiChainService.getChainSpec(chainName);
-    const provider = this.multiChainService.getNetworkProvider(chainName);
+    const provider = this.multiChainService.getProvider(chainName);
     const ens = new Contract(chainSpec.ensAddress, ENS.interface, provider);
     const domainsInfo : Record<string, ENSDomainInfo>  = {};
     for (let count = 0; count < ensRegistrars.length; count++) {
@@ -43,7 +43,7 @@ class ENSService {
   }
 
   resolveName = async (ensName: string, chainName: string) => {
-    const provider = this.multiChainService.getNetworkProvider(chainName);
+    const provider = this.multiChainService.getProvider(chainName);
     const chainSpec = this.multiChainService.getChainSpec(chainName);
     return resolveName(provider, chainSpec.ensAddress, ensName);
   }

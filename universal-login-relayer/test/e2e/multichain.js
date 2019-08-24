@@ -109,7 +109,6 @@ describe('E2E: Relayer - Multi-Chain', async () => {
       operationType: OPERATION_CALL,
     };
     const signedMessage = createSignedMessage(msg, wallet.privateKey);
-    console.log('lol');
     const result = await chai.request(relayer.server)
       .post('/wallet/execution')
       .send({signedMessage, chainName: 'giulioChain'});

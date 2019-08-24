@@ -10,7 +10,7 @@ class WalletMasterContractService {
   constructor(private multiChainService: MultiChainService) {}
 
   async ensureValidSignature(walletContractAddress: string, signature: string, payloadDigest: string, recoveredAddress: string, chainName: string) {
-    const provider = this.multiChainService.getNetworkProvider(chainName);
+    const provider = this.multiChainService.getProvider(chainName);
     const contract = new Contract(walletContractAddress, WalletMasterWithRefund.interface, provider);
     const isCorrectAddress = await contract.isValidSignature(payloadDigest, signature);
     ensure(isCorrectAddress === MAGICVALUE, UnauthorisedAddress, recoveredAddress);

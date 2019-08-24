@@ -23,7 +23,7 @@ describe('INT: MultiChainService', async () => {
   });
 
   it('should return correct provider', async () => {
-    const provider = multiChainService.getNetworkProvider(chainName);
+    const provider = multiChainService.getProvider(chainName);
     expect(provider.network.name).to.be.eq('unknown');
   });
 });

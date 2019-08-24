@@ -1,6 +1,6 @@
 import {utils, Contract} from 'ethers';
 import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
-import {TokensValueConverter, TokenDetails, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, MANAGEMENT_KEY, waitForContractDeploy, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signCancelAuthorisationRequest, signGetAuthorisationRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage} from '@universal-login/commons';
+import {TokensValueConverter, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, MANAGEMENT_KEY, waitForContractDeploy, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signCancelAuthorisationRequest, signGetAuthorisationRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage} from '@universal-login/commons';
 import AuthorisationsObserver from '../core/observers/AuthorisationsObserver';
 import BlockchainObserver from '../core/observers/BlockchainObserver';
 import {DeploymentReadyObserver} from '../core/observers/DeploymentReadyObserver';
@@ -10,11 +10,11 @@ import {BlockchainService} from '../integration/ethereum/BlockchainService';
 import {MissingConfiguration, InvalidEvent, InvalidContract} from '../core/utils/errors';
 import {FutureWalletFactory} from './FutureWalletFactory';
 import {ExecutionFactory, Execution} from '../core/services/ExecutionFactory';
-import {BalanceObserver} from '../core/observers/BalanceObserver';
+import {BalanceObserver, OnBalanceChange} from '../core/observers/BalanceObserver';
 import {SdkConfigDefault} from '../config/SdkConfigDefault';
 import {SdkConfig} from '../config/SdkConfig';
-import {AggregateBalanceObserver} from '../core/observers/AggregateBalanceObserver';
-import {PriceObserver} from '../core/observers/PriceObserver';
+import {AggregateBalanceObserver, OnAggregatedBalanceChange} from '../core/observers/AggregateBalanceObserver';
+import {PriceObserver, OnTokenPricesChange} from '../core/observers/PriceObserver';
 import {ProviderDict, Chains} from '../config/Chains';
 import {Provider} from 'ethers/providers';
 import {TokensDetailsStore} from '../integration/ethereum/TokensDetailsStore';
@@ -52,8 +52,7 @@ class UniversalLoginSDK {
     this.sdkConfig = deepMerge(SdkConfigDefault, sdkConfig);
     this.tokenDetailsService = new TokenDetailsService();
     this.tokensDetailsStore = new TokensDetailsStore(this.tokenDetailsService, this.sdkConfig.observedTokens, this.chains);
-    this.tokensDetailsStore.fetchTokensDetails();
-    this.priceObserver = new PriceObserver(this.sdkConfig.observedTokens, this.sdkConfig.observedCurrencies);
+    this.priceObserver = new PriceObserver(this.tokensDetailsStore, this.sdkConfig.observedCurrencies);
     this.tokensValueConverter = new TokensValueConverter(this.sdkConfig.observedCurrencies);
   }
 
@@ -120,8 +119,8 @@ class UniversalLoginSDK {
     ensureNotNull(walletContractAddress, InvalidContract);
     ensureNotNull(this.relayerConfig, MissingConfiguration);
 
-    const tokenDetails = await this.getTokensDetails(chainName);
-    this.balanceObserver = new BalanceObserver(balanceChecker, walletContractAddress, tokenDetails);
+    await this.tokensDetailsStore.fetchTokensDetails();
+    this.balanceObserver = new BalanceObserver(balanceChecker, walletContractAddress, this.tokensDetailsStore);
   }
 
   async fetchAggregateBalanceObserver(ensName: string, chainName: string) {
@@ -130,17 +129,6 @@ class UniversalLoginSDK {
     }
     await this.fetchBalanceObserver(ensName, chainName);
     this.aggregateBalanceObserver = new AggregateBalanceObserver(this.balanceObserver!, this.priceObserver, this.tokensValueConverter);
-  }
-
-  async getTokensDetails(chainName = 'default') {
-    const provider = this.chains[chainName].provider;
-    const tokenDetails: TokenDetails[] = [];
-    for (const token of this.sdkConfig.observedTokens) {
-      const name = await this.tokenDetailsService.getName(token.address, provider);
-      const symbol = await this.tokenDetailsService.getSymbol(token.address, provider);
-      tokenDetails.push({...token, name, symbol});
-    }
-    return tokenDetails;
   }
 
   private fetchFutureWalletFactory(chainName: string) {
@@ -230,17 +218,17 @@ class UniversalLoginSDK {
     return this.chains[chainName].blockchainObserver!.subscribe(eventType, filter, callback);
   }
 
-  async subscribeToBalances(ensName: string, callback: Function, chainName = 'default') {
+  async subscribeToBalances(ensName: string, callback: OnBalanceChange, chainName = 'default') {
     await this.fetchBalanceObserver(ensName, chainName);
     return this.balanceObserver!.subscribe(callback);
   }
 
-  async subscribeToAggregatedBalance(ensName: string, chainName: string, callback: Function) {
+  async subscribeToAggregatedBalance(ensName: string, callback: OnAggregatedBalanceChange, chainName = 'default') {
     await this.fetchAggregateBalanceObserver(ensName, chainName);
     return this.aggregateBalanceObserver!.subscribe(callback);
   }
 
-  subscribeToPrices(callback: Function) {
+  subscribeToPrices(callback: OnTokenPricesChange) {
     return this.priceObserver.subscribe(callback);
   }
 
@@ -259,6 +247,7 @@ class UniversalLoginSDK {
       this.chains[chainName].blockchainObserver = blockchainObserver;
       await this.chains[chainName].blockchainObserver!.start();
     }
+    await this.tokensDetailsStore.fetchTokensDetails();
   }
 
   stop() {
