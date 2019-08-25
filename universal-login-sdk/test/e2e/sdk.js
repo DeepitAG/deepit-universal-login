@@ -7,6 +7,7 @@ import Proxy from '@universal-login/contracts/build/Proxy';
 import basicSDK, {transferMessage} from '../fixtures/basicSDK';
 import {MANAGEMENT_KEY, ACTION_KEY, CLAIM_KEY, ENCRYPTION_KEY, signGetAuthorisationRequest, createKeyPair, INVALID_KEY} from '@universal-login/commons';
 import UniversalLoginSDK from '../../lib/api/sdk';
+import {createWallet} from '../helpers/createWallet';
 
 chai.use(solidity);
 chai.use(sinonChai);
@@ -45,12 +46,6 @@ describe('E2E: SDK', async () => {
         expect(universalLoginSDK.chains[chainName].provider.connection.url).to.eq(provider.connection.url);
       });
 
-      it('should return proper private key and address', async () => {
-        [privateKey, contractAddress] = await sdk.create('test.mylogin.eth');
-        expect(privateKey).to.be.properPrivateKey;
-        expect(contractAddress).to.be.properAddress;
-      });
-
       it('should register ENS name', async () => {
         expect(await relayer.config.networkConfig[chainName].provider.resolveName('alex.mylogin.eth')).to.eq(contractAddress);
       });
@@ -59,10 +54,6 @@ describe('E2E: SDK', async () => {
         const expectedEnsAddress = relayer.config.networkConfig[chainName].chainSpec.ensAddress;
         const response = await sdk.getRelayerConfig();
         expect(response.networkConfig[chainName].chainSpec.ensAddress).to.eq(expectedEnsAddress);
-      });
-
-      it('should throw InvalidENS exception if invalid ENS name', async () => {
-        await expect(sdk.create('alex.non-existing-id.eth')).to.be.eventually.rejectedWith('ENS domain alex.non-existing-id.eth does not exist or is not compatible with Universal Login');
       });
     });
   });
