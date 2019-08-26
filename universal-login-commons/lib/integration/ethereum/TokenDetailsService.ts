@@ -8,27 +8,36 @@ const tokenAbi = [
 ];
 
 export class TokenDetailsService {
-  constructor() {}
+  constructor(private provider: providers.Provider) {}
 
-  async getTokenDetails(tokenAddress: string, provider: providers.Provider): Promise<TokenDetails> {
-    const symbol = await this.getSymbol(tokenAddress, provider);
-    const name = await this.getName(tokenAddress, provider);
+  async getTokensDetails(tokenAddresses: string[]) {
+    const tokensDetails: TokenDetails[] = [];
+    for (const address of tokenAddresses) {
+      const tokenDetails = await this.getTokenDetails(address);
+      tokensDetails.push(tokenDetails);
+    }
+    return tokensDetails;
+  }
+
+  async getTokenDetails(tokenAddress: string): Promise<TokenDetails> {
+    const symbol = await this.getSymbol(tokenAddress);
+    const name = await this.getName(tokenAddress);
     return {address: tokenAddress, symbol, name};
   }
 
-  async getSymbol(tokenAddress: string, provider: providers.Provider): Promise<string> {
+  async getSymbol(tokenAddress: string): Promise<string> {
     if (tokenAddress === ETHER_NATIVE_TOKEN.address) {
       return ETHER_NATIVE_TOKEN.symbol;
     }
-    const token = new Contract(tokenAddress, tokenAbi, provider);
+    const token = new Contract(tokenAddress, tokenAbi, this.provider);
     return token.symbol();
   }
 
-  async getName(tokenAddress: string, provider: providers.Provider): Promise<string> {
+  async getName(tokenAddress: string): Promise<string> {
     if (tokenAddress === ETHER_NATIVE_TOKEN.address) {
       return ETHER_NATIVE_TOKEN.name;
     }
-    const token = new Contract(tokenAddress, tokenAbi, provider);
+    const token = new Contract(tokenAddress, tokenAbi, this.provider);
     return token.name();
   }
 }

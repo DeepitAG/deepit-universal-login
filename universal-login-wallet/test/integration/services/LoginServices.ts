@@ -34,7 +34,7 @@ describe('Login', () => {
     walletService = new WalletService(sdk);
     walletServiceForConnect = new WalletService(sdk);
     connectToWalletService = ConnectionToWalletService(sdk, walletServiceForConnect);
-    blockchainObserver = sdk.getBlockchainObserver();
+    ({blockchainObserver} = sdk);
     blockchainObserver.step = 10;
     blockchainObserver.lastBlock = 0;
     await sdk.start();

@@ -1,18 +1,12 @@
-import {TokenDetails, TokenDetailsService, ObservedToken} from '@universal-login/commons';
-import {Chains} from '.././../config/Chains';
+import {TokenDetails, TokenDetailsService} from '@universal-login/commons';
 
 export class TokensDetailsStore {
   tokensDetails: TokenDetails[] = [];
 
-  constructor(private tokenDetailsService: TokenDetailsService, private tokens: ObservedToken[], private chains: Chains) {}
+  constructor(private tokenDetailsService: TokenDetailsService, private tokensAddresses: string[]) {}
 
   async fetchTokensDetails() {
-    this.tokensDetails = [];
-    for (const {address, chainName} of this.tokens) {
-      const provider = this.chains[chainName as string].provider;
-      const details = await this.tokenDetailsService.getTokenDetails(address, provider);
-      this.tokensDetails.push({...details, chainName});
-    }
+    this.tokensDetails = await this.tokenDetailsService.getTokensDetails(this.tokensAddresses);
   }
 
   getTokenAddress(symbol: string) {

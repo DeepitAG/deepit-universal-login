@@ -39,6 +39,7 @@ export class BalanceObserver extends ObserverRunner {
 
   subscribe(callback: OnBalanceChange) {
     this.callbacks.push(callback);
+
     this.isStopped() ? this.start() : callback(this.lastTokenBalances);
 
     const unsubscribe = () => {

@@ -1,9 +1,9 @@
 import {createServices} from '../../../src/ui/createServices';
 import {providers} from 'ethers';
-import {testJsonRpcUrl, ObservedToken} from '@universal-login/commons';
+import {testJsonRpcUrl} from '@universal-login/commons';
 import {MockedStorageService} from './MockedStorageService';
 
-export const createPreconfiguredServices = async (provider: providers.Provider, relayer: any, tokens: ObservedToken[]) => {
+export const createPreconfiguredServices = async (provider: providers.Provider, relayer: any, tokens: string[]) => {
   const domains = relayer.config.ensRegistrars;
   const config = {
     jsonRpcUrl: testJsonRpcUrl,

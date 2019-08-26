@@ -1,4 +1,4 @@
-import {utils, Contract} from 'ethers';
+import {utils, Contract, providers} from 'ethers';
 import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
 import {TokensValueConverter, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, MANAGEMENT_KEY, waitForContractDeploy, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signCancelAuthorisationRequest, signGetAuthorisationRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage} from '@universal-login/commons';
 import AuthorisationsObserver from '../core/observers/AuthorisationsObserver';
@@ -15,16 +15,17 @@ import {SdkConfigDefault} from '../config/SdkConfigDefault';
 import {SdkConfig} from '../config/SdkConfig';
 import {AggregateBalanceObserver, OnAggregatedBalanceChange} from '../core/observers/AggregateBalanceObserver';
 import {PriceObserver, OnTokenPricesChange} from '../core/observers/PriceObserver';
-import {ProviderDict, Chains} from '../config/Chains';
-import {Provider} from 'ethers/providers';
 import {TokensDetailsStore} from '../integration/ethereum/TokensDetailsStore';
-import {getChains} from '../core/utils/getChains';
 
 class UniversalLoginSDK {
+  provider: providers.Provider;
   relayerApi: RelayerApi;
   authorisationsObserver: AuthorisationsObserver;
-  chains: Chains = {};
+  blockchainObserver: BlockchainObserver;
   executionFactory: ExecutionFactory;
+  deploymentReadyObserver?: DeploymentReadyObserver;
+  deploymentObserver?: DeploymentObserver;
+  balanceChecker: BalanceChecker;
   balanceObserver?: BalanceObserver;
   tokensValueConverter: TokensValueConverter;
   aggregateBalanceObserver?: AggregateBalanceObserver;
@@ -36,63 +37,65 @@ class UniversalLoginSDK {
   sdkConfig: SdkConfig;
   relayerConfig?: PublicRelayerConfig;
   factoryAddress?: string;
+  chainName: string = 'default';
 
   constructor(
     relayerUrl: string,
-    providerOrProviderDict: Provider | ProviderDict,
+    providerOrUrl: string | providers.Provider,
     sdkConfig?: DeepPartial<SdkConfig>
   ) {
-    providerOrProviderDict.call ?
-      this.chains['default'] = {provider: providerOrProviderDict as Provider}
-      : this.chains = getChains(providerOrProviderDict as ProviderDict);
+    this.provider = typeof(providerOrUrl) === 'string' ?
+      new providers.JsonRpcProvider(providerOrUrl, {chainId: 0} as any)
+      : providerOrUrl;
     this.relayerApi = new RelayerApi(relayerUrl);
     this.authorisationsObserver = new AuthorisationsObserver(this.relayerApi);
     this.executionFactory = new ExecutionFactory(this.relayerApi);
-    this.blockchainService = new BlockchainService();
+    this.blockchainService = new BlockchainService(this.provider);
+    this.blockchainObserver = new BlockchainObserver(this.blockchainService);
+    this.balanceChecker = new BalanceChecker(this.provider);
     this.sdkConfig = deepMerge(SdkConfigDefault, sdkConfig);
-    this.tokenDetailsService = new TokenDetailsService();
-    this.tokensDetailsStore = new TokensDetailsStore(this.tokenDetailsService, this.sdkConfig.observedTokens, this.chains);
+    this.tokenDetailsService = new TokenDetailsService(this.provider);
+    this.tokensDetailsStore = new TokensDetailsStore(this.tokenDetailsService, this.sdkConfig.observedTokensAddresses);
     this.priceObserver = new PriceObserver(this.tokensDetailsStore, this.sdkConfig.observedCurrencies);
     this.tokensValueConverter = new TokensValueConverter(this.sdkConfig.observedCurrencies);
   }
 
-  async create(ensName: string, chainName = 'default'): Promise<[string, string]> {
+  async create(ensName: string): Promise<[string, string]> {
     const {publicKey, privateKey} = createKeyPair();
-    const result = await this.relayerApi.createWallet(publicKey, ensName, chainName);
-    const provider = this.chains[chainName].provider;
+    const result = await this.relayerApi.createWallet(publicKey, ensName);
     const contract = await waitForContractDeploy(
-      provider,
+      this.provider,
       WalletContract,
       result.transaction.hash,
     );
     return [privateKey, contract.address];
   }
 
-  async createFutureWallet(chainName = 'default') {
+  async createFutureWallet() {
     await this.getRelayerConfig();
-    this.fetchFutureWalletFactory(chainName);
+    this.fetchFutureWalletFactory();
     return this.futureWalletFactory!.createFutureWallet();
   }
 
-  async addKey(to: string, publicKey: string, privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY, chainName = 'default') {
-    return this.selfExecute(to, 'addKey', [publicKey, keyPurpose], privateKey, transactionDetails, chainName);
+  async addKey(to: string, publicKey: string, privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY) {
+    return this.selfExecute(to, 'addKey', [publicKey, keyPurpose], privateKey, transactionDetails);
   }
 
-  async addKeys(to: string, publicKeys: string[], privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY, chainName = 'default') {
+  async addKeys(to: string, publicKeys: string[], privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY) {
     const keyRoles = new Array(publicKeys.length).fill(keyPurpose);
-    return this.selfExecute(to, 'addKeys', [publicKeys, keyRoles], privateKey, transactionDetails, chainName);
+    return this.selfExecute(to, 'addKeys', [publicKeys, keyRoles], privateKey, transactionDetails);
   }
 
-  async removeKey(to: string, key: string, privateKey: string, transactionDetails: Message, chainName = 'default') {
-    return this.selfExecute(to, 'removeKey', [key, MANAGEMENT_KEY], privateKey, transactionDetails, chainName);
+  async removeKey(to: string, key: string, privateKey: string, transactionDetails: Message) {
+    return this.selfExecute(to, 'removeKey', [key, MANAGEMENT_KEY], privateKey, transactionDetails);
   }
 
-  async setRequiredSignatures(to: string, requiredSignatures: number, privateKey: string, transactionDetails: Message, chainName = 'default') {
-    return this.selfExecute(to, 'setRequiredSignatures', [requiredSignatures], privateKey, transactionDetails, chainName);
+  async setRequiredSignatures(to: string, requiredSignatures: number, privateKey: string, transactionDetails: Message) {
+    return this.selfExecute(to, 'setRequiredSignatures', [requiredSignatures], privateKey, transactionDetails);
   }
 
-  async getMessageStatus(messageHash: string, chainName = 'default') {
-    return this.relayerApi.getStatus(messageHash, chainName);
+  async getMessageStatus(messageHash: string) {
+    return this.relayerApi.getStatus(messageHash);
   }
 
   async getRelayerConfig() {
@@ -100,64 +103,58 @@ class UniversalLoginSDK {
     return this.relayerConfig;
   }
 
-  async fetchDeploymentReadyObserver(chainName: string) {
-    const provider = this.chains[chainName].provider;
+  async fetchDeploymentReadyObserver() {
     ensureNotNull(this.relayerConfig, MissingConfiguration);
-    this.chains[chainName].deploymentReadyObserver = this.chains[chainName].deploymentReadyObserver || new DeploymentReadyObserver(this.relayerConfig!.networkConfig[chainName].supportedTokens, provider);
+    this.deploymentReadyObserver = this.deploymentReadyObserver || new DeploymentReadyObserver(this.relayerConfig!.networkConfig[this.chainName].supportedTokens, this.provider);
   }
 
-  async fetchDeploymentObserver(chainName: string) {
-    const provider = this.chains[chainName].provider;
+  async fetchDeploymentObserver() {
     ensureNotNull(this.relayerConfig, MissingConfiguration);
-    this.chains[chainName].deploymentObserver = this.chains[chainName].deploymentObserver || new DeploymentObserver(this.blockchainService, this.relayerConfig!.networkConfig[chainName].contractWhiteList, provider);
+    this.deploymentObserver = this.deploymentObserver || new DeploymentObserver(this.blockchainService, this.relayerConfig!.networkConfig[this.chainName].contractWhiteList);
   }
 
-  async fetchBalanceObserver(ensName: string, chainName: string) {
-    const provider = this.chains[chainName].provider;
-    const balanceChecker = new BalanceChecker(provider);
-    const walletContractAddress = await this.getWalletContractAddress(ensName, chainName);
+  async fetchBalanceObserver(ensName: string) {
+    if (this.balanceObserver) {
+      return;
+    }
+    const walletContractAddress = await this.getWalletContractAddress(ensName);
     ensureNotNull(walletContractAddress, InvalidContract);
     ensureNotNull(this.relayerConfig, MissingConfiguration);
 
     await this.tokensDetailsStore.fetchTokensDetails();
-    this.balanceObserver = new BalanceObserver(balanceChecker, walletContractAddress, this.tokensDetailsStore);
+    this.balanceObserver = new BalanceObserver(this.balanceChecker, walletContractAddress, this.tokensDetailsStore);
   }
 
-  async fetchAggregateBalanceObserver(ensName: string, chainName: string) {
-    await this.fetchBalanceObserver(ensName, chainName);
+  async fetchAggregateBalanceObserver(ensName: string) {
+    if (this.aggregateBalanceObserver) {
+      return;
+    }
+    await this.fetchBalanceObserver(ensName);
     this.aggregateBalanceObserver = new AggregateBalanceObserver(this.balanceObserver!, this.priceObserver, this.tokensValueConverter);
   }
 
-  getBlockchainObserver(chainName = 'default') {
-    const provider = this.chains[chainName].provider;
-    const blockchainObserver = new BlockchainObserver(this.blockchainService, provider);
-    this.chains[chainName].blockchainObserver = this.chains[chainName].blockchainObserver || blockchainObserver;
-    return this.chains[chainName].blockchainObserver;
-  }
-
-  private fetchFutureWalletFactory(chainName: string) {
+  private fetchFutureWalletFactory() {
     ensureNotNull(this.relayerConfig, Error, 'Relayer configuration not yet loaded');
     const futureWalletConfig = {
-      supportedTokens: this.relayerConfig!.networkConfig[chainName].supportedTokens,
-      factoryAddress: this.relayerConfig!.networkConfig[chainName].factoryAddress,
-      contractWhiteList: this.relayerConfig!.networkConfig[chainName].contractWhiteList,
-      chainSpec: this.relayerConfig!.networkConfig[chainName].chainSpec
+      supportedTokens: this.relayerConfig!.networkConfig[this.chainName].supportedTokens,
+      factoryAddress: this.relayerConfig!.networkConfig[this.chainName].factoryAddress,
+      contractWhiteList: this.relayerConfig!.networkConfig[this.chainName].contractWhiteList,
+      chainSpec: this.relayerConfig!.networkConfig[this.chainName].chainSpec
     };
-    const provider = this.chains[chainName].provider;
-    this.futureWalletFactory = new FutureWalletFactory(futureWalletConfig, provider, chainName, this.blockchainService, this.relayerApi);
+    this.futureWalletFactory = this.futureWalletFactory || new FutureWalletFactory(futureWalletConfig, this.provider, this.blockchainService, this.relayerApi);
   }
 
-  async execute(message: Message, privateKey: string, chainName = 'default'): Promise<Execution> {
+  async execute(message: Message, privateKey: string): Promise<Execution> {
     const unsignedMessage = {
       ...this.sdkConfig.paymentOptions,
       ...message,
-      nonce: message.nonce || parseInt(await this.getNonce(message.from!, chainName), 10),
+      nonce: message.nonce || parseInt(await this.getNonce(message.from!), 10),
     } as MessageWithFrom;
     const signedMessage: SignedMessage = createSignedMessage(unsignedMessage, privateKey);
-    return this.executionFactory.createExecution(signedMessage, chainName);
+    return this.executionFactory.createExecution(signedMessage);
   }
 
-  protected selfExecute(to: string, method: string , args: any[], privateKey: string, transactionDetails: Message, chainName: string) {
+  protected selfExecute(to: string, method: string , args: any[], privateKey: string, transactionDetails: Message) {
     const data = new utils.Interface(WalletContract.interface).functions[method].encode(args);
     const message = {
       ...transactionDetails,
@@ -165,70 +162,66 @@ class UniversalLoginSDK {
       from: to,
       data
     };
-    return this.execute(message, privateKey, chainName);
+    return this.execute(message, privateKey);
   }
 
-  async getKeyPurpose(walletContractAddress: string, key: string, chainName = 'default') {
-    const provider = this.chains[chainName].provider;
-    const walletContract = new Contract(walletContractAddress, WalletContract.interface, provider);
+  async getKeyPurpose(walletContractAddress: string, key: string) {
+    const walletContract = new Contract(walletContractAddress, WalletContract.interface, this.provider);
     return walletContract.getKeyPurpose(key);
   }
 
-  async getNonce(walletContractAddress: string, chainName = 'default') {
-    const provider = this.chains[chainName].provider;
-    const contract = new Contract(walletContractAddress, WalletContract.interface, provider);
+  async getNonce(walletContractAddress: string) {
+    const contract = new Contract(walletContractAddress, WalletContract.interface, this.provider);
     return contract.lastNonce();
   }
 
-  async getWalletContractAddress(ensName: string, chainName = 'default') {
-    const walletContractAddress = await this.resolveName(ensName, chainName);
-    const provider = this.chains[chainName].provider;
-    if (walletContractAddress && await this.blockchainService.getCode(walletContractAddress, provider)) {
+  async getWalletContractAddress(ensName: string) {
+    const walletContractAddress = await this.resolveName(ensName);
+    if (walletContractAddress && await this.blockchainService.getCode(walletContractAddress)) {
       return walletContractAddress;
     }
     return null;
   }
 
-  async walletContractExist(ensName: string, chainName = 'default') {
-    const walletContractAddress = await this.getWalletContractAddress(ensName, chainName);
+  async walletContractExist(ensName: string) {
+    const walletContractAddress = await this.getWalletContractAddress(ensName);
     return walletContractAddress !== null;
   }
 
-  async resolveName(ensName: string, chainName = 'default') {
+  async resolveName(ensName: string) {
     await this.getRelayerConfig();
-    const {ensAddress} = this.relayerConfig!.networkConfig[chainName].chainSpec;
-    const provider = this.chains[chainName].provider;
-    return resolveName(provider, ensAddress, ensName);
+    const {ensAddress} = this.relayerConfig!.networkConfig[this.chainName].chainSpec;
+    return resolveName(this.provider, ensAddress, ensName);
   }
 
-  async connect(walletContractAddress: string, chainName = 'default') {
+  async connect(walletContractAddress: string) {
     const {publicKey, privateKey} = createKeyPair();
-    await this.relayerApi.connect(walletContractAddress, publicKey, chainName);
+    await this.relayerApi.connect(walletContractAddress, publicKey);
     return {
       privateKey,
       securityCode: generateCode(publicKey)
     };
   }
 
-  async denyRequest(walletContractAddress: string, publicKey: string, privateKey: string, chainName = 'default') {
+  async denyRequest(walletContractAddress: string, publicKey: string, privateKey: string) {
     const cancelAuthorisationRequest = {walletContractAddress, publicKey};
     signCancelAuthorisationRequest(cancelAuthorisationRequest, privateKey);
-    await this.relayerApi.denyConnection(cancelAuthorisationRequest, chainName);
+    await this.relayerApi.denyConnection(cancelAuthorisationRequest);
     return publicKey;
   }
 
-  subscribe(eventType: string, filter: any, callback: Function, chainName = 'default') {
+  subscribe(eventType: string, filter: any, callback: Function) {
     ensure(['KeyAdded', 'KeyRemoved'].includes(eventType), InvalidEvent, eventType);
-    return this.chains[chainName].blockchainObserver!.subscribe(eventType, filter, callback);
+    return this.blockchainObserver.subscribe(eventType, filter, callback);
   }
 
-  async subscribeToBalances(ensName: string, callback: OnBalanceChange, chainName = 'default') {
-    await this.fetchBalanceObserver(ensName, chainName);
+  async subscribeToBalances(ensName: string, callback: OnBalanceChange) {
+    await this.fetchBalanceObserver(ensName);
     return this.balanceObserver!.subscribe(callback);
   }
 
-  async subscribeToAggregatedBalance(ensName: string, callback: OnAggregatedBalanceChange, chainName = 'default') {
-    await this.fetchAggregateBalanceObserver(ensName, chainName);
+  async subscribeToAggregatedBalance(ensName: string, callback: OnAggregatedBalanceChange) {
+    await this.fetchAggregateBalanceObserver(ensName);
     return this.aggregateBalanceObserver!.subscribe(callback);
   }
 
@@ -236,32 +229,24 @@ class UniversalLoginSDK {
     return this.priceObserver.subscribe(callback);
   }
 
-  subscribeAuthorisations(walletContractAddress: string, privateKey: string, callback: Function, chainName = 'default') {
+  subscribeAuthorisations(walletContractAddress: string, privateKey: string, callback: Function) {
     return this.authorisationsObserver.subscribe(
       signGetAuthorisationRequest({walletContractAddress}, privateKey),
-      chainName,
       (notifications: Notification[]) => callback(addCodesToNotifications(notifications))
     );
   }
 
   async start() {
-    for (const chainName in this.chains) {
-      this.getBlockchainObserver(chainName);
-      await this.chains[chainName].blockchainObserver!.start();
-    }
+    await this.blockchainObserver.start();
     await this.tokensDetailsStore.fetchTokensDetails();
   }
 
   stop() {
-    for (const chainName in this.chains) {
-      this.chains[chainName].blockchainObserver!.stop();
-    }
+    this.blockchainObserver.stop();
   }
 
   async finalizeAndStop() {
-    for (const chainName in this.chains) {
-      await this.chains[chainName].blockchainObserver!.finalizeAndStop();
-    }
+    await this.blockchainObserver.finalizeAndStop();
   }
 }
 

@@ -1,13 +1,9 @@
 import {utils} from 'ethers';
 
-export type ObservedToken = {
+export type TokenDetails = {
   address: string;
-  chainName?: string;
-};
-
-export type TokenDetails = ObservedToken & {
-  name: string;
   symbol: string;
+  name: string;
 };
 
 export type TokenDetailsWithBalance = TokenDetails & {

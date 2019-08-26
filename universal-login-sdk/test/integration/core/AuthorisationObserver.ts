@@ -24,7 +24,6 @@ describe('INT: AuthorisationsObserver', async () => {
   let privateKey: string;
   let wallet: Wallet;
   let getAuthorisationRequest: GetAuthorisationRequest;
-  const chainName = 'default';
 
   const createGetAuthorisationRequest = (walletContractAddress: string, privateKey: string) => {
     const getauthorisationRequest: GetAuthorisationRequest = {
@@ -44,14 +43,14 @@ describe('INT: AuthorisationsObserver', async () => {
 
   it('no authorisation requests', async () => {
     const callback = sinon.spy();
-    const unsubscribe = authorisationsObserver.subscribe(getAuthorisationRequest, chainName, callback);
+    const unsubscribe = authorisationsObserver.subscribe(getAuthorisationRequest, callback);
     unsubscribe();
     expect(callback).to.have.been.calledWith([]);
   });
 
   it('one authorisation requests', async () => {
     const callback = sinon.spy();
-    const unsubscribe = authorisationsObserver.subscribe(getAuthorisationRequest, chainName, callback);
+    const unsubscribe = authorisationsObserver.subscribe(getAuthorisationRequest, callback);
     expect(callback).to.have.been.calledWith([]);
     const {privateKey} = await sdk.connect(contractAddress);
     await waitUntil(() => !!callback.secondCall);
@@ -68,8 +67,8 @@ describe('INT: AuthorisationsObserver', async () => {
     const callback1 = sinon.spy();
     const callback2 = sinon.spy();
 
-    const unsubscribe1 = authorisationsObserver.subscribe(getAuthorisationRequest, chainName, callback1);
-    const unsubscribe2 = authorisationsObserver.subscribe(getAuthorisationRequest, chainName, callback2);
+    const unsubscribe1 = authorisationsObserver.subscribe(getAuthorisationRequest, callback1);
+    const unsubscribe2 = authorisationsObserver.subscribe(getAuthorisationRequest, callback2);
 
     await sdk.connect(contractAddress);
     await sdk.connect(newWalletContract.contractAddress);

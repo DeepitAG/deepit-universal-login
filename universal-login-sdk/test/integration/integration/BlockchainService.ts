@@ -8,23 +8,23 @@ describe('INT: BlockchainService', async () => {
   const provider = createMockProvider();
   const [deployer] = getWallets(provider);
   const expectedBytecode = `0x${getDeployedBytecode(WalletMaster as ContractJSON)}`;
-  const blockchainService = new BlockchainService();
+  const blockchainService = new BlockchainService(provider);
 
   it('getCode returns 0x if contract does not existing', async () => {
-    const bytecode = await blockchainService.getCode(TEST_ACCOUNT_ADDRESS, provider);
+    const bytecode = await blockchainService.getCode(TEST_ACCOUNT_ADDRESS);
     expect(bytecode).to.be.eq('0x');
   });
 
   it('getCode returns bytecode of existing contract', async () => {
     const {address} = await deployContract(deployer, WalletMaster);
-    expect(await blockchainService.getCode(address, provider)).to.be.eq(expectedBytecode);
+    expect(await blockchainService.getCode(address)).to.be.eq(expectedBytecode);
   });
 
   it('getBlockNumber should return increased block number', async () => {
-    const blockNumber = await blockchainService.getBlockNumber(provider);
+    const blockNumber = await blockchainService.getBlockNumber();
     expect(blockNumber).at.least(0);
     await deployContract(deployer, WalletMaster);
-    const blockNumber2 = await blockchainService.getBlockNumber(provider);
+    const blockNumber2 = await blockchainService.getBlockNumber();
     expect(blockNumber2).greaterThan(blockNumber);
     expect(blockNumber2).to.be.eq(blockNumber + 1);
   });
@@ -40,12 +40,12 @@ describe('INT: BlockchainService', async () => {
           '0x0000000000000000000000000000000000000000000000000000000000000001' ],
       logIndex: 0 };
     const {address} = await deployContract(deployer, WalletMaster);
-    const logs = await blockchainService.getLogs({address}, provider);
+    const logs = await blockchainService.getLogs({address});
     expect(logs).to.have.length(1);
     expect(logs[0]).to.deep.include(expectedPartOfLog);
   });
 
   it('should return empty array if does not match the logs', async () => {
-    expect(await blockchainService.getLogs({address: TEST_ACCOUNT_ADDRESS}, provider)).to.be.deep.eq([]);
+    expect(await blockchainService.getLogs({address: TEST_ACCOUNT_ADDRESS})).to.be.deep.eq([]);
   });
 });

@@ -27,7 +27,6 @@ describe('E2E: SDK', async () => {
   let mockToken;
   let message;
   let walletContract;
-  const chainName = 'default';
 
   beforeEach(async () => {
     ({provider, mockToken, otherWallet, otherWallet2, sdk, privateKey, contractAddress, walletContract, relayer} = await loadFixture(basicSDK));
@@ -40,20 +39,20 @@ describe('E2E: SDK', async () => {
 
   describe('Create', async () => {
     describe('Initalization', () => {
-      it('creates sdk from provider dictionary', () => {
-        const providerDict = { default: provider };
-        const universalLoginSDK = new UniversalLoginSDK(relayer.url(), providerDict);
-        expect(universalLoginSDK.chains[chainName].provider.connection.url).to.eq(provider.connection.url);
+      it('creates provider from URL', () => {
+        const universalLoginSDK = new UniversalLoginSDK(relayer.url(), jsonRpcUrl);
+        expect(universalLoginSDK.provider.connection.url).to.eq(jsonRpcUrl);
       });
 
       it('should register ENS name', async () => {
-        expect(await relayer.config.networkConfig[chainName].provider.resolveName('alex.mylogin.eth')).to.eq(contractAddress);
+        const relayerProvider = relayer.multiChainService.getProvider('default');;
+        expect(await relayerProvider.resolveName('alex.mylogin.eth')).to.eq(contractAddress);
       });
 
       it('should return ens config', async () => {
-        const expectedEnsAddress = relayer.config.networkConfig[chainName].chainSpec.ensAddress;
+        const expectedEnsAddress = relayer.multiChainService.getChainSpec('default').ensAddress;
         const response = await sdk.getRelayerConfig();
-        expect(response.networkConfig[chainName].chainSpec.ensAddress).to.eq(expectedEnsAddress);
+        expect(response.networkConfig['default'].chainSpec.ensAddress).to.eq(expectedEnsAddress);
       });
     });
   });
@@ -74,13 +73,13 @@ describe('E2E: SDK', async () => {
     });
 
     it('Should increment nonce', async () => {
-      expect(await sdk.getNonce(contractAddress)).to.eq(0);
+      expect(await sdk.getNonce(contractAddress, privateKey)).to.eq(0);
       const {waitToBeMined} = await sdk.execute(message, privateKey);
       await waitToBeMined();
-      expect(await sdk.getNonce(contractAddress)).to.eq(1);
+      expect(await sdk.getNonce(contractAddress, privateKey)).to.eq(1);
       ({waitToBeMined} = await sdk.execute(message, privateKey));
       await waitToBeMined();
-      expect(await sdk.getNonce(contractAddress)).to.eq(2);
+      expect(await sdk.getNonce(contractAddress, privateKey)).to.eq(2);
     });
 
     it('when not enough tokens ', async () => {
@@ -161,11 +160,11 @@ describe('E2E: SDK', async () => {
 
   describe('Get nonce', async () => {
     it('getNonce should return correct nonce', async () => {
-      const executionNonce = await sdk.getNonce(contractAddress);
+      const executionNonce = await sdk.getNonce(contractAddress, privateKey);
       expect(executionNonce).to.eq(0);
       const {waitToBeMined} = await sdk.addKey(contractAddress, otherWallet.address, privateKey, {gasToken: mockToken.address});
       await waitToBeMined();
-      expect(await sdk.getNonce(contractAddress)).to.eq(executionNonce.add(1));
+      expect(await sdk.getNonce(contractAddress, privateKey)).to.eq(executionNonce.add(1));
     });
   });
 
@@ -219,7 +218,7 @@ describe('E2E: SDK', async () => {
     describe('Authorisation', async () => {
       it('no pending authorisations', async () => {
         const getAuthorisationRequest = signGetAuthorisationRequest({walletContractAddress: contractAddress}, privateKey);
-        expect(await sdk.authorisationsObserver.fetchPendingAuthorisations(getAuthorisationRequest, chainName)).to.deep.eq([]);
+        expect(await sdk.authorisationsObserver.fetchPendingAuthorisations(getAuthorisationRequest)).to.deep.eq([]);
       });
 
 
@@ -229,7 +228,7 @@ describe('E2E: SDK', async () => {
 
         const getAuthorisationRequest = signGetAuthorisationRequest({walletContractAddress: contractAddress}, privateKey);
 
-        const response = await sdk.authorisationsObserver.fetchPendingAuthorisations(getAuthorisationRequest, chainName);
+        const response = await sdk.authorisationsObserver.fetchPendingAuthorisations(getAuthorisationRequest);
         expect(response[response.length - 1]).to.deep.include({key: wallet.address});
       });
 

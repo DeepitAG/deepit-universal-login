@@ -25,7 +25,7 @@ describe('UI: Transfer', () => {
     const [wallet] = await getWallets(createMockProvider());
     ({relayer, provider} = await setupSdk(wallet, '33113'));
     ({mockTokenContract} = await createFixtureLoader(provider as providers.Web3Provider)(deployMockToken));
-    ({appWrapper, appPage, services} = await setupUI(relayer, {address: mockTokenContract.address, chainName: 'default'}));
+    ({appWrapper, appPage, services} = await setupUI(relayer, mockTokenContract.address));
   });
 
   it('Creates wallet and transfers ethers', async () => {

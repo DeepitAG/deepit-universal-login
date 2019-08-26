@@ -14,7 +14,6 @@ describe('UNIT: ExecutionFactory', async () => {
   let executionStatus: MessageStatus;
   let getStatus: SinonSpy;
   const callCount = 2;
-  const chainName = 'default';
 
   before(async () => {
     signedMessage = createSignedMessage({from: TEST_ACCOUNT_ADDRESS, value: utils.parseEther('3'), to: TEST_ACCOUNT_ADDRESS}, TEST_PRIVATE_KEY);
@@ -41,7 +40,7 @@ describe('UNIT: ExecutionFactory', async () => {
   });
 
   it('waitToBeMined success', async () => {
-    const execution = await executionFactory.createExecution(signedMessage, chainName);
+    const execution = await executionFactory.createExecution(signedMessage);
     await execution.waitToBeMined();
     expect(execution.messageStatus).to.be.deep.eq(executionStatus);
     expect(getStatus.callCount).be.eq(callCount);
@@ -50,7 +49,7 @@ describe('UNIT: ExecutionFactory', async () => {
   it('waitToBeMined error', async () => {
     delete status.transactionHash;
     status.error = 'Error: waitToBeMined';
-    const execution = await executionFactory.createExecution(signedMessage, chainName);
+    const execution = await executionFactory.createExecution(signedMessage);
     expect(execution.messageStatus).to.be.deep.eq(executionStatus);
     await expect(execution.waitToBeMined()).to.be.rejectedWith('Error: waitToBeMined');
     expect(getStatus.callCount).be.eq(callCount);
@@ -64,7 +63,7 @@ describe('UNIT: ExecutionFactory', async () => {
     delete expectedStatus.transactionHash;
     delete expectedStatus.error;
     relayerApi.execute = sinon.stub().returns({status: expectedStatus});
-    const execution = await executionFactory.createExecution(signedMessage, chainName);
+    const execution = await executionFactory.createExecution(signedMessage);
     expect(await execution.waitToBeMined()).to.be.deep.eq(expectedStatus);
     expect(getStatus.callCount).be.eq(0);
   });

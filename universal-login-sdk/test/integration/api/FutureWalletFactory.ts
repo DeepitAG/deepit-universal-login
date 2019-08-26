@@ -22,7 +22,6 @@ describe('INT: FutureWalletFactory', async () => {
   let ensAddress: string;
   const relayerPort = '33511';
   const relayerUrl = `http://localhost:${relayerPort}`;
-  const chainName = 'default';
 
   before(async () => {
     provider = createMockProvider();
@@ -39,12 +38,11 @@ describe('INT: FutureWalletFactory', async () => {
         name: ''
       }
     };
-    const blockchainService = new BlockchainService();
+    const blockchainService = new BlockchainService(provider);
     const relayerApi = new RelayerApi(relayerUrl);
     futureWalletFactory = new FutureWalletFactory(
       futureWalletConfig,
       provider,
-      chainName,
       blockchainService,
       relayerApi
     );

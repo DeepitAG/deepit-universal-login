@@ -9,15 +9,13 @@ describe('INT: TokensDetailsStore', () => {
   let mockToken: Contract;
   let tokensDetailsStore: TokensDetailsStore;
   let tokenDetailsService: TokenDetailsService;
-  const chainName = 'default';
 
   before(async () => {
     const provider = createMockProvider();
     const [wallet] = await getWallets(provider);
     mockToken = await deployContract(wallet, MockToken, []);
-    const multichainConfig = { default: {provider} };
-    tokenDetailsService = new TokenDetailsService();
-    tokensDetailsStore = new TokensDetailsStore(tokenDetailsService, [{address: mockToken.address, chainName}, {address: ETHER_NATIVE_TOKEN.address, chainName}], multichainConfig);
+    tokenDetailsService = new TokenDetailsService(provider);
+    tokensDetailsStore = new TokensDetailsStore(tokenDetailsService, [mockToken.address, ETHER_NATIVE_TOKEN.address]);
   });
 
   it('token details', async () => {

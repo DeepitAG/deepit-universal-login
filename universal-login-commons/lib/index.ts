@@ -2,7 +2,7 @@ export {Omit, PartialRequired, Procedure, Predicate, DeepPartial} from './core/t
 export {DeviceInfo, Notification} from './core/models/notifications';
 export {PaymentOptions, Message, MessageWithFrom, MessageWithoutFrom, SignedMessage, UnsignedMessage, MessageStatus, MessageState, CollectedSignatureKeyPair} from './core/models/message';
 export * from './core/models/ContractJSON';
-export {SupportedToken, ContractWhiteList, ChainSpec, OnRampConfig, PublicRelayerConfig, NetworkConfig, NetworkData, PublicNetworkConfig} from './core/models/relayer';
+export {SupportedToken, ContractWhiteList, ChainSpec, OnRampConfig, PublicRelayerConfig, NetworkConfig, NetworkData, PublicNetworkData, PublicNetworkConfig} from './core/models/relayer';
 export {LocalizationConfig, SafelloConfig, RampConfig} from './core/models/onRamp';
 export {createKeyPair, KeyPair} from './core/models/keyPair';
 export {TransactionOverrides, TransferDetails} from './core/models/transactions';
@@ -52,7 +52,7 @@ export {slices, shuffle, array8bitTo16bit} from './core/utils/arrays';
 export {SECURITY_CODE_LENGTH, generateCode, generateCodeWithFakes, isValidCode, addCodesToNotifications, isProperCodeNumber, isProperSecurityCode, isProperSecurityCodeWithFakes} from './core/utils/securityCodes';
 export {deepMerge} from './core/utils/deepMerge';
 export {walletFromBrain} from './integration/ethereum/walletFromBrain';
-export {TokenDetails, TokenDetailsWithBalance, ObservedToken} from './core/models/TokenData';
+export {TokenDetails, TokenDetailsWithBalance} from './core/models/TokenData';
 export {normalizeBigNumber} from './core/utils/bigNumbers';
 export {stringToEther} from './integration/ethereum/stringToEther';
 export {isValidAmount} from './core/utils/isValidAmount';

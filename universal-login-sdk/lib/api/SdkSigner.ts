@@ -11,10 +11,9 @@ export class SdkSigner extends ethers.Signer {
     private sdk: UniversalLoginSDK,
     public contractAddress: string,
     privateKey: string,
-    private chainName: string = 'default'
   ) {
     super();
-    this.provider = this.sdk.chains[chainName].provider;
+    this.provider = sdk.provider;
     this.wallet = new Wallet(privateKey, this.provider);
   }
 
@@ -45,7 +44,7 @@ export class SdkSigner extends ethers.Signer {
     if (transaction.value !== undefined) {
       message.value = await transaction.value;
     }
-    const execution = await this.sdk.execute(message, this.wallet.privateKey, this.chainName);
+    const execution = await this.sdk.execute(message, this.wallet.privateKey);
     const {transactionHash} = await execution.waitToBeMined();
     ensureNotNull(transactionHash, TransactionHashNotFound);
     return this.provider.getTransaction(transactionHash!);

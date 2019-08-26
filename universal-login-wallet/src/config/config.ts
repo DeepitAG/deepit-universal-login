@@ -8,29 +8,20 @@ export default Object.freeze({
     domains: ['mylogin.eth'],
     relayerUrl: 'http://localhost:3311',
     jsonRpcUrl: 'http://localhost:18545',
-    tokens: [
-      {address: process.env.TOKEN_CONTRACT_ADDRESS!, chainName: 'default'},
-      {address: ETHER_NATIVE_TOKEN.address, chainName: 'default'}
-    ],
+    tokens: [process.env.TOKEN_CONTRACT_ADDRESS!, ETHER_NATIVE_TOKEN.address],
   },
 
   test: {
     domains: ['mylogin.eth'],
     relayerUrl: 'http://localhost:3311',
     jsonRpcUrl: 'http://localhost:18545',
-    tokens: [
-      {address: process.env.TOKEN_CONTRACT_ADDRESS!, chainName: 'default'},
-      {address: ETHER_NATIVE_TOKEN.address, chainName: 'default'}
-    ],
+    tokens: [process.env.TOKEN_CONTRACT_ADDRESS!, ETHER_NATIVE_TOKEN.address],
   },
 
   production: {
     domains: [process.env.ENS_DOMAIN_1!],
     relayerUrl: process.env.RELAYER_URL!,
     jsonRpcUrl: process.env.JSON_RPC_URL!,
-    tokens: [
-      {address: process.env.TOKEN_CONTRACT_ADDRESS!, chainName: 'default'},
-      {address: ETHER_NATIVE_TOKEN.address, chainName: 'default'}
-    ],
+    tokens: [process.env.TOKEN_CONTRACT_ADDRESS!, ETHER_NATIVE_TOKEN.address],
   }
 });

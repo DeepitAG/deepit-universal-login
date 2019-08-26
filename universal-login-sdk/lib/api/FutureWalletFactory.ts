@@ -1,5 +1,5 @@
 import {providers} from 'ethers';
-import {NetworkData, calculateInitializeSignature} from '@universal-login/commons';
+import {PublicNetworkData, calculateInitializeSignature} from '@universal-login/commons';
 import {DeploymentReadyObserver} from '../core/observers/DeploymentReadyObserver';
 import {DeploymentObserver} from '../core/observers/DeploymentObserver';
 import {BlockchainService} from '../integration/ethereum/BlockchainService';
@@ -19,7 +19,7 @@ export type FutureWallet = {
   deploy: (ensName: string, gasPrice: string) => Promise<string>
 };
 
-type FutureFactoryConfig = Pick<NetworkData, 'supportedTokens' | 'factoryAddress' | 'contractWhiteList' | 'chainSpec'>;
+type FutureFactoryConfig = Pick<PublicNetworkData, 'supportedTokens' | 'factoryAddress' | 'contractWhiteList' | 'chainSpec'>;
 
 export class FutureWalletFactory {
   private ensService: ENSService;
@@ -27,7 +27,6 @@ export class FutureWalletFactory {
   constructor(
     private config: FutureFactoryConfig,
     private provider: providers.Provider,
-    private chainName: string,
     private blockchainService: BlockchainService,
     private relayerApi: RelayerApi) {
       this.ensService = new ENSService(provider, config.chainSpec.ensAddress);
@@ -40,7 +39,7 @@ export class FutureWalletFactory {
   }
 
   async createFutureWallet(): Promise<FutureWallet> {
-    const [privateKey, contractAddress, publicKey] = await this.blockchainService.createFutureWallet(this.config.factoryAddress, this.provider);
+    const [privateKey, contractAddress, publicKey] = await this.blockchainService.createFutureWallet(this.config.factoryAddress);
     const waitForBalance = async () => new Promise(
       (resolve) => {
         const onReadyToDeploy = (tokenAddress: string, contractAddress: string) => resolve({tokenAddress, contractAddress});
@@ -52,10 +51,10 @@ export class FutureWalletFactory {
     const deploy = async (ensName: string, gasPrice: string) => {
       const initData = await this.setupInitData(publicKey, ensName, gasPrice);
       const signature = await calculateInitializeSignature(initData, privateKey);
-      await this.relayerApi.deploy(publicKey, ensName, gasPrice, signature, this.chainName);
+      await this.relayerApi.deploy(publicKey, ensName, gasPrice, signature);
       return new Promise(
         (resolve) => {
-          const deploymentObserver = new DeploymentObserver(this.blockchainService, this.config.contractWhiteList, this.provider);
+          const deploymentObserver = new DeploymentObserver(this.blockchainService, this.config.contractWhiteList);
           const onContractDeployed = (contractAddress: string) => resolve(contractAddress);
           deploymentObserver.startAndSubscribe(contractAddress, onContractDeployed);
         }
