@@ -1,5 +1,5 @@
 import fetch from 'node-fetch';
-import {Wallet, Contract, utils} from 'ethers';
+import {Contract, utils} from 'ethers';
 import {http, HttpFunction, PublicRelayerConfig, createKeyPair, calculateInitializeSignature, computeContractAddress, TEST_GAS_PRICE} from '@universal-login/commons';
 import {encodeInitializeWithRefundData} from '@universal-login/contracts';
 import ProxyCounterfactualFactory from '@universal-login/contracts/build/ProxyCounterfactualFactory.json';

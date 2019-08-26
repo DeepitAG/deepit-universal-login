@@ -79,14 +79,14 @@ export const getInitData = async (keyPair, ensName, ensAddress, provider, gasPri
   return encodeInitializeWithRefundData([keyPair.publicKey, hashLabel, ensName, node, ensAddress, registrarAddress, resolverAddress, gasPrice]);
 };
 
-export const postAuthorisationRequest = async(relayer, walletContractAddress, keyPair, chainName) =>
-  await chai.request(relayer.server)
+export const postAuthorisationRequest = (relayer, walletContractAddress, keyPair, chainName) =>
+  chai.request(relayer.server)
     .post('/authorisation')
     .send({
       walletContractAddress,
       key: keyPair.publicKey,
       chainName
-    })
+    });
 
 
 export const getAuthorisation = async (relayer, walletContractAddress, keyPair, chainName) => {
@@ -103,4 +103,4 @@ export const getAuthorisation = async (relayer, walletContractAddress, keyPair, 
       key: keyPair.publicKey,
     });
   return {result, response: result.body.response};
-}
+};

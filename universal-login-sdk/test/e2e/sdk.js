@@ -45,7 +45,7 @@ describe('E2E: SDK', async () => {
       });
 
       it('should register ENS name', async () => {
-        const relayerProvider = relayer.multiChainService.getProvider('default');;
+        const relayerProvider = relayer.multiChainService.getProvider('default');
         expect(await relayerProvider.resolveName('alex.mylogin.eth')).to.eq(contractAddress);
       });
 

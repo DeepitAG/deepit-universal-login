@@ -8,25 +8,21 @@ import {Provider} from 'ethers/providers';
 import {WalletCreator} from '../helpers/WalletCreator';
 
 describe('E2E: Relayer - Multi-Chain', async () => {
-  let provider1: Provider;
   let provider2: Provider;
   let ensAddress2: any;
   let deployer1: Wallet;
   let deployer2: Wallet;
   let walletMaster2: Contract;
   let factoryContract2: Contract;
-  let wallet: Wallet;
   let otherWallet: Wallet;
   let relayer: any;
   let walletCreator: WalletCreator;
   const chainName = 'default';
   const otherChainName = 'otherChain';
   const ensName = 'giulio.mylogin.eth';
-  let keyPair1;
-  let keyPair2;
 
   beforeEach(async () => {
-    ({provider1, provider2, deployer1, deployer2, ensAddress2, walletMaster2, factoryContract2, wallet, otherWallet, relayer} = await startMultiChainRelayer());
+    ({provider2, deployer1, deployer2, ensAddress2, walletMaster2, factoryContract2, otherWallet, relayer} = await startMultiChainRelayer());
     walletCreator = new WalletCreator(relayer);
   });
 
