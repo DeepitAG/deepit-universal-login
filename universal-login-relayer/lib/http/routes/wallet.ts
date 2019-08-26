@@ -2,15 +2,8 @@ import {Router} from 'express';
 import WalletService from '../../integration/ethereum/WalletService';
 import MessageHandler from '../../core/services/MessageHandler';
 import {SignedMessage, DeployArgs} from '@universal-login/commons';
-import {asyncHandler, sanitize, responseOf, asString, asObject, asNumber, asOptional} from '@restless/restless';
-import {asBigNumberish, asOverrideOptions, asArrayish} from '../utils/sanitizers';
-
-const create = (walletContractService : WalletService) =>
-  async (data: {body: {managementKey: string, ensName: string, chainName: string, overrideOptions?: {}}}) => {
-    const {managementKey, ensName, overrideOptions, chainName} = data.body;
-    const transaction = await walletContractService.create(managementKey, ensName, chainName, overrideOptions);
-    return responseOf({transaction}, 201);
-  };
+import {asyncHandler, sanitize, responseOf, asString, asObject, asNumber} from '@restless/restless';
+import {asBigNumberish, asArrayish} from '../utils/sanitizers';
 
 const execution = (messageHandler : MessageHandler) =>
   async (data: {body: {signedMessage: SignedMessage, chainName: string}}) => {
@@ -33,18 +26,6 @@ const deploy = (walletContractService: WalletService) =>
 
 export default (walletContractService : WalletService, messageHandler: MessageHandler) => {
   const router = Router();
-
-  router.post('/', asyncHandler(
-    sanitize({
-      body: asObject({
-        managementKey: asString,
-        ensName: asString,
-        chainName: asString,
-        overrideOptions: asOptional(asOverrideOptions)
-      })
-    }),
-    create(walletContractService)
-  ));
 
   router.post('/execution', asyncHandler(
     sanitize({

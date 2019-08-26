@@ -20,7 +20,7 @@ describe('INT: Development Relayer', async () => {
     provider = createMockProvider();
     [wallet] = getWallets(provider);
     ({relayer, tokenContract} = await startRelayer(wallet, DevelopmentRelayer));
-    const walletCreator = new WalletCreator(relayer as any, wallet);
+    const walletCreator = new WalletCreator(relayer as any);
     ({contractAddress} = await walletCreator.deployWallet(chainName));
   });
 

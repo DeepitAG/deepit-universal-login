@@ -1,6 +1,6 @@
 import chai, {expect} from 'chai';
 import chaiHttp from 'chai-http';
-import {startRelayer, createWalletContract, getAuthorisation, postAuthorisationRequest} from '../helpers/http';
+import {startRelayerWithRefund, createWalletCounterfactually, getAuthorisation, postAuthorisationRequest} from '../helpers/http';
 import {signCancelAuthorisationRequest, signGetAuthorisationRequest, createKeyPair} from '@universal-login/commons';
 import {utils} from 'ethers';
 
@@ -9,29 +9,38 @@ chai.use(chaiHttp);
 
 describe('E2E: Relayer - Authorisation routes', async () => {
   let relayer;
-  let provider;
-  let wallet;
   let otherWallet;
   let contract;
+  let keyPair;
+  let walletMaster;
+  let factoryContract;
+  let ensAddress;
+  let deployer;
+
+  const relayerPort = '33511';
+  const relayerUrl = `http://localhost:${relayerPort}`;
   const chainName = 'default';
 
   beforeEach(async () => {
-    ({provider, wallet, otherWallet, relayer} = await startRelayer());
-    contract = await createWalletContract(provider, relayer.server, wallet.address);
+    keyPair = createKeyPair();
+    ({otherWallet, relayer, deployer, walletMaster, ensAddress, factoryContract} = await startRelayerWithRefund(relayerPort));
+    contract = await createWalletCounterfactually(deployer, relayerUrl, keyPair, walletMaster.address, factoryContract.address, ensAddress);
   });
 
   it('get empty pending authorisations', async () => {
-    const {result, response} = await getAuthorisation(relayer, contract, wallet, chainName);
+    const {result} = await getAuthorisation(relayer, contract.address, keyPair, chainName);
     expect(result.status).to.eq(200);
     expect(result.body.response).to.deep.eq([]);
   });
 
   it('create and get authorisation', async () => {
-    await postAuthorisationRequest(relayer, contract, wallet, chainName);
-    const {result, response} = await getAuthorisation(relayer, contract, wallet, chainName);
+    const newKeyPair = createKeyPair();
+    await postAuthorisationRequest(relayer, contract.address, newKeyPair, chainName);
+
+    const {result, response} = await getAuthorisation(relayer, contract.address, keyPair, chainName);
     expect(result.status).to.eq(200);
     expect(response[0]).to.include({
-      key: wallet.address,
+      key: newKeyPair.publicKey,
       walletContractAddress: contract.address,
     });
     expect(response[0].deviceInfo).to.deep.include({
@@ -41,34 +50,34 @@ describe('E2E: Relayer - Authorisation routes', async () => {
   });
 
   it('deny request', async () => {
-    await postAuthorisationRequest(relayer, contract, wallet, chainName);
+    const newKeyPair = createKeyPair();
+    await postAuthorisationRequest(relayer, contract.address, newKeyPair, chainName);
 
     const cancelAuthorisationRequest = {
       walletContractAddress: contract.address,
-      publicKey: wallet.address,
+      publicKey: newKeyPair.publicKey,
       signature: ''
     };
-    signCancelAuthorisationRequest(cancelAuthorisationRequest, wallet.privateKey);
+    signCancelAuthorisationRequest(cancelAuthorisationRequest, keyPair.privateKey);
     const result = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
       .send({cancelAuthorisationRequest, chainName});
     expect(result.status).to.eq(204);
 
 
-    const {result, response} = await getAuthorisation(relayer, contract, wallet, chainName);
+    const {result, response} = await getAuthorisation(relayer, contract.address, keyPair, chainName);
     expect(response).to.deep.eq([]);
   });
 
   it('Send valid cancel request', async () => {
     const {publicKey} = createKeyPair();
-
     const cancelAuthorisationRequest = {
       walletContractAddress: contract.address,
       publicKey,
       signature: ''
     };
 
-    signCancelAuthorisationRequest(cancelAuthorisationRequest, wallet.privateKey);
+    signCancelAuthorisationRequest(cancelAuthorisationRequest, keyPair.privateKey);
     const {body, status} = await chai.request(relayer.server)
       .post(`/authorisation//${contract.address}`)
       .send({cancelAuthorisationRequest, chainName});
@@ -98,7 +107,6 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
   it('Forged getPending request', async () => {
     const attackerPrivateKey = createKeyPair().privateKey;
-    const attackerAddress = utils.computeAddress(attackerPrivateKey);
     const getAuthorisationRequest = {
       walletContractAddress: contract.address,
       signature: ''

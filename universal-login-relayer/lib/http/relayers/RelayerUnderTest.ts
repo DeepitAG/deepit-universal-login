@@ -75,7 +75,7 @@ export class RelayerUnderTest extends Relayer {
     const mockToken2 = await deployContract(wallet2, MockToken as any);
     const walletMaster1 = await deployContract(wallet1, WalletMasterWithRefund as any);
     const walletMaster2 = await deployContract(wallet2, WalletMasterWithRefund as any);
-    const factoryContract1 = await deployFactory(wallet2, walletMaster1.address);
+    const factoryContract1 = await deployFactory(wallet1, walletMaster1.address);
     const factoryContract2 = await deployFactory(wallet2, walletMaster2.address);
     const supportedTokens1 = [
       {

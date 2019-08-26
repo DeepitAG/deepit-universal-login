@@ -1,41 +1,15 @@
 import {EventEmitter} from 'fbemitter';
-import {ContractFactory, utils} from 'ethers';
-import {Abi, defaultDeployOptions, ensureNotNull, ensure, RequiredBalanceChecker, BalanceChecker, computeContractAddress, DeployArgs, getInitializeSigner, DEPLOY_GAS_LIMIT} from '@universal-login/commons';
-import {encodeInitializeWithENSData, encodeInitializeWithRefundData} from '@universal-login/contracts';
-import ProxyContract from '@universal-login/contracts/build/Proxy.json';
+import {utils} from 'ethers';
+import {ensureNotNull, ensure, RequiredBalanceChecker, BalanceChecker, computeContractAddress, DeployArgs, getInitializeSigner, DEPLOY_GAS_LIMIT} from '@universal-login/commons';
+import {encodeInitializeWithRefundData} from '@universal-login/contracts';
 import ENSService from './ensService';
 import {InvalidENSDomain, NotEnoughBalance, EnsNameTaken, InvalidSignature} from '../../core/utils/errors';
 import {WalletDeployer} from '../ethereum/WalletDeployer';
 import {MultiChainService} from '../../core/services/MultiChainService';
 
 class WalletService {
-  private bytecode: string;
-  private abi: Abi;
 
   constructor(private multiChainService: MultiChainService, private ensService: ENSService, private hooks: EventEmitter) {
-    const contractJSON = ProxyContract;
-    this.abi = contractJSON.interface;
-    this.bytecode = `0x${contractJSON.evm.bytecode.object}`;
-  }
-
-  async create(key: string, ensName: string, chainName: string, overrideOptions = {}) {
-    const ensArgs = await this.ensService.argsFor(ensName, chainName);
-    if (ensArgs !== null) {
-      let args = [key, ...ensArgs] as string[];
-      const initData = encodeInitializeWithENSData(args);
-      const walletMasterAddress = this.multiChainService.getWalletMasterAddress(chainName);
-      const wallet = this.multiChainService.getWallet(chainName);
-      args = [walletMasterAddress, initData];
-      const deployTransaction = {
-        ...defaultDeployOptions,
-        ...overrideOptions,
-        ...new ContractFactory(this.abi, this.bytecode).getDeployTransaction(...args),
-      };
-      const transaction = await wallet.sendTransaction(deployTransaction);
-      this.hooks.emit('created', transaction, chainName);
-      return transaction;
-    }
-    throw new InvalidENSDomain(ensName);
   }
 
   async deploy({publicKey, ensName, gasPrice, signature, chainName}: DeployArgs) {

@@ -20,7 +20,7 @@ describe('WalletCreator', () => {
     const [wallet] = getWallets(provider);
     ({relayer} = await RelayerUnderTest.createPreconfigured(wallet, relayerPort));
     await relayer.start();
-    walletCreator = new WalletCreator(relayer as any, wallet);
+    walletCreator = new WalletCreator(relayer as any);
   });
 
   afterEach(async () => {
@@ -29,16 +29,16 @@ describe('WalletCreator', () => {
 
   it('Creates wallet contract', async () => {
     const applicationWallet = await walletCreator.createFutureWallet(chainName);
-    expect(applicationWallet.privateKey).to.be.properPrivateKey;
+    expect(applicationWallet.keyPair.privateKey).to.be.properPrivateKey;
     expect(applicationWallet.contractAddress).to.be.properAddress;
   });
 
   it('Sends funds to the contract', async () => {
-    const {contractAddress, publicKey} = await walletCreator.deployWallet(chainName);
+    const {contractAddress, keyPair} = await walletCreator.deployWallet(chainName);
     expect(await provider.getBalance(contractAddress)).to.eq('999999999999500000');
     expect(contractAddress).to.be.properAddress;
     expect(await provider.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
     const walletContract = new Contract(contractAddress, WalletMasterWithRefund.interface, provider);
-    expect(await walletContract.getKeyPurpose(publicKey)).to.eq(MANAGEMENT_KEY);
+    expect(await walletContract.getKeyPurpose(keyPair.publicKey)).to.eq(MANAGEMENT_KEY);
   });
 });

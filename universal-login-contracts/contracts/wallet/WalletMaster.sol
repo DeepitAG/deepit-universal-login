@@ -1,9 +1,9 @@
 pragma solidity ^0.5.2;
 
 import "openzeppelin-solidity/contracts/token/ERC721/IERC721Receiver.sol";
-import "./erc1836/masters/MasterBase.sol";
-import "./erc1836/interfaces/IERC1271.sol";
-import "./ENSRegistered.sol";
+import "../proxy/MasterBase.sol";
+import "../interfaces/IERC1271.sol";
+import "../utils/ENSRegistered.sol";
 import "./ERC1077.sol";
 
 
@@ -57,14 +57,6 @@ contract WalletMaster is MasterBase, ENSRegistered, ERC1077, IERC1271, IERC721Re
         }
     }
 
-    function getMagicValue() private pure returns(bytes4) {
-        return 0x20c13b0b;
-    }
-
-    function getInvalidSignature() private pure returns(bytes4) {
-        return 0xffffffff;
-    }
-
     function onERC721Received(address, address, uint256, bytes memory) public returns (bytes4 magicValue) {
         return this.onERC721Received.selector;
     }
@@ -91,5 +83,13 @@ contract WalletMaster is MasterBase, ENSRegistered, ERC1077, IERC1271, IERC721Re
             i /= 10;
         }
         return string(bstr);
+    }
+
+    function getMagicValue() private pure returns(bytes4) {
+        return 0x20c13b0b;
+    }
+
+    function getInvalidSignature() private pure returns(bytes4) {
+        return 0xffffffff;
     }
 }
