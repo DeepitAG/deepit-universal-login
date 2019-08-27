@@ -1,7 +1,7 @@
 import {MultiChainService} from '../../lib/core/services/MultiChainService';
 import {NetworkConfig, ChainSpec, deployContract, ContractJSON, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
 import {utils} from 'ethers';
-import WalletMasterWithRefund from '@universal-login/contracts/build/WalletMasterWithRefund.json';
+import WalletMaster from '@universal-login/contracts/build/WalletMaster.json';
 import {getWallets} from 'ethereum-waffle';
 import {Provider} from 'ethers/providers';
 import {getContractWhiteList} from '../../lib/http/relayers/RelayerUnderTest';
@@ -9,7 +9,7 @@ import {deployFactory} from '@universal-login/contracts';
 
 export async function setupMultiChainService(provider: Provider, ensRegistrars = []) {
   const [wallet] = getWallets(provider);
-  const walletMaster = await deployContract(wallet, WalletMasterWithRefund as ContractJSON);
+  const walletMaster = await deployContract(wallet, WalletMaster as ContractJSON);
   await walletMaster.deployed();
   const contractWhiteList = getContractWhiteList();
   const factory = await deployFactory(wallet, walletMaster.address);

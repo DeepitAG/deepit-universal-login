@@ -1,6 +1,6 @@
 import chai, {expect} from 'chai';
 import {startMultiChainRelayer, getAuthorisation, postAuthorisationRequest, getInitData} from '../helpers/http';
-import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateInitializeSignature, createSignedMessage, waitExpect, TEST_GAS_PRICE, OPERATION_CALL} from '@universal-login/commons';
+import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateInitializeSignature, createSignedMessage, waitExpect, TEST_GAS_PRICE} from '@universal-login/commons';
 import {getDeployData} from '@universal-login/contracts';
 import {utils, Wallet, Contract} from 'ethers';
 import ProxyContract from '@universal-login/contracts/build/Proxy.json';
@@ -68,7 +68,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
     expect(await deployer2.getBalance()).to.be.above(initialRelayerBalance);
   });
 
-  it('Execute signed transfer in secondary chain', async () => {
+  it('execute signed transfer in secondary chain', async () => {
     const {contractAddress, keyPair} = await walletCreator.deployWallet(otherChainName, ensName);
     await deployer2.sendTransaction({to: contractAddress, value: utils.parseEther('1.5')});
     const msg = {
@@ -80,7 +80,6 @@ describe('E2E: Relayer - Multi-Chain', async () => {
       gasToken: '0x0000000000000000000000000000000000000000',
       gasPrice: 110000000,
       gasLimit: 1000000,
-      operationType: OPERATION_CALL,
     };
     const balanceBefore = await provider2.getBalance(otherWallet.address);
     const signedMessage = createSignedMessage(msg, keyPair.privateKey);
@@ -109,7 +108,6 @@ describe('E2E: Relayer - Multi-Chain', async () => {
       gasToken: '0x0000000000000000000000000000000000000000',
       gasPrice: 110000000,
       gasLimit: 1000000,
-      operationType: OPERATION_CALL,
     };
     const signedMessage = createSignedMessage(msg, keyPair.privateKey);
     const result = await chai.request(relayer.server)

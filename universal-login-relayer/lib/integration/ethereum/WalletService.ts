@@ -1,7 +1,7 @@
 import {EventEmitter} from 'fbemitter';
 import {utils} from 'ethers';
 import {ensureNotNull, ensure, RequiredBalanceChecker, BalanceChecker, computeContractAddress, DeployArgs, getInitializeSigner, DEPLOY_GAS_LIMIT} from '@universal-login/commons';
-import {encodeInitializeWithRefundData} from '@universal-login/contracts';
+import {encodeInitializeWithENSData} from '@universal-login/contracts';
 import ENSService from './ensService';
 import {InvalidENSDomain, NotEnoughBalance, EnsNameTaken, InvalidSignature} from '../../core/utils/errors';
 import {WalletDeployer} from '../ethereum/WalletDeployer';
@@ -22,11 +22,12 @@ class WalletService {
     ensure(!await this.ensService.resolveName(ensName, chainName), EnsNameTaken, ensName);
     const ensArgs = await this.ensService.argsFor(ensName, chainName);
     ensureNotNull(ensArgs, InvalidENSDomain, ensName);
-    const contractAddress = computeContractAddress(factoryContract.address, publicKey, await walletDeployer.getInitCode());
-    const supportedTokens = this.multiChainService.getSupportedTokens(chainName);
+    const factoryAddress = (this.multiChainService.getFactoryContract('default')).address;
+    const supportedTokens = this.multiChainService.getSupportedTokens('default');
+    const contractAddress = computeContractAddress(factoryAddress, publicKey, await walletDeployer.getInitCode());
     ensure(!!await requiredBalanceChecker.findTokenWithRequiredBalance(supportedTokens, contractAddress), NotEnoughBalance);
-    const args = [publicKey, ...ensArgs as unknown as string[], gasPrice];
-    const initWithENS = encodeInitializeWithRefundData(args);
+    const args = [publicKey, ...ensArgs as string[], gasPrice];
+    const initWithENS = encodeInitializeWithENSData(args);
     ensure(getInitializeSigner(initWithENS, signature) === publicKey, InvalidSignature);
     const transaction = await walletDeployer.deploy({publicKey, signature, intializeData: initWithENS}, {gasLimit: DEPLOY_GAS_LIMIT, gasPrice: utils.bigNumberify(gasPrice)});
     this.hooks.emit('created', {transaction, contractAddress, chainName});
