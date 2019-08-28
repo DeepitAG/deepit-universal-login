@@ -48,7 +48,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
 
   it('deploy conterfactually on secondary chain', async () => {
     const keyPair = createKeyPair();
-    const initCode = getDeployData(ProxyContract, [walletMaster2.address, '0x0']);
+    const initCode = getDeployData(ProxyContract, [walletMaster2.address]);
     const contractAddress = computeContractAddress(factoryContract2.address, keyPair.publicKey, initCode);
     const initData = await getInitData(keyPair, ensName, ensAddress2, provider2, TEST_GAS_PRICE);
     const signature = await calculateInitializeSignature(initData, keyPair.privateKey);
