@@ -7,8 +7,8 @@ export function getPublicNetworkConfig(config: Config): PublicNetworkConfig {
   const networkConfig = config.networkConfig;
   const publicNetworkConfig: PublicNetworkConfig = {};
   for (const property in networkConfig) {
-    const {factoryAddress, chainSpec, supportedTokens, ensRegistrars, walletMasterAddress, contractWhiteList} = networkConfig[property];
-    publicNetworkConfig[property] = {factoryAddress, chainSpec, supportedTokens, ensRegistrars, walletMasterAddress, contractWhiteList};
+    const {factoryAddress, chainSpec, supportedTokens, ensRegistrars, walletContractAddress, contractWhiteList} = networkConfig[property];
+    publicNetworkConfig[property] = {factoryAddress, chainSpec, supportedTokens, ensRegistrars, walletContractAddress, contractWhiteList};
   }
   return publicNetworkConfig;
 }

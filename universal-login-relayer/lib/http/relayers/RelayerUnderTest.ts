@@ -3,8 +3,8 @@ import {providers, Wallet, utils, Contract} from 'ethers';
 const ENSBuilder = require('ens-builder');
 import {withENS, getContractHash, ContractJSON, ETHER_NATIVE_TOKEN, deployContract, ChainSpec} from '@universal-login/commons';
 import {deployFactory} from '@universal-login/contracts';
-import WalletMasterWithRefund from '@universal-login/contracts/build/WalletMaster.json';
-import ProxyContract from '@universal-login/contracts/build/Proxy.json';
+import WalletMasterWithRefund from '@universal-login/contracts/build/Wallet.json';
+import ProxyContract from '@universal-login/contracts/build/UpgradeabilityProxy.json';
 import MockToken from '@universal-login/contracts/build/MockToken.json';
 import {Config} from '../../config/relayer';
 import Relayer from './Relayer';
@@ -17,18 +17,18 @@ const DOMAIN = `${DOMAIN_LABEL}.${DOMAIN_TLD}`;
 type CreateRelayerArgs = {
   port: string;
   wallet: Wallet;
-  walletMaster: Contract;
+  walletContract: Contract;
   factoryContract: Contract;
 };
 
 export class RelayerUnderTest extends Relayer {
   static async createPreconfigured(wallet: Wallet, port = '33111') {
-    const walletMaster = await deployContract(wallet, WalletMasterWithRefund);
-    const factoryContract = await deployFactory(wallet, walletMaster.address);
-    return this.createPreconfiguredRelayer({port, wallet, walletMaster, factoryContract});
+    const walletContract = await deployContract(wallet, WalletMasterWithRefund);
+    const factoryContract = await deployFactory(wallet, walletContract.address);
+    return this.createPreconfiguredRelayer({port, wallet, walletContract, factoryContract});
   }
 
-  static async createPreconfiguredRelayer({port, wallet, walletMaster, factoryContract}: CreateRelayerArgs) {
+  static async createPreconfiguredRelayer({port, wallet, walletContract, factoryContract}: CreateRelayerArgs) {
     const ensBuilder = new ENSBuilder(wallet);
     const ensAddress = await ensBuilder.bootstrapWith(DOMAIN_LABEL, DOMAIN_TLD);
     const providerWithENS = withENS(wallet.provider as providers.Web3Provider, ensAddress);
@@ -55,7 +55,7 @@ export class RelayerUnderTest extends Relayer {
           privateKey: wallet.privateKey,
           chainSpec: providerWithENS.network as ChainSpec,
           ensRegistrars: [DOMAIN],
-          walletMasterAddress: walletMaster.address,
+          walletContractAddress: walletContract.address,
           contractWhiteList,
           factoryAddress: factoryContract.address,
           supportedTokens,
@@ -64,7 +64,7 @@ export class RelayerUnderTest extends Relayer {
       }
     };
     const relayer = new RelayerUnderTest(config);
-    return {relayer, factoryContract, supportedTokens, contractWhiteList, ensAddress, walletMaster, mockToken, provider: providerWithENS};
+    return {relayer, factoryContract, supportedTokens, contractWhiteList, ensAddress, walletContract, mockToken, provider: providerWithENS};
   }
 
   static async createPreconfiguredMultiChainRelayer(port: string, wallet1: Wallet, wallet2: Wallet) {
@@ -73,10 +73,10 @@ export class RelayerUnderTest extends Relayer {
     const contractWhiteList = getContractWhiteList();
     const mockToken1 = await deployContract(wallet1, MockToken as any);
     const mockToken2 = await deployContract(wallet2, MockToken as any);
-    const walletMaster1 = await deployContract(wallet1, WalletMasterWithRefund as any);
-    const walletMaster2 = await deployContract(wallet2, WalletMasterWithRefund as any);
-    const factoryContract1 = await deployFactory(wallet1, walletMaster1.address);
-    const factoryContract2 = await deployFactory(wallet2, walletMaster2.address);
+    const walletContract1 = await deployContract(wallet1, WalletMasterWithRefund as any);
+    const walletContract2 = await deployContract(wallet2, WalletMasterWithRefund as any);
+    const factoryContract1 = await deployFactory(wallet1, walletContract1.address);
+    const factoryContract2 = await deployFactory(wallet2, walletContract2.address);
     const supportedTokens1 = [
       {
         address: mockToken1.address,
@@ -108,7 +108,7 @@ export class RelayerUnderTest extends Relayer {
           privateKey: wallet1.privateKey,
           chainSpec: provider1.network as ChainSpec,
           ensRegistrars: [DOMAIN],
-          walletMasterAddress: walletMaster1.address,
+          walletContractAddress: walletContract1.address,
           contractWhiteList,
           factoryAddress: factoryContract1.address,
           supportedTokens: supportedTokens1,
@@ -118,7 +118,7 @@ export class RelayerUnderTest extends Relayer {
           privateKey: wallet2.privateKey,
           chainSpec: provider2.network as ChainSpec,
           ensRegistrars: [DOMAIN],
-          walletMasterAddress: walletMaster2.address,
+          walletContractAddress: walletContract2.address,
           contractWhiteList,
           factoryAddress: factoryContract2.address,
           supportedTokens: supportedTokens2,
@@ -130,7 +130,7 @@ export class RelayerUnderTest extends Relayer {
     const ensAddress2 = provider2.network.ensAddress;
     const relayer = new RelayerUnderTest(config);
     return {relayer, factoryContract1, factoryContract2, supportedTokens1, supportedTokens2, contractWhiteList,
-            ensAddress1, ensAddress2, walletMaster1, walletMaster2, mockToken1, mockToken2, provider1, provider2};
+            ensAddress1, ensAddress2, walletContract1, walletContract2, mockToken1, mockToken2, provider1, provider2};
   }
 
   static async configureENSProvider(wallet: Wallet) {
@@ -161,6 +161,6 @@ export async function clearDatabase(knex: Knex) {
 }
 
 export const getContractWhiteList = () => ({
-  master: [],
+  wallet: [],
   proxy: [getContractHash(ProxyContract as ContractJSON)]
 });

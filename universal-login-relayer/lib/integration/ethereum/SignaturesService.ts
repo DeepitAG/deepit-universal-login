@@ -1,6 +1,6 @@
 import {Contract, utils} from 'ethers';
 import {MultiChainService} from '../../core/services/MultiChainService';
-import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
+import WalletContract from '@universal-login/contracts/build/Wallet.json';
 
 
 export class SignaturesService {

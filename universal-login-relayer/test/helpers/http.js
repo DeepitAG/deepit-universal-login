@@ -2,19 +2,19 @@ import {Wallet, utils, Contract} from 'ethers';
 import {RelayerUnderTest} from '../../lib/http/relayers/RelayerUnderTest';
 import {createMockProvider, getWallets} from 'ethereum-waffle';
 import {waitForContractDeploy, calculateInitializeSignature, TEST_GAS_PRICE, parseDomain, signGetAuthorisationRequest} from '@universal-login/commons';
-import WalletContract from '@universal-login/contracts/build/WalletMaster.json';
+import WalletContract from '@universal-login/contracts/build/Wallet.json';
 import ENS from '@universal-login/contracts/build/ENS.json';
 import chai from 'chai';
-import {deployFactory, getFutureAddress, deployWalletMaster, encodeInitializeWithENSData} from '@universal-login/contracts';
+import {deployFactory, getFutureAddress, deployWalletContract, encodeInitializeWithENSData} from '@universal-login/contracts';
 
 export const startRelayer = async (port = '33111') => {
   const provider = createMockProvider();
   const [deployer] = getWallets(provider);
   const wallet = Wallet.createRandom();
   const otherWallet = Wallet.createRandom();
-  const {relayer, factoryContract, walletMaster, mockToken, ensAddress} = await RelayerUnderTest.createPreconfigured(deployer, port);
+  const {relayer, factoryContract, walletContract, mockToken, ensAddress} = await RelayerUnderTest.createPreconfigured(deployer, port);
   await relayer.start();
-  return {provider, wallet, otherWallet, relayer, deployer, factoryContract, walletMaster, mockToken, ensAddress};
+  return {provider, wallet, otherWallet, relayer, deployer, factoryContract, walletContract, mockToken, ensAddress};
 };
 
 export const startMultiChainRelayer = async (port = '33111') => {
@@ -24,9 +24,9 @@ export const startMultiChainRelayer = async (port = '33111') => {
   const [deployer2] = getWallets(provider2);
   const wallet = Wallet.createRandom();
   const otherWallet = Wallet.createRandom();
-  const {relayer, factoryContract1, factoryContract2, walletMaster1, walletMaster2, mockToken1, mockToken2, ensAddress1, ensAddress2} = await RelayerUnderTest.createPreconfiguredMultiChainRelayer(port, deployer1, deployer2);
+  const {relayer, factoryContract1, factoryContract2, walletContract1, walletContract2, mockToken1, mockToken2, ensAddress1, ensAddress2} = await RelayerUnderTest.createPreconfiguredMultiChainRelayer(port, deployer1, deployer2);
   await relayer.start();
-  return {provider1, provider2, wallet, otherWallet, relayer, deployer1, deployer2, factoryContract1, factoryContract2, walletMaster1, walletMaster2, mockToken1, mockToken2, ensAddress1, ensAddress2};
+  return {provider1, provider2, wallet, otherWallet, relayer, deployer1, deployer2, factoryContract1, factoryContract2, walletContract1, walletContract2, mockToken1, mockToken2, ensAddress1, ensAddress2};
 };
 
 export const createWalletContract = async (provider, relayerUrlOrServer, publicKey, ensName = 'marek.mylogin.eth', chainName = 'default') => {
@@ -41,8 +41,8 @@ export const createWalletContract = async (provider, relayerUrlOrServer, publicK
   return waitForContractDeploy(provider, WalletContract, transaction.hash);
 };
 
-export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, keyPair, walletMasterAddress, factoryContractAddress, ensAddress, ensName = 'marek.mylogin.eth', chainName = 'default') => {
-  const futureAddress = getFutureAddress(walletMasterAddress, factoryContractAddress, keyPair.publicKey);
+export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, keyPair, walletContractAddress, factoryContractAddress, ensAddress, ensName = 'marek.mylogin.eth', chainName = 'default') => {
+  const futureAddress = getFutureAddress(walletContractAddress, factoryContractAddress, keyPair.publicKey);
   await wallet.sendTransaction({to: futureAddress, value: utils.parseEther('1.0')});
   const initData = await getInitData(keyPair, ensName, ensAddress, wallet.provider, TEST_GAS_PRICE);
   const signature = await calculateInitializeSignature(initData, keyPair.privateKey);
@@ -62,11 +62,11 @@ export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, k
 export const startRelayerWithRefund = async (port = '33111') => {
   const provider = createMockProvider();
   const [deployer, wallet, otherWallet] = getWallets(provider);
-  const walletMaster = await deployWalletMaster(deployer);
-  const factoryContract = await deployFactory(deployer, walletMaster.address);
-  const {relayer, mockToken, ensAddress} = await RelayerUnderTest.createPreconfiguredRelayer({port, wallet: deployer, walletMaster, factoryContract});
+  const walletContract = await deployWalletContract(deployer);
+  const factoryContract = await deployFactory(deployer, walletContract.address);
+  const {relayer, mockToken, ensAddress} = await RelayerUnderTest.createPreconfiguredRelayer({port, wallet: deployer, walletContract, factoryContract});
   await relayer.start();
-  return {provider, relayer, mockToken, factoryContract, walletMaster, deployer, ensAddress, wallet, otherWallet};
+  return {provider, relayer, mockToken, factoryContract, walletContract, deployer, ensAddress, wallet, otherWallet};
 };
 
 export const getInitData = async (keyPair, ensName, ensAddress, provider, gasPrice) => {

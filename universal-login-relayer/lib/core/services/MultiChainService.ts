@@ -40,9 +40,9 @@ export class MultiChainService {
     return this.networkConfig[chainName].chainSpec;
   }
 
-  getWalletMasterAddress(chainName: string) {
+  getWalletContractAddress(chainName: string) {
     ensureChainSupport(this.networkConfig, chainName);
-    return this.networkConfig[chainName].walletMasterAddress;
+    return this.networkConfig[chainName].walletContractAddress;
   }
 
   getSupportedTokens(chainName: string) {

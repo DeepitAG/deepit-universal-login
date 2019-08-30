@@ -1,6 +1,6 @@
 import {utils} from 'ethers';
 import {deployContract} from 'ethereum-waffle';
-import WalletMaster from '@universal-login/contracts/build/WalletMaster.json';
+import WalletContract from '@universal-login/contracts/build/Wallet.json';
 import {deployFactory} from '@universal-login/contracts';
 import Token from '../../lib/http/relayers/abi/Token.json';
 import ENSBuilder from 'ens-builder';
@@ -17,9 +17,9 @@ async function depolyEns(wallet) {
 }
 
 async function startRelayer(wallet, relayerConstructor) {
-  const walletMaster = await deployContract(wallet, WalletMaster, [], {gasLimit: 5000000});
+  const walletContract = await deployContract(wallet, WalletContract, [], {gasLimit: 5000000});
   const tokenContract = await deployContract(wallet, Token, []);
-  const factoryContract = await deployFactory(wallet, walletMaster.address);
+  const factoryContract = await deployFactory(wallet, walletContract.address);
   const ensAddress = await depolyEns(wallet);
   const testConfig = getConfig('test');
   const config = Object.freeze({
@@ -35,7 +35,7 @@ async function startRelayer(wallet, relayerConstructor) {
           ensAddress,
         },
         ensRegistrars: ['mylogin.eth'],
-        walletMasterAddress: walletMaster.address,
+        walletContractAddress: walletContract.address,
         tokenContractAddress: tokenContract.address,
         contractWhiteList: getContractWhiteList(),
         factoryAddress: factoryContract.address,

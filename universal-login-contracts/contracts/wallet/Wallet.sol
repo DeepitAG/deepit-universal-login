@@ -1,16 +1,16 @@
 pragma solidity ^0.5.2;
 
 import "openzeppelin-solidity/contracts/token/ERC721/IERC721Receiver.sol";
-import "../proxy/MasterBase.sol";
+import "../openzeppelin/contracts/Initializable.sol";
 import "../interfaces/IERC1271.sol";
 import "../utils/ENSRegistered.sol";
-import "./ERC1077.sol";
+import "./Executor.sol";
 
 
 /* solium-disable no-empty-blocks */
-contract WalletMaster is MasterBase, ENSRegistered, ERC1077, IERC1271, IERC721Receiver {
+contract Wallet is ENSRegistered, Executor, IERC1271, IERC721Receiver, Initializable {
     constructor()
-        ERC1077(address(0))
+        Executor(address(0))
         public
     {}
 
@@ -19,8 +19,8 @@ contract WalletMaster is MasterBase, ENSRegistered, ERC1077, IERC1271, IERC721Re
     }
 
     // Disabled upgradability: persistent nonce not sync
-    function initialize(address _key) external onlyInitializing() {
-        // ERC1077 → KeyHolder
+    function initialize(address _key) external initializer {
+        // Executor → KeyHolder
         keys[_key].key = _key;
         keys[_key].purpose = MANAGEMENT_KEY;
         keyCount = 1;
@@ -37,10 +37,10 @@ contract WalletMaster is MasterBase, ENSRegistered, ERC1077, IERC1271, IERC721Re
         ENS ens,
         FIFSRegistrar registrar,
         PublicResolver resolver,
-        uint gasPrice) external onlyInitializing()
+        uint gasPrice) external initializer
         {
 
-        // ERC1077 → KeyHolder
+        // Executor → KeyHolder
         keys[_key].key = _key;
         keys[_key].purpose = MANAGEMENT_KEY;
         keyCount = 1;

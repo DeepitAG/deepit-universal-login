@@ -1,6 +1,6 @@
 import {recoverFromCancelAuthorisationRequest, recoverFromGetAuthorisationRequest, GetAuthorisationRequest, hashGetAuthorisationRequest, CancelAuthorisationRequest, hashCancelAuthorisationRequest, ensure} from '@universal-login/commons';
 import {Contract} from 'ethers';
-import WalletMasterWithRefund from '@universal-login/contracts/build/WalletMasterWithRefund.json';
+import WalletMasterWithRefund from '@universal-login/contracts/build/Wallet.json';
 import { UnauthorisedAddress } from '../../../core/utils/errors';
 import {MultiChainService} from '../../../core/services/MultiChainService';
 

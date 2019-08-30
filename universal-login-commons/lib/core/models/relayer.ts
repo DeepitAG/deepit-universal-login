@@ -13,7 +13,7 @@ export interface ChainSpec {
 }
 
 export interface ContractWhiteList {
-  master: string[];
+  wallet: string[];
   proxy: string[];
 }
 
@@ -30,7 +30,7 @@ export interface NetworkData {
   supportedTokens: SupportedToken[];
   privateKey: string;
   ensRegistrars: string[];
-  walletMasterAddress: string;
+  walletContractAddress: string;
   contractWhiteList: ContractWhiteList;
   tokenContractAddress?: string;
 }
@@ -42,7 +42,7 @@ export interface PublicNetworkData {
   chainSpec: ChainSpec;
   supportedTokens: SupportedToken[];
   ensRegistrars: string[];
-  walletMasterAddress: string;
+  walletContractAddress: string;
   contractWhiteList: ContractWhiteList;
 }
 

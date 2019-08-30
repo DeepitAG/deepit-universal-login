@@ -33,23 +33,23 @@ export const config: Config =  Object.freeze({
   networkConfig: {
     default: {
       jsonRpcUrl: 'GENERATED',
-      factoryAddress: 'GENERATED',
       chainSpec: {
         name: 'test',
         ensAddress: 'GENERATED',
         chainId: 0,
       },
+      privateKey: 'GENERATED',
+      ensRegistrars: ['GENERATED'],
+      walletContractAddress: 'GENERATED',
+      contractWhiteList: {
+        proxy: ['GENERATED'],
+        wallet: ['GENERATED']
+      },
+      factoryAddress: 'GENERATED',
       supportedTokens: [{
         address: 'GENERATED',
         minimalAmount: 'GENERATED'
       }],
-      privateKey: 'GENERATED',
-      ensRegistrars: ['GENERATED'],
-      walletMasterAddress: 'GENERATED',
-      contractWhiteList: {
-        proxy: ['GENERATED'],
-        master: ['GENERATED']
-      },
     }
   },
 });

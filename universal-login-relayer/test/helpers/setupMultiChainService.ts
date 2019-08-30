@@ -9,10 +9,10 @@ import {deployFactory} from '@universal-login/contracts';
 
 export async function setupMultiChainService(provider: Provider, ensRegistrars = []) {
   const [wallet] = getWallets(provider);
-  const walletMaster = await deployContract(wallet, WalletMaster as ContractJSON);
-  await walletMaster.deployed();
+  const walletContract = await deployContract(wallet, WalletMaster as ContractJSON);
+  await walletContract.deployed();
   const contractWhiteList = getContractWhiteList();
-  const factory = await deployFactory(wallet, walletMaster.address);
+  const factory = await deployFactory(wallet, walletContract.address);
   await factory.deployed();
   const factoryAddress = factory.address;
   const configuration: NetworkConfig = {
@@ -26,7 +26,7 @@ export async function setupMultiChainService(provider: Provider, ensRegistrars =
       }],
       privateKey: wallet.privateKey,
       ensRegistrars,
-      walletMasterAddress: walletMaster.address,
+      walletContractAddress: walletContract.address,
       contractWhiteList
     }
   };

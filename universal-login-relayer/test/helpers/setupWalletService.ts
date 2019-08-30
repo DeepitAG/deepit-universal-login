@@ -2,7 +2,7 @@ import {EventEmitter} from 'fbemitter';
 import sinon from 'sinon';
 import {Wallet, Contract, utils} from 'ethers';
 import {computeContractAddress, TEST_GAS_PRICE, KeyPair, calculateInitializeSignature} from '@universal-login/commons';
-import {encodeInitializeWithENSData} from '@universal-login/contracts';
+import {deployFactory, encodeInitializeWithENSData, deployWalletContract} from '@universal-login/contracts';
 import WalletService from '../../lib/integration/ethereum/WalletService';
 import buildEnsService from './buildEnsService';
 import ENSService from '../../lib/integration/ethereum/ensService';

@@ -3,7 +3,7 @@ import {startMultiChainRelayer, getAuthorisation, postAuthorisationRequest, getI
 import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateInitializeSignature, createSignedMessage, waitExpect, TEST_GAS_PRICE} from '@universal-login/commons';
 import {getDeployData} from '@universal-login/contracts';
 import {utils, Wallet, Contract} from 'ethers';
-import ProxyContract from '@universal-login/contracts/build/Proxy.json';
+import ProxyContract from '@universal-login/contracts/build/UpgradeabilityProxy.json';
 import {Provider} from 'ethers/providers';
 import {WalletCreator} from '../helpers/WalletCreator';
 
@@ -12,7 +12,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
   let ensAddress2: any;
   let deployer1: Wallet;
   let deployer2: Wallet;
-  let walletMaster2: Contract;
+  let walletContract2: Contract;
   let factoryContract2: Contract;
   let otherWallet: Wallet;
   let relayer: any;
@@ -22,7 +22,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
   const ensName = 'giulio.mylogin.eth';
 
   beforeEach(async () => {
-    ({provider2, deployer1, deployer2, ensAddress2, walletMaster2, factoryContract2, otherWallet, relayer} = await startMultiChainRelayer());
+    ({provider2, deployer1, deployer2, ensAddress2, walletContract2, factoryContract2, otherWallet, relayer} = await startMultiChainRelayer());
     walletCreator = new WalletCreator(relayer);
   });
 
@@ -48,7 +48,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
 
   it('deploy conterfactually on secondary chain', async () => {
     const keyPair = createKeyPair();
-    const initCode = getDeployData(ProxyContract, [walletMaster2.address]);
+    const initCode = getDeployData(ProxyContract as any, [walletContract2.address]);
     const contractAddress = computeContractAddress(factoryContract2.address, keyPair.publicKey, initCode);
     const initData = await getInitData(keyPair, ensName, ensAddress2, provider2, TEST_GAS_PRICE);
     const signature = await calculateInitializeSignature(initData, keyPair.privateKey);
