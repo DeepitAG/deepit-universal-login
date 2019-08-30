@@ -3,7 +3,7 @@ import chaiHttp from 'chai-http';
 import {TokenGrantingRelayer} from '../../../../lib/http/relayers/TokenGrantingRelayer';
 import {utils, Contract} from 'ethers';
 import {getWallets, createMockProvider, solidity} from 'ethereum-waffle';
-import {waitUntil, MANAGEMENT_KEY, createSignedMessage, stringifySignedMessageFields} from '@universal-login/commons';
+import {waitUntil, createSignedMessage, stringifySignedMessageFields} from '@universal-login/commons';
 import WalletContract from '@universal-login/contracts/build/Wallet.json';
 import {startRelayer} from '../../../helpers/startRelayer';
 import {WalletCreator} from '../../../helpers/WalletCreator';
@@ -13,7 +13,7 @@ chai.use(chaiHttp);
 const chainName = 'default';
 
 const addKey = async (contractAddress, publicKey, privateKey, tokenAddress, provider) => {
-  const data = new utils.Interface(WalletContract.interface).functions['addKey'].encode([publicKey, MANAGEMENT_KEY]);
+  const data = new utils.Interface(WalletContract.interface).functions['addKey'].encode([publicKey]);
   const message = {
     gasToken: tokenAddress,
     to: contractAddress,

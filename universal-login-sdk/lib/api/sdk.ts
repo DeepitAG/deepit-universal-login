@@ -1,6 +1,6 @@
 import {utils, Contract, providers} from 'ethers';
 import WalletContract from '@universal-login/contracts/build/Wallet.json';
-import {TokensValueConverter, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, MANAGEMENT_KEY, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signCancelAuthorisationRequest, signGetAuthorisationRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage} from '@universal-login/commons';
+import {TokensValueConverter, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signCancelAuthorisationRequest, signGetAuthorisationRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage} from '@universal-login/commons';
 import AuthorisationsObserver from '../core/observers/AuthorisationsObserver';
 import BlockchainObserver from '../core/observers/BlockchainObserver';
 import {RelayerApi} from '../integration/http/RelayerApi';
@@ -62,17 +62,16 @@ class UniversalLoginSDK {
     return this.futureWalletFactory!.createFutureWallet();
   }
 
-  async addKey(to: string, publicKey: string, privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY) {
-    return this.selfExecute(to, 'addKey', [publicKey, keyPurpose], privateKey, transactionDetails);
+  async addKey(to: string, publicKey: string, privateKey: string, transactionDetails: Message) {
+    return this.selfExecute(to, 'addKey', [publicKey], privateKey, transactionDetails);
   }
 
-  async addKeys(to: string, publicKeys: string[], privateKey: string, transactionDetails: Message, keyPurpose = MANAGEMENT_KEY) {
-    const keyRoles = new Array(publicKeys.length).fill(keyPurpose);
-    return this.selfExecute(to, 'addKeys', [publicKeys, keyRoles], privateKey, transactionDetails);
+  async addKeys(to: string, publicKeys: string[], privateKey: string, transactionDetails: Message) {
+    return this.selfExecute(to, 'addKeys', [publicKeys], privateKey, transactionDetails);
   }
 
   async removeKey(to: string, key: string, privateKey: string, transactionDetails: Message) {
-    return this.selfExecute(to, 'removeKey', [key, MANAGEMENT_KEY], privateKey, transactionDetails);
+    return this.selfExecute(to, 'removeKey', [key], privateKey, transactionDetails);
   }
 
   async setRequiredSignatures(to: string, requiredSignatures: number, privateKey: string, transactionDetails: Message) {
@@ -140,9 +139,9 @@ class UniversalLoginSDK {
     return this.execute(message, privateKey);
   }
 
-  async getKeyPurpose(walletContractAddress: string, key: string) {
+  async keyExist(walletContractAddress: string, key: string) {
     const walletContract = new Contract(walletContractAddress, WalletContract.interface, this.provider);
-    return walletContract.getKeyPurpose(key);
+    return walletContract.keyExist(key);
   }
 
   async getNonce(walletContractAddress: string) {

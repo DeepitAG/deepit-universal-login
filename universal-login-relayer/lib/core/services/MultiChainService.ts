@@ -1,6 +1,6 @@
 import {providers, Wallet, Contract} from 'ethers';
 import {NetworkConfig} from '@universal-login/commons';
-import ProxyCounterfactualFactory from '@universal-login/contracts/build/ProxyCounterfactualFactory.json';
+import WalletProxyFactory from '@universal-login/contracts/build/WalletProxyFactory.json';
 import Token from '@universal-login/commons/lib/contracts/Token.json';
 import {ensureChainSupport} from '../../integration/ethereum/validations';
 
@@ -21,7 +21,7 @@ export class MultiChainService {
 
   getFactoryContract(chainName: string) {
     ensureChainSupport(this.networkConfig, chainName);
-    return new Contract(this.networkConfig[chainName].factoryAddress, ProxyCounterfactualFactory.interface, this.getWallet(chainName));
+    return new Contract(this.networkConfig[chainName].factoryAddress, WalletProxyFactory.interface, this.getWallet(chainName));
   }
 
   getWallet(chainName: string) {

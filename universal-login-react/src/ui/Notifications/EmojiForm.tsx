@@ -37,10 +37,10 @@ export const EmojiForm = ({sdk, contractAddress, privateKey, hideTitle, classNam
 
   useEffect(() => sdk.subscribeAuthorisations(contractAddress, privateKey, (notifications: Notification[]) => {
     setNotifications(notifications);
-    setAddressesAndInputMode(notifications);
+    updateAddressesAndInputMode(notifications);
   }), []);
 
-  const setAddressesAndInputMode = (notifications: Notification[]) => {
+  const updateAddressesAndInputMode = (notifications: Notification[]) => {
     const addresses = filterNotificationByCodePrefix(notifications, enteredCode);
     setInputMode(getInputModeFor(addresses, inputMode));
     setAddresses(addresses);
@@ -64,7 +64,7 @@ export const EmojiForm = ({sdk, contractAddress, privateKey, hideTitle, classNam
     if (enteredCode.length < SECURITY_CODE_LENGTH) {
       enteredCode.push(code);
       setEnteredCode([...enteredCode]);
-      setAddressesAndInputMode(notifications);
+      updateAddressesAndInputMode(notifications);
     }
     if (checkCode()) {
       setStatus(``);
@@ -76,12 +76,12 @@ export const EmojiForm = ({sdk, contractAddress, privateKey, hideTitle, classNam
   };
 
   const onEmojiRemove = (index: number) => {
-    setAddressesAndInputMode(notifications);
     if (enteredCode.length >= 0) {
       enteredCode.splice(index, 1);
       setEnteredCode([...enteredCode]);
       setStatus('');
     }
+    updateAddressesAndInputMode(notifications);
   };
 
   return (

@@ -1,8 +1,8 @@
 import {expect} from 'chai';
 import {providers, Contract} from 'ethers';
 import {createMockProvider, getWallets} from 'ethereum-waffle';
-import {getDeployedBytecode, MANAGEMENT_KEY} from '@universal-login/commons';
-import ProxyContract from '@universal-login/contracts/build/UpgradeabilityProxy.json';
+import {getDeployedBytecode} from '@universal-login/commons';
+import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
 import WalletMasterWithRefund from '@universal-login/contracts/build/Wallet.json';
 import {WalletCreator} from '../../helpers/WalletCreator';
 import Relayer, {RelayerUnderTest} from '../../../lib';
@@ -39,6 +39,6 @@ describe('WalletCreator', () => {
     expect(contractAddress).to.be.properAddress;
     expect(await provider.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
     const walletContract = new Contract(contractAddress, WalletMasterWithRefund.interface, provider);
-    expect(await walletContract.getKeyPurpose(keyPair.publicKey)).to.eq(MANAGEMENT_KEY);
+    expect(await walletContract.keyExist(keyPair.publicKey)).to.be.true;
   });
 });

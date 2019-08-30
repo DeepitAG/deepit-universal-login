@@ -1,8 +1,8 @@
 import {expect} from 'chai';
-import ENSRegisteredUnderTests from '../../build/ENSRegisteredUnderTests.json';
+import TestableENSUtils from '../../../build/TestableENSUtils.json';
 import {deployContract, loadFixture} from 'ethereum-waffle';
-import {utils} from 'ethers';
-import {lookupAddress} from '../utils';
+import {utils, providers, Wallet, Contract} from 'ethers';
+import {lookupAddress} from '../../helpers/lookupAddress';
 import {basicENS} from '@universal-login/commons/testutils';
 
 
@@ -12,19 +12,19 @@ const hashLabel = utils.keccak256(utils.toUtf8Bytes(label));
 const name = `${label}.${domain}`;
 const node = utils.namehash(name);
 
-describe('ENSRegistered', async () => {
-  let provider;
-  let wallet;
-  let ensRegisteredContract;
-  let publicResolver;
-  let registrarAddress;
-  let ensAddress;
-  let args;
+describe('ENSUtils', async () => {
+  let provider: providers.Provider;
+  let wallet: Wallet;
+  let ensRegisteredContract: Contract;
+  let publicResolver: string;
+  let registrarAddress: string;
+  let ensAddress: string;
+  let args: string[];
 
   beforeEach(async () => {
     ({provider, publicResolver, registrarAddress, ensAddress, wallet} = await loadFixture(basicENS));
     args = [hashLabel, name, node, ensAddress, registrarAddress, publicResolver];
-    ensRegisteredContract = await deployContract(wallet, ENSRegisteredUnderTests);
+    ensRegisteredContract = await deployContract(wallet, TestableENSUtils);
   });
 
   it('resolves to given address', async () => {

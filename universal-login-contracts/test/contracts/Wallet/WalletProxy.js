@@ -2,25 +2,24 @@ import chai, {expect} from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {deployContract, solidity, loadFixture} from 'ethereum-waffle';
 import {utils} from 'ethers';
-import MockWalletMaster from '../../build/MockWalletMaster.json';
-import Proxy from '../../build/UpgradeabilityProxy.json';
-import DEFAULT_PAYMENT_OPTIONS from '../../lib/defaultPaymentOptions';
-import basicWalletAndProxy from '../fixtures/basicWalletAndProxy';
+import MockWalletMaster from '../../../build/MockWalletMaster.json';
+import Proxy from '../../../build/WalletProxy.json';
+import DEFAULT_PAYMENT_OPTIONS from '../../../lib/defaultPaymentOptions';
+import basicWalletAndProxy from '../../fixtures/basicWalletAndProxy';
 
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
 const {gasPrice, gasLimit} = DEFAULT_PAYMENT_OPTIONS;
 
-describe('CONTRACT: ProxyMasterCopy', async () => {
-  let walletContract;
+describe('CONTRACT: WalletProxy', async () => {
   let walletProxy;
   let proxyAsWallet;
   let wallet;
   let data;
 
   beforeEach(async () => {
-    ({walletContract, walletProxy, proxyAsWallet, wallet} = await loadFixture(basicWalletAndProxy));
+    ({walletProxy, proxyAsWallet, wallet} = await loadFixture(basicWalletAndProxy));
   });
 
 

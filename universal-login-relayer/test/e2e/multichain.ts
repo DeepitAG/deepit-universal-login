@@ -3,7 +3,7 @@ import {startMultiChainRelayer, getAuthorisation, postAuthorisationRequest, getI
 import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateInitializeSignature, createSignedMessage, waitExpect, TEST_GAS_PRICE} from '@universal-login/commons';
 import {getDeployData} from '@universal-login/contracts';
 import {utils, Wallet, Contract} from 'ethers';
-import ProxyContract from '@universal-login/contracts/build/UpgradeabilityProxy.json';
+import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
 import {Provider} from 'ethers/providers';
 import {WalletCreator} from '../helpers/WalletCreator';
 
