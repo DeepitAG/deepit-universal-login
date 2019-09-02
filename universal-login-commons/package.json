@@ -1,6 +1,6 @@
 {
   "name": "@universal-login/commons",
-  "version": "0.3.31",
+  "version": "0.3.33",
   "description": "Unviersal Login Common source code",
   "main": "dist/lib/index.js",
   "types": "dist/lib/index.d.ts",
@@ -19,6 +19,8 @@
     "chai": "^4.1.2",
     "chai-as-promised": "^7.1.1",
     "ens-builder": "^2.0.1",
+    "ethereum-waffle": "^2.1.0",
+    "node-fetch": "^2.6.0",
     "rimraf": "^2.6.3",
     "sinon": "^7.2.3",
     "sinon-chai": "^3.3.0",
@@ -27,8 +29,11 @@
     "typescript": "^3.3.3"
   },
   "dependencies": {
-    "ethers": "^4.0",
+    "deep-equal": "^1.1.0",
+    "ethers": "^4.0.36",
     "lodash.clonedeep": "^4.5.0",
-    "openzeppelin-solidity": "^2.1.1"
+    "lodash.range": "^3.2.0",
+    "openzeppelin-solidity": "^2.1.1",
+    "scrypt-js": "^2.0.4"
   }
 }
