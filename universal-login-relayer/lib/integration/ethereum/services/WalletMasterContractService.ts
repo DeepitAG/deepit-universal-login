@@ -1,5 +1,5 @@
-import {recoverFromCancelAuthorisationRequest, recoverFromGetAuthorisationRequest, GetAuthorisationRequest, hashGetAuthorisationRequest, CancelAuthorisationRequest, hashCancelAuthorisationRequest, ensure} from '@universal-login/commons';
-import {Contract} from 'ethers';
+import {recoverFromAuthorisationRequest, AuthorisationRequest, hashAuthorisationRequest, ensure} from '@universal-login/commons';
+import { ethers, providers} from 'ethers';
 import WalletMasterWithRefund from '@universal-login/contracts/build/Wallet.json';
 import { UnauthorisedAddress } from '../../../core/utils/errors';
 import {MultiChainService} from '../../../core/services/MultiChainService';
@@ -11,25 +11,17 @@ class WalletMasterContractService {
 
   async ensureValidSignature(walletContractAddress: string, signature: string, payloadDigest: string, recoveredAddress: string, chainName: string) {
     const provider = this.multiChainService.getProvider(chainName);
-    const contract = new Contract(walletContractAddress, WalletMasterWithRefund.interface, provider);
+    const contract = new ethers.Contract(walletContractAddress, WalletMasterWithRefund.interface, provider);
     const isCorrectAddress = await contract.isValidSignature(payloadDigest, signature);
     ensure(isCorrectAddress === MAGICVALUE, UnauthorisedAddress, recoveredAddress);
   }
 
-  async ensureValidCancelAuthorisationRequestSignature(cancelAuthorisationRequest: CancelAuthorisationRequest, chainName: string) {
-    const recoveredAddress = recoverFromCancelAuthorisationRequest(cancelAuthorisationRequest);
-    const {walletContractAddress, signature} = cancelAuthorisationRequest;
-    const payloadDigest = hashCancelAuthorisationRequest(cancelAuthorisationRequest);
+  async ensureValidAuthorisationRequestSignature(authorisationRequest: AuthorisationRequest, chainName: string) {
+    const recoveredAddress = recoverFromAuthorisationRequest(authorisationRequest);
+    const {contractAddress, signature} = authorisationRequest;
+    const payloadDigest = hashAuthorisationRequest(authorisationRequest);
 
-    await this.ensureValidSignature(walletContractAddress, signature!, payloadDigest, recoveredAddress, chainName);
-  }
-
-  async ensureValidGetAuthorisationRequestSignature(getAuthorisationRequest: GetAuthorisationRequest, chainName: string) {
-    const recoveredAddress = recoverFromGetAuthorisationRequest(getAuthorisationRequest);
-    const {walletContractAddress, signature} = getAuthorisationRequest;
-    const payloadDigest = hashGetAuthorisationRequest(getAuthorisationRequest);
-
-    await this.ensureValidSignature(walletContractAddress, signature!, payloadDigest, recoveredAddress, chainName);
+    await this.ensureValidSignature(contractAddress, signature!, payloadDigest, recoveredAddress, chainName);
   }
 }
 

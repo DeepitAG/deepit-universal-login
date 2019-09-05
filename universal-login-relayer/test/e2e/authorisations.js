@@ -1,7 +1,7 @@
 import chai, {expect} from 'chai';
 import chaiHttp from 'chai-http';
 import {startRelayerWithRefund, createWalletCounterfactually, getAuthorisation, postAuthorisationRequest} from '../helpers/http';
-import {signCancelAuthorisationRequest, signGetAuthorisationRequest, createKeyPair} from '@universal-login/commons';
+import {createKeyPair, signAuthorisationRequest} from '@universal-login/commons';
 import {utils} from 'ethers';
 
 chai.use(chaiHttp);
@@ -53,15 +53,14 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     const newKeyPair = createKeyPair();
     await postAuthorisationRequest(relayer, contract.address, newKeyPair, chainName);
 
-    const cancelAuthorisationRequest = {
-      walletContractAddress: contract.address,
-      publicKey: newKeyPair.publicKey,
+    const authorisationRequest = {
+      contractAddress: contract.address,
       signature: ''
     };
-    signCancelAuthorisationRequest(cancelAuthorisationRequest, keyPair.privateKey);
+    signAuthorisationRequest(authorisationRequest, keyPair.privateKey);
     const result = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
-      .send({cancelAuthorisationRequest, chainName});
+      .send({authorisationRequest, chainName});
     expect(result.status).to.eq(204);
 
 
@@ -70,17 +69,15 @@ describe('E2E: Relayer - Authorisation routes', async () => {
   });
 
   it('Send valid cancel request', async () => {
-    const {publicKey} = createKeyPair();
-    const cancelAuthorisationRequest = {
-      walletContractAddress: contract.address,
-      publicKey,
+    const authorisationRequest = {
+      contractAddress: contract.address,
       signature: ''
     };
 
-    signCancelAuthorisationRequest(cancelAuthorisationRequest, keyPair.privateKey);
+    signAuthorisationRequest(authorisationRequest, keyPair.privateKey);
     const {body, status} = await chai.request(relayer.server)
-      .post(`/authorisation//${contract.address}`)
-      .send({cancelAuthorisationRequest, chainName});
+      .post(`/authorisation/${contract.address}`)
+      .send({authorisationRequest, chainName});
 
     expect(status).to.eq(204);
     expect(body).to.deep.eq({});
@@ -89,16 +86,15 @@ describe('E2E: Relayer - Authorisation routes', async () => {
   it('Send forged cancel request', async () => {
     const attackerPrivateKey = createKeyPair().privateKey;
     const attackerAddress = utils.computeAddress(attackerPrivateKey);
-    const cancelAuthorisationRequest = {
-      walletContractAddress: contract.address,
-      publicKey: otherWallet.address,
+    const authorisationRequest = {
+      contractAddress: contract.address,
       signature: ''
     };
 
-    signCancelAuthorisationRequest(cancelAuthorisationRequest, attackerPrivateKey);
+    signAuthorisationRequest(authorisationRequest, attackerPrivateKey);
     const {body, status} = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
-      .send({cancelAuthorisationRequest, chainName});
+      .send({authorisationRequest, chainName});
 
     expect(status).to.eq(401);
     expect(body.type).to.eq('UnauthorisedAddress');
@@ -107,15 +103,14 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
   it('Forged getPending request', async () => {
     const attackerPrivateKey = createKeyPair().privateKey;
-    const getAuthorisationRequest = {
-      walletContractAddress: contract.address,
+    const authorisationRequest = {
+      contractAddress: contract.address,
       signature: ''
     };
-    signGetAuthorisationRequest(getAuthorisationRequest, attackerPrivateKey);
+    signAuthorisationRequest(authorisationRequest, attackerPrivateKey);
 
     const {body, status} = await chai.request(relayer.server)
-      .get(`/authorisation/${chainName}/${contract.address}?signature=${getAuthorisationRequest.signature}`)
-      .send({chainName});
+      .get(`/authorisation/${chainName}/${contract.address}?signature=${authorisationRequest.signature}`);
 
     expect(status).to.eq(401);
     expect(body.type).to.eq('UnauthorisedAddress');

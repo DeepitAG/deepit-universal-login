@@ -1,4 +1,4 @@
-import {CancelAuthorisationRequest, GetAuthorisationRequest} from '@universal-login/commons';
+import {AuthorisationRequest} from '@universal-login/commons';
 import AuthorisationStore from '../../integration/sql/services/AuthorisationStore';
 import WalletMasterContractService from '../../integration/ethereum/services/WalletMasterContractService';
 import {MultiChainService} from './MultiChainService';
@@ -12,20 +12,16 @@ class AuthorisationService {
     return this.authorisationStore.addRequest(requestAuthorisation, chainName);
   }
 
-  async removeAuthorisationRequest(cancelAuthorisationRequest: CancelAuthorisationRequest, chainName: string) {
-    ensureChainSupport(this.multiChainService.networkConfig, chainName);
-    await this.walletMasterContractService.ensureValidCancelAuthorisationRequestSignature(cancelAuthorisationRequest, chainName);
+  async removeAuthorisationRequest(authorisationRequest: AuthorisationRequest, chainName: string) {
+    await this.walletMasterContractService.ensureValidAuthorisationRequestSignature(authorisationRequest, chainName);
 
-    const {walletContractAddress, publicKey} = cancelAuthorisationRequest;
-    return this.authorisationStore.removeRequest(walletContractAddress, publicKey, chainName);
+    return this.authorisationStore.removeRequests(authorisationRequest.contractAddress, chainName);
   }
 
-  async getAuthorisationRequests(getAuthorisationRequest: GetAuthorisationRequest, chainName: string) {
-    ensureChainSupport(this.multiChainService.networkConfig, chainName);
-    await this.walletMasterContractService.ensureValidGetAuthorisationRequestSignature(getAuthorisationRequest, chainName);
+  async getAuthorisationRequests(authorisationRequest: AuthorisationRequest, chainName: string) {
+    await this.walletMasterContractService.ensureValidAuthorisationRequestSignature(authorisationRequest, chainName);
 
-    const {walletContractAddress} = getAuthorisationRequest;
-    return this.authorisationStore.getPendingAuthorisations(walletContractAddress, chainName);
+    return this.authorisationStore.getPendingAuthorisations(authorisationRequest.contractAddress, chainName);
   }
 }
 

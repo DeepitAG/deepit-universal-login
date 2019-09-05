@@ -1,7 +1,7 @@
 import {Wallet, utils, Contract} from 'ethers';
 import {RelayerUnderTest} from '../../lib/http/relayers/RelayerUnderTest';
 import {createMockProvider, getWallets} from 'ethereum-waffle';
-import {waitForContractDeploy, calculateInitializeSignature, TEST_GAS_PRICE, parseDomain, signGetAuthorisationRequest} from '@universal-login/commons';
+import {waitForContractDeploy, calculateInitializeSignature, TEST_GAS_PRICE, parseDomain, signAuthorisationRequest} from '@universal-login/commons';
 import WalletContract from '@universal-login/contracts/build/Wallet.json';
 import ENS from '@universal-login/contracts/build/ENS.json';
 import chai from 'chai';
@@ -89,16 +89,16 @@ export const postAuthorisationRequest = (relayer, walletContractAddress, keyPair
     });
 
 
-export const getAuthorisation = async (relayer, walletContractAddress, keyPair, chainName) => {
-  const getAuthorisationRequest = {
-    walletContractAddress,
+export const getAuthorisation = async (relayer, contractAddress, keyPair, chainName) => {
+  const authorisationRequest = {
+    contractAddress,
     signature: ''
   };
-  signGetAuthorisationRequest(getAuthorisationRequest, keyPair.privateKey);
-  const {signature} = getAuthorisationRequest;
+  signAuthorisationRequest(authorisationRequest, keyPair.privateKey);
+  const {signature} = authorisationRequest;
 
   const result = await chai.request(relayer.server)
-    .get(`/authorisation/${chainName}/${walletContractAddress}?signature=${signature}`)
+    .get(`/authorisation/${chainName}/${contractAddress}?signature=${signature}`)
     .send({
       key: keyPair.publicKey,
     });
