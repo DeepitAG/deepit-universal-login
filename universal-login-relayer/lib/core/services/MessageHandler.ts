@@ -34,34 +34,34 @@ class MessageHandler {
     this.queueService.start();
   }
 
-  async onTransactionSent(sentTransaction: providers.TransactionResponse, chainName: string) {
+  async onTransactionSent(sentTransaction: providers.TransactionResponse, network: string) {
     const {data, to} = sentTransaction;
     const message = decodeDataForExecuteSigned(data);
     if (message.to === to) {
       if (isAddKeyCall(message.data as string)) {
-        await this.removeReqFromAuthService({...message, from: to}, chainName);
-        this.hooks.emit('added', {transaction: sentTransaction, contractAddress: to, chainName});
+        await this.removeReqFromAuthService({...message, from: to}, network);
+        this.hooks.emit('added', {transaction: sentTransaction, contractAddress: to, network});
       } else if (isAddKeysCall(message.data as string)) {
-        this.hooks.emit('keysAdded', {transaction: sentTransaction, contractAddress: to, chainName});
+        this.hooks.emit('keysAdded', {transaction: sentTransaction, contractAddress: to, network});
       }
     }
   }
 
-  async handleMessage(message: SignedMessage, chainName: string) {
-    ensureChainSupport(this.multiChainService.networkConfig, chainName);
-    return this.pendingMessages.add(message, chainName);
+  async handleMessage(message: SignedMessage, network: string) {
+    ensureChainSupport(this.multiChainService.networkConfig, network);
+    return this.pendingMessages.add(message, network);
   }
 
-  private async removeReqFromAuthService(message: SignedMessage, chainName: string) {
+  private async removeReqFromAuthService(message: SignedMessage, network: string) {
     const key = getKeyFromData(message.data as string);
-    return this.authorisationStore.removeRequest(message.from, key, chainName);
+    return this.authorisationStore.removeRequest(message.from, key, network);
   }
 
-  async getStatus(messageHash: string, chainName: string) {
-    if (!await this.pendingMessages.isPresent(messageHash, chainName)) {
+  async getStatus(messageHash: string, network: string) {
+    if (!await this.pendingMessages.isPresent(messageHash, network)) {
       return null;
     }
-    return this.pendingMessages.getStatus(messageHash, chainName);
+    return this.pendingMessages.getStatus(messageHash, network);
   }
 
   async stop() {

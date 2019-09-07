@@ -9,19 +9,19 @@ const MAGICVALUE = '0x20c13b0b';
 class WalletMasterContractService {
   constructor(private multiChainService: MultiChainService) {}
 
-  async ensureValidSignature(walletContractAddress: string, signature: string, payloadDigest: string, recoveredAddress: string, chainName: string) {
-    const provider = this.multiChainService.getProvider(chainName);
+  async ensureValidSignature(walletContractAddress: string, signature: string, payloadDigest: string, recoveredAddress: string, network: string) {
+    const provider = this.multiChainService.getProvider(network);
     const contract = new ethers.Contract(walletContractAddress, WalletMasterWithRefund.interface, provider);
     const isCorrectAddress = await contract.isValidSignature(payloadDigest, signature);
     ensure(isCorrectAddress === MAGICVALUE, UnauthorisedAddress, recoveredAddress);
   }
 
-  async ensureValidAuthorisationRequestSignature(authorisationRequest: AuthorisationRequest, chainName: string) {
+  async ensureValidAuthorisationRequestSignature(authorisationRequest: AuthorisationRequest, network: string) {
     const recoveredAddress = recoverFromAuthorisationRequest(authorisationRequest);
     const {contractAddress, signature} = authorisationRequest;
     const payloadDigest = hashAuthorisationRequest(authorisationRequest);
 
-    await this.ensureValidSignature(contractAddress, signature!, payloadDigest, recoveredAddress, chainName);
+    await this.ensureValidSignature(contractAddress, signature!, payloadDigest, recoveredAddress, network);
   }
 }
 

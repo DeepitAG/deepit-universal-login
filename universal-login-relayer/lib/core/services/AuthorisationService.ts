@@ -7,26 +7,26 @@ import {ensureChainSupport} from '../../integration/ethereum/validations';
 class AuthorisationService {
   constructor(private authorisationStore: AuthorisationStore, private walletMasterContractService: WalletMasterContractService, private multiChainService: MultiChainService) {}
 
-  addRequest(requestAuthorisation: any, chainName: string) {
-    ensureChainSupport(this.multiChainService.networkConfig, chainName);
-    return this.authorisationStore.addRequest(requestAuthorisation, chainName);
+  addRequest(requestAuthorisation: any, network: string) {
+    ensureChainSupport(this.multiChainService.networkConfig, network);
+    return this.authorisationStore.addRequest(requestAuthorisation, network);
   }
 
-  async cancelAuthorisationRequest(authorisationRequest: AuthorisationRequest, chainName: string) {
+  async cancelAuthorisationRequest(authorisationRequest: AuthorisationRequest, network: string) {
     const recoveredAddress = recoverFromAuthorisationRequest(authorisationRequest);
-    return this.authorisationStore.removeRequest(authorisationRequest.contractAddress, recoveredAddress, chainName);
+    return this.authorisationStore.removeRequest(authorisationRequest.contractAddress, recoveredAddress, network);
   }
 
-  async removeAuthorisationRequest(authorisationRequest: AuthorisationRequest, chainName: string) {
-    await this.walletMasterContractService.ensureValidAuthorisationRequestSignature(authorisationRequest, chainName);
+  async removeAuthorisationRequest(authorisationRequest: AuthorisationRequest, network: string) {
+    await this.walletMasterContractService.ensureValidAuthorisationRequestSignature(authorisationRequest, network);
 
-    return this.authorisationStore.removeRequests(authorisationRequest.contractAddress, chainName);
+    return this.authorisationStore.removeRequests(authorisationRequest.contractAddress, network);
   }
 
-  async getAuthorisationRequests(authorisationRequest: AuthorisationRequest, chainName: string) {
-    await this.walletMasterContractService.ensureValidAuthorisationRequestSignature(authorisationRequest, chainName);
+  async getAuthorisationRequests(authorisationRequest: AuthorisationRequest, network: string) {
+    await this.walletMasterContractService.ensureValidAuthorisationRequestSignature(authorisationRequest, network);
 
-    return this.authorisationStore.getPendingAuthorisations(authorisationRequest.contractAddress, chainName);
+    return this.authorisationStore.getPendingAuthorisations(authorisationRequest.contractAddress, network);
   }
 }
 

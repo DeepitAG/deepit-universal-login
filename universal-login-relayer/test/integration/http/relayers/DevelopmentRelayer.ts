@@ -14,14 +14,14 @@ describe('INT: Development Relayer', async () => {
   let relayer: DevelopmentRelayer;
   let tokenContract: Contract;
   let contractAddress: string;
-  const chainName = 'default';
+  const network = 'default';
 
   beforeEach(async () => {
     provider = createMockProvider();
     [wallet] = getWallets(provider);
     ({relayer, tokenContract} = await startRelayer(wallet, DevelopmentRelayer));
     const walletCreator = new WalletCreator(relayer as any);
-    ({contractAddress} = await walletCreator.deployWallet(chainName));
+    ({contractAddress} = await walletCreator.deployWallet(network));
   });
 
   const isBalanceEqual = (value: utils.BigNumber) => async () =>

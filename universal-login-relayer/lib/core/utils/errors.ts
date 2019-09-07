@@ -184,8 +184,8 @@ export class DuplicatedExecution extends Conflict {
 }
 
 export class ChainNotSupported extends NotFound {
-  constructor (chainName: string) {
-    super(`Chain ${chainName} is not supported`, 'ChainNotSupported');
+  constructor (network: string) {
+    super(`Chain ${network} is not supported`, 'ChainNotSupported');
     Object.setPrototypeOf(this, DuplicatedExecution.prototype);
   }
 }

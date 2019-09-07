@@ -9,31 +9,31 @@ export interface AddAuthorisationRequest {
 class AuthorisationStore {
   constructor(private database : Knex) {}
 
-  addRequest(request: AddAuthorisationRequest, chainName: string) {
+  addRequest(request: AddAuthorisationRequest, network: string) {
     const {walletContractAddress, key, deviceInfo} = request;
-    return this.database.insert({walletContractAddress, key, deviceInfo, chainName})
+    return this.database.insert({walletContractAddress, key, deviceInfo, network})
       .into('authorisations')
       .returning('id');
   }
 
-  getPendingAuthorisations(walletContractAddress: string, chainName: string) {
+  getPendingAuthorisations(walletContractAddress: string, network: string) {
     return this.database('authorisations')
-      .where({walletContractAddress, chainName})
+      .where({walletContractAddress, network})
       .select();
   }
 
-  removeRequest(contractAddress: string, key: string, chainName: string) {
+  removeRequest(contractAddress: string, key: string, network: string) {
     return this.database('authorisations')
       .where('walletContractAddress', contractAddress)
       .where('key', key)
-      .where('chainName', chainName)
+      .where('network', network)
       .del();
   }
 
-  removeRequests(contractAddress: string, chainName: string) {
+  removeRequests(contractAddress: string, network: string) {
     return this.database('authorisations')
       .where('walletContractAddress', contractAddress)
-      .where('chainName', chainName)
+      .where('network', network)
       .del();
   }
 }

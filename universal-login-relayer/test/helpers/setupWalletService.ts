@@ -19,10 +19,10 @@ export default async function setupWalletService(wallet: Wallet) {
   return {provider, wallet, walletService, callback, factoryContract, ensService};
 }
 
-export const createFutureWallet = async (keyPair: KeyPair, ensName: string, factoryContract: Contract, wallet: Wallet, ensService: ENSService, chainName: string) => {
+export const createFutureWallet = async (keyPair: KeyPair, ensName: string, factoryContract: Contract, wallet: Wallet, ensService: ENSService, network: string) => {
   const futureContractAddress = computeContractAddress(factoryContract.address, keyPair.publicKey, await factoryContract.initCode());
   await wallet.sendTransaction({to: futureContractAddress, value: utils.parseEther('1')});
-  const args = await ensService.argsFor(ensName, chainName) as string[];
+  const args = await ensService.argsFor(ensName, network) as string[];
   const initData = encodeInitializeWithENSData([keyPair.publicKey, ...args, TEST_GAS_PRICE]);
   const signature = await calculateInitializeSignature(initData, keyPair.privateKey);
   return {signature, futureContractAddress};

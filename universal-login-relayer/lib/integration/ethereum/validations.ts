@@ -31,5 +31,5 @@ export const ensureEnoughGas = async (provider: providers.Provider, walletAddres
   ensure(utils.bigNumberify(message.gasLimit as utils.BigNumberish).gte(estimateGas), NotEnoughGas);
 };
 
-export const ensureChainSupport = (networkConfig: NetworkConfig, chainName: string) =>
-  ensureNotNull(networkConfig[chainName], ChainNotSupported, chainName);
+export const ensureChainSupport = (networkConfig: NetworkConfig, network: string) =>
+  ensureNotNull(networkConfig[network], ChainNotSupported, network);

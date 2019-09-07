@@ -12,27 +12,27 @@ class TokenGrantingRelayer extends Relayer {
   }
 
   addHooks() {
-    this.hooks.addListener('created', async ({transaction, contractAddress, chainName} : CallbackArgs) => {
-      const tokenContract = this.multiChainService.getTokenContract(chainName);
-      const provider = this.multiChainService.getProvider(chainName);
+    this.hooks.addListener('created', async ({transaction, contractAddress, network} : CallbackArgs) => {
+      const tokenContract = this.multiChainService.getTokenContract(network);
+      const provider = this.multiChainService.getProvider(network);
       const receipt = await waitToBeMined(provider, transaction.hash as string);
       if (receipt.status) {
         tokenContract.transfer(contractAddress, utils.parseEther('100'));
       }
     });
 
-    this.hooks.addListener('added', async ({transaction, contractAddress, chainName} : CallbackArgs) => {
-      const tokenContract = this.multiChainService.getTokenContract(chainName);
-      const provider = this.multiChainService.getProvider(chainName);
+    this.hooks.addListener('added', async ({transaction, contractAddress, network} : CallbackArgs) => {
+      const tokenContract = this.multiChainService.getTokenContract(network);
+      const provider = this.multiChainService.getProvider(network);
       const receipt = await waitToBeMined(provider, transaction.hash as string);
       if (receipt.status) {
         tokenContract.transfer(contractAddress, utils.parseEther('5'));
       }
     });
 
-     this.hooks.addListener('keysAdded', async ({transaction, contractAddress, chainName} : CallbackArgs) => {
-      const tokenContract = this.multiChainService.getTokenContract(chainName);
-      const provider = this.multiChainService.getProvider(chainName);
+     this.hooks.addListener('keysAdded', async ({transaction, contractAddress, network} : CallbackArgs) => {
+      const tokenContract = this.multiChainService.getTokenContract(network);
+      const provider = this.multiChainService.getProvider(network);
       const receipt = await waitToBeMined(provider, transaction.hash as string);
       if (receipt.status) {
         tokenContract.transfer(contractAddress, utils.parseEther('15'));

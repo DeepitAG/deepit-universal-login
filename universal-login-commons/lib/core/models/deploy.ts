@@ -3,5 +3,5 @@ export interface DeployArgs {
   ensName: string;
   gasPrice: string;
   signature: string;
-  chainName: string;
+  network: string;
 }

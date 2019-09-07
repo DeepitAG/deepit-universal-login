@@ -9,7 +9,7 @@ import {createMessageItem} from '../../../lib/core/utils/utils';
 import getTestSignedMessage from '../../config/message';
 
 describe('UNIT: MessageStatusService', async () => {
-  const chainName = 'default';
+  const network = 'default';
   const signaturesService : any = {
     getRequiredSignatures: sinon.stub().returns(utils.bigNumberify(1))
   };
@@ -29,7 +29,7 @@ describe('UNIT: MessageStatusService', async () => {
   });
 
   it('getStatus for newly created Message', async () => {
-    expect(await messageStatusService.getStatus(messageHash, chainName)).to.deep.eq({
+    expect(await messageStatusService.getStatus(messageHash, network)).to.deep.eq({
       collectedSignatures: [],
       totalCollected: 0,
       required: 1,
@@ -40,7 +40,7 @@ describe('UNIT: MessageStatusService', async () => {
 
   it('getStatus after adding a signature', async () => {
     await messageRepository.addSignature(messageHash, message.signature);
-    expect(await messageStatusService.getStatus(messageHash, chainName)).to.deep.eq({
+    expect(await messageStatusService.getStatus(messageHash, network)).to.deep.eq({
       collectedSignatures: [message.signature],
       totalCollected: 1,
       required: 1,
@@ -51,12 +51,12 @@ describe('UNIT: MessageStatusService', async () => {
 
   it('getStatus after being queued', async () => {
     await messageRepository.setMessageState(messageHash, 'Queued');
-    expect(await messageStatusService.getStatus(messageHash, chainName)).to.include({state: 'Queued'});
+    expect(await messageStatusService.getStatus(messageHash, network)).to.include({state: 'Queued'});
   });
 
   it('getStatus after success', async () => {
     await messageRepository.markAsPending(messageHash, TEST_TRANSACTION_HASH);
-    expect(await messageStatusService.getStatus(messageHash, chainName)).to.deep.include({
+    expect(await messageStatusService.getStatus(messageHash, network)).to.deep.include({
       state: 'Pending',
       transactionHash: TEST_TRANSACTION_HASH
     });
@@ -64,7 +64,7 @@ describe('UNIT: MessageStatusService', async () => {
 
   it('getStatus after error', async () => {
     await messageRepository.markAsError(messageHash, 'Error message');
-    expect(await messageStatusService.getStatus(messageHash, chainName)).to.include({
+    expect(await messageStatusService.getStatus(messageHash, network)).to.include({
       state: 'Error',
       error: 'Error message'
     });

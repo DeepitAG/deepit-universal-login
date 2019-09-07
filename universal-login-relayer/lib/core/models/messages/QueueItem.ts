@@ -1,4 +1,4 @@
 export interface QueueItem {
   hash: string;
-  chainName: string;
+  network: string;
 }

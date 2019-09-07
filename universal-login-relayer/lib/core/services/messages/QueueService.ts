@@ -7,7 +7,7 @@ import {TransactionHashNotFound} from '../../utils/errors';
 
 type QueueState = 'running' | 'stopped' | 'stopping';
 
-export type OnTransactionSent = (transaction: providers.TransactionResponse, chainName: string) => Promise<void>;
+export type OnTransactionSent = (transaction: providers.TransactionResponse, network: string) => Promise<void>;
 
 class QueueService {
   private state: QueueState;
@@ -22,25 +22,25 @@ class QueueService {
     this.state = 'stopped';
   }
 
-  async add(signedMessage: SignedMessage, chainName: string) {
-    const messageHash = await this.queueStore.add(signedMessage, chainName);
-    await this.messageRepository.setMessageState(messageHash, 'Queued', chainName);
+  async add(signedMessage: SignedMessage, network: string) {
+    const messageHash = await this.queueStore.add(signedMessage, network);
+    await this.messageRepository.setMessageState(messageHash, 'Queued', network);
     return messageHash;
   }
 
-  async execute(messageHash: string, chainName: string) {
+  async execute(messageHash: string, network: string) {
     try {
-      const signedMessage = await this.messageRepository.getMessage(messageHash, chainName);
-      const transactionResponse = await this.messageExecutor.execute(signedMessage, chainName);
+      const signedMessage = await this.messageRepository.getMessage(messageHash, network);
+      const transactionResponse = await this.messageExecutor.execute(signedMessage, network);
       const {hash, wait} = transactionResponse;
       ensureNotNull(hash, TransactionHashNotFound);
-      await this.messageRepository.markAsPending(messageHash, hash!, chainName);
+      await this.messageRepository.markAsPending(messageHash, hash!, network);
       await wait();
-      await this.onTransactionSent(transactionResponse, chainName);
-      await this.messageRepository.setMessageState(messageHash, 'Success', chainName);
+      await this.onTransactionSent(transactionResponse, network);
+      await this.messageRepository.setMessageState(messageHash, 'Success', network);
     } catch (error) {
       const errorMessage = `${error.name}: ${error.message}`;
-      await this.messageRepository.markAsError(messageHash, errorMessage, chainName);
+      await this.messageRepository.markAsError(messageHash, errorMessage, network);
     }
     await this.queueStore.remove(messageHash);
   }
@@ -56,7 +56,7 @@ class QueueService {
     do {
       const nextMessage = await this.queueStore.getNext();
       if (nextMessage){
-        await this.execute(nextMessage.hash, nextMessage.chainName);
+        await this.execute(nextMessage.hash, nextMessage.network);
       } else {
         if (this.state === 'stopping'){
           this.state = 'stopped';

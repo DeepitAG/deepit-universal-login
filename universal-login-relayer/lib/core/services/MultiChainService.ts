@@ -9,56 +9,56 @@ export class MultiChainService {
   constructor(public networkConfig: NetworkConfig) {
   }
 
-  getProvider(chainName: string) {
-    ensureChainSupport(this.networkConfig, chainName);
-    if (!this.networkConfig[chainName].provider) {
-      const jsonRpcUrl = this.networkConfig[chainName].jsonRpcUrl;
-      const chainSpec = this.networkConfig[chainName].chainSpec;
-      this.networkConfig[chainName].provider = new providers.JsonRpcProvider(jsonRpcUrl, chainSpec);
+  getProvider(network: string) {
+    ensureChainSupport(this.networkConfig, network);
+    if (!this.networkConfig[network].provider) {
+      const jsonRpcUrl = this.networkConfig[network].jsonRpcUrl;
+      const chainSpec = this.networkConfig[network].chainSpec;
+      this.networkConfig[network].provider = new providers.JsonRpcProvider(jsonRpcUrl, chainSpec);
     }
-    return this.networkConfig[chainName].provider as any;
+    return this.networkConfig[network].provider as any;
   }
 
-  getFactoryContract(chainName: string) {
-    ensureChainSupport(this.networkConfig, chainName);
-    return new Contract(this.networkConfig[chainName].factoryAddress, WalletProxyFactory.interface, this.getWallet(chainName));
+  getFactoryContract(network: string) {
+    ensureChainSupport(this.networkConfig, network);
+    return new Contract(this.networkConfig[network].factoryAddress, WalletProxyFactory.interface, this.getWallet(network));
   }
 
-  getWallet(chainName: string) {
-    ensureChainSupport(this.networkConfig, chainName);
-    const privateKey = this.networkConfig[chainName].privateKey;
-    return new Wallet(privateKey, this.getProvider(chainName));
+  getWallet(network: string) {
+    ensureChainSupport(this.networkConfig, network);
+    const privateKey = this.networkConfig[network].privateKey;
+    return new Wallet(privateKey, this.getProvider(network));
   }
 
-  getRegistrars(chainName: string) {
-    ensureChainSupport(this.networkConfig, chainName);
-    return this.networkConfig[chainName].ensRegistrars;
+  getRegistrars(network: string) {
+    ensureChainSupport(this.networkConfig, network);
+    return this.networkConfig[network].ensRegistrars;
   }
 
-  getChainSpec(chainName: string) {
-    ensureChainSupport(this.networkConfig, chainName);
-    return this.networkConfig[chainName].chainSpec;
+  getChainSpec(network: string) {
+    ensureChainSupport(this.networkConfig, network);
+    return this.networkConfig[network].chainSpec;
   }
 
-  getWalletContractAddress(chainName: string) {
-    ensureChainSupport(this.networkConfig, chainName);
-    return this.networkConfig[chainName].walletContractAddress;
+  getWalletContractAddress(network: string) {
+    ensureChainSupport(this.networkConfig, network);
+    return this.networkConfig[network].walletContractAddress;
   }
 
-  getSupportedTokens(chainName: string) {
-    ensureChainSupport(this.networkConfig, chainName);
-    return this.networkConfig[chainName].supportedTokens;
+  getSupportedTokens(network: string) {
+    ensureChainSupport(this.networkConfig, network);
+    return this.networkConfig[network].supportedTokens;
   }
 
-  getContractWhiteList(chainName: string) {
-    ensureChainSupport(this.networkConfig, chainName);
-    return this.networkConfig[chainName].contractWhiteList;
+  getContractWhiteList(network: string) {
+    ensureChainSupport(this.networkConfig, network);
+    return this.networkConfig[network].contractWhiteList;
   }
 
-  getTokenContract(chainName: string) {
-    ensureChainSupport(this.networkConfig, chainName);
-    const tokenAddress = this.networkConfig[chainName].tokenContractAddress as string;
-    const wallet = this.getWallet(chainName);
+  getTokenContract(network: string) {
+    ensureChainSupport(this.networkConfig, network);
+    const tokenAddress = this.networkConfig[network].tokenContractAddress as string;
+    const wallet = this.getWallet(network);
     return new Contract(tokenAddress, Token.abi, wallet);
   }
 }

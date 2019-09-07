@@ -19,7 +19,7 @@ describe(`INT: IQueueStore: ${config.type.name}`, async () => {
   let signedMessage: SignedMessage;
   let expectedMessageHash: string;
   const knex = getKnexConfig();
-  const chainName = 'default';
+  const network = 'default';
 
   before(async () => {
     signedMessage = getTestSignedMessage();
@@ -40,15 +40,15 @@ describe(`INT: IQueueStore: ${config.type.name}`, async () => {
   });
 
   it('add message', async () =>  {
-    const messageHash = await queueStore.add(signedMessage, chainName);
+    const messageHash = await queueStore.add(signedMessage, network);
     expect(messageHash).to.be.a('string');
     expect(messageHash).to.be.eq(expectedMessageHash);
   });
 
   it('message round trip', async () => {
-    const messageHash1 = await queueStore.add(signedMessage, chainName);
+    const messageHash1 = await queueStore.add(signedMessage, network);
     const signedMessage2 = getTestSignedMessage({value: utils.parseEther('2')});
-    const messageHash2 = await queueStore.add(signedMessage2, chainName);
+    const messageHash2 = await queueStore.add(signedMessage2, network);
     const nextMessageHash = (await queueStore.getNext())!.hash;
     expect(nextMessageHash).to.be.equal(messageHash1);
     expect(nextMessageHash).to.be.eq(expectedMessageHash);

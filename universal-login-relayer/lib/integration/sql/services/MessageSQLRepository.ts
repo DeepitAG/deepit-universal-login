@@ -10,7 +10,7 @@ export class MessageSQLRepository implements IMessageRepository {
   constructor(public knex: Knex) {
   }
 
-  async add(messageHash: string, messageItem: MessageItem, chainName: string) {
+  async add(messageHash: string, messageItem: MessageItem, network: string) {
     ensureNotNull(messageItem.message, MessageNotFound, messageHash);
     return this.knex
       .insert({
@@ -19,20 +19,20 @@ export class MessageSQLRepository implements IMessageRepository {
         walletAddress: messageItem.walletAddress,
         state: 'AwaitSignature',
         message: stringifySignedMessageFields(messageItem.message),
-        chainName
+        network
       })
       .into('messages');
   }
 
-  async get(messageHash: string, chainName: string) {
-    const message = await this.getMessageEntry(messageHash, chainName);
+  async get(messageHash: string, network: string) {
+    const message = await this.getMessageEntry(messageHash, network);
     if (!message) {
       throw new InvalidMessage(messageHash);
     }
     if (message.message) {
       message.message = bignumberifySignedMessageFields(message.message);
     }
-    const signatureKeyPairs = await this.getCollectedSignatureKeyPairs(messageHash, chainName);
+    const signatureKeyPairs = await this.getCollectedSignatureKeyPairs(messageHash, network);
     const messageItem: MessageItem = message && {
       ...message,
       collectedSignatureKeyPairs: signatureKeyPairs
@@ -40,90 +40,90 @@ export class MessageSQLRepository implements IMessageRepository {
     return messageItem;
   }
 
-  private async getMessageEntry(messageHash: string, chainName: string) {
+  private async getMessageEntry(messageHash: string, network: string) {
     return this.knex('messages')
       .where('messageHash', messageHash)
-      .where('chainName', chainName)
+      .where('network', network)
       .columns(['transactionHash', 'error', 'walletAddress', 'message', 'state'])
       .first();
   }
 
-  async isPresent(messageHash: string, chainName: string) {
-    const message = await this.getMessageEntry(messageHash, chainName);
+  async isPresent(messageHash: string, network: string) {
+    const message = await this.getMessageEntry(messageHash, network);
     const signatureKeyPairs = await this.knex('signature_key_pairs')
       .where('messageHash', messageHash)
-      .where('chainName', chainName);
+      .where('network', network);
     return !!message || signatureKeyPairs.length !== 0;
   }
 
-  async remove(messageHash: string, chainName: string) {
-    const messageItem: MessageItem = await this.get(messageHash, chainName);
+  async remove(messageHash: string, network: string) {
+    const messageItem: MessageItem = await this.get(messageHash, network);
     await this.knex('signature_key_pairs')
       .delete()
       .where('messageHash', messageHash)
-      .where('chainName', chainName);
+      .where('network', network);
     await this.knex('messages')
       .delete()
       .where('messageHash', messageHash);
     return messageItem;
   }
 
-  async addSignature(messageHash: string, signature: string, chainName: string) {
+  async addSignature(messageHash: string, signature: string, network: string) {
     const key = getKeyFromHashAndSignature(messageHash, signature);
     await this.knex
       .insert({
         messageHash,
         signature,
         key,
-        chainName
+        network
       })
       .into('signature_key_pairs');
   }
 
-  async getCollectedSignatureKeyPairs(messageHash: string, chainName: string) {
+  async getCollectedSignatureKeyPairs(messageHash: string, network: string) {
     return this.knex('signature_key_pairs')
       .where('messageHash', messageHash)
-      .where('chainName', chainName)
+      .where('network', network)
       .select(['key', 'signature']);
   }
 
-  async setMessageState(messageHash: string, state: MessageState, chainName: string) {
+  async setMessageState(messageHash: string, state: MessageState, network: string) {
     return this.knex('messages')
       .where('messageHash', messageHash)
-      .where('chainName', chainName)
+      .where('network', network)
       .update('state', state);
   }
 
-  async markAsPending(messageHash: string, transactionHash: string, chainName: string) {
+  async markAsPending(messageHash: string, transactionHash: string, network: string) {
     ensureProperTransactionHash(transactionHash);
     return this.knex('messages')
       .where('messageHash', messageHash)
-      .where('chainName', chainName)
+      .where('network', network)
       .update('transactionHash', transactionHash)
       .update('state', 'Pending');
   }
 
-  async markAsError(messageHash: string, error: string, chainName: string) {
+  async markAsError(messageHash: string, error: string, network: string) {
     return this.knex('messages')
       .where('messageHash', messageHash)
-      .where('chainName', chainName)
+      .where('network', network)
       .update('error', error)
       .update('state', 'Error');
   }
 
-  async containSignature(messageHash: string, signature: string, chainName: string) {
+  async containSignature(messageHash: string, signature: string, network: string) {
     const foundSignature = await this.knex('signature_key_pairs')
       .where('messageHash', messageHash)
-      .where('chainName', chainName)
+      .where('network', network)
       .andWhere('signature', signature)
       .first();
     return !!foundSignature;
   }
 
-  async getMessage(messageHash: string, chainName: string) {
-    const message = (await this.get(messageHash, chainName)).message;
+  async getMessage(messageHash: string, network: string) {
+    const message = (await this.get(messageHash, network)).message;
     ensureNotNull(message, MessageNotFound, messageHash);
-    const collectedSignatureKeyPairs = await this.getCollectedSignatureKeyPairs(messageHash, chainName);
+    const collectedSignatureKeyPairs = await this.getCollectedSignatureKeyPairs(messageHash, network);
     return getMessageWithSignatures(message, collectedSignatureKeyPairs);
   }
 }

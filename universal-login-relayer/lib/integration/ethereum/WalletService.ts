@@ -12,15 +12,15 @@ class WalletService {
   constructor(private multiChainService: MultiChainService, private ensService: ENSService, private hooks: EventEmitter) {
   }
 
-  async deploy({publicKey, ensName, gasPrice, signature, chainName}: DeployArgs) {
-    const factoryContract = this.multiChainService.getFactoryContract(chainName);
-    const provider = this.multiChainService.getProvider(chainName);
-    const wallet = this.multiChainService.getWallet(chainName);
+  async deploy({publicKey, ensName, gasPrice, signature, network}: DeployArgs) {
+    const factoryContract = this.multiChainService.getFactoryContract(network);
+    const provider = this.multiChainService.getProvider(network);
+    const wallet = this.multiChainService.getWallet(network);
     const walletDeployer = new WalletDeployer(factoryContract.address, wallet);
     const balanceChecker = new BalanceChecker(provider);
     const requiredBalanceChecker = new RequiredBalanceChecker(balanceChecker);
-    ensure(!await this.ensService.resolveName(ensName, chainName), EnsNameTaken, ensName);
-    const ensArgs = await this.ensService.argsFor(ensName, chainName);
+    ensure(!await this.ensService.resolveName(ensName, network), EnsNameTaken, ensName);
+    const ensArgs = await this.ensService.argsFor(ensName, network);
     ensureNotNull(ensArgs, InvalidENSDomain, ensName);
     const factoryAddress = (this.multiChainService.getFactoryContract('default')).address;
     const supportedTokens = this.multiChainService.getSupportedTokens('default');
@@ -30,7 +30,7 @@ class WalletService {
     const initWithENS = encodeInitializeWithENSData(args);
     ensure(getInitializeSigner(initWithENS, signature) === publicKey, InvalidSignature);
     const transaction = await walletDeployer.deploy({publicKey, signature, intializeData: initWithENS}, {gasLimit: DEPLOY_GAS_LIMIT, gasPrice: utils.bigNumberify(gasPrice)});
-    this.hooks.emit('created', {transaction, contractAddress, chainName});
+    this.hooks.emit('created', {transaction, contractAddress, network});
     return transaction;
   }
 }

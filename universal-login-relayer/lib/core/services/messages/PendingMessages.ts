@@ -17,38 +17,38 @@ export default class PendingMessages {
     private statusService: MessageStatusService
   ) {}
 
-  async isPresent(messageHash : string, chainName: string) {
-    return this.messageRepository.isPresent(messageHash, chainName);
+  async isPresent(messageHash : string, network: string) {
+    return this.messageRepository.isPresent(messageHash, network);
   }
 
-  async add(message: SignedMessage, chainName: string) : Promise<MessageStatus> {
+  async add(message: SignedMessage, network: string) : Promise<MessageStatus> {
     const messageHash = calculateMessageHash(message);
-    if (!await this.isPresent(messageHash, chainName)) {
+    if (!await this.isPresent(messageHash, network)) {
       const messageItem = createMessageItem(message);
-      await this.messageRepository.add(messageHash, messageItem, chainName);
+      await this.messageRepository.add(messageHash, messageItem, network);
     }
-    await this.addSignatureToPendingMessage(messageHash, message, chainName);
-    const status = await this.getStatus(messageHash, chainName);
+    await this.addSignatureToPendingMessage(messageHash, message, network);
+    const status = await this.getStatus(messageHash, network);
     status.messageHash = messageHash;
-    if (await this.isEnoughSignatures(messageHash, chainName)) {
-      await this.onReadyToExecute(messageHash, message, chainName);
+    if (await this.isEnoughSignatures(messageHash, network)) {
+      await this.onReadyToExecute(messageHash, message, network);
     }
     return status;
   }
 
-  private async onReadyToExecute(messageHash: string, message: SignedMessage, chainName: string) {
-    await this.ensureCorrectExecution(messageHash, chainName);
-    return this.queueService.add(message, chainName);
+  private async onReadyToExecute(messageHash: string, message: SignedMessage, network: string) {
+    await this.ensureCorrectExecution(messageHash, network);
+    return this.queueService.add(message, network);
   }
 
-  private async addSignatureToPendingMessage(messageHash: string, message: SignedMessage, chainName: string) {
-    const wallet = this.multiChainService.getWallet(chainName);
-    const messageItem = await this.messageRepository.get(messageHash, chainName);
+  private async addSignatureToPendingMessage(messageHash: string, message: SignedMessage, network: string) {
+    const wallet = this.multiChainService.getWallet(network);
+    const messageItem = await this.messageRepository.get(messageHash, network);
     ensure(!messageItem.transactionHash, DuplicatedExecution);
-    const isContainSignature = await this.messageRepository.containSignature(messageHash, message.signature, chainName);
+    const isContainSignature = await this.messageRepository.containSignature(messageHash, message.signature, network);
     ensure(!isContainSignature, DuplicatedSignature);
     await this.ensureCorrectKeyPurpose(message, messageItem.walletAddress, wallet);
-    await this.messageRepository.addSignature(messageHash, message.signature, chainName);
+    await this.messageRepository.addSignature(messageHash, message.signature, network);
   }
 
   private async ensureCorrectKeyPurpose(message: SignedMessage, walletAddress: string, wallet: Wallet) {
@@ -60,18 +60,18 @@ export default class PendingMessages {
     ensure(await walletContract.keyExist(key), InvalidSignature, 'Invalid key');
   }
 
-  async getStatus(messageHash: string, chainName: string) {
-    return this.statusService.getStatus(messageHash, chainName);
+  async getStatus(messageHash: string, network: string) {
+    return this.statusService.getStatus(messageHash, network);
   }
 
-  async ensureCorrectExecution(messageHash: string, chainName: string) {
-    const {required, transactionHash, totalCollected} = await this.statusService.getStatus(messageHash, chainName);
+  async ensureCorrectExecution(messageHash: string, network: string) {
+    const {required, transactionHash, totalCollected} = await this.statusService.getStatus(messageHash, network);
     ensure(!transactionHash, DuplicatedExecution);
-    ensure(await this.isEnoughSignatures(messageHash, chainName), NotEnoughSignatures, required, totalCollected);
+    ensure(await this.isEnoughSignatures(messageHash, network), NotEnoughSignatures, required, totalCollected);
   }
 
-  async isEnoughSignatures(messageHash: string, chainName: string) : Promise<boolean> {
-    const {totalCollected, required} = await this.getStatus(messageHash, chainName);
+  async isEnoughSignatures(messageHash: string, network: string) : Promise<boolean> {
+    const {totalCollected, required} = await this.getStatus(messageHash, network);
     return totalCollected >= required;
   }
 }

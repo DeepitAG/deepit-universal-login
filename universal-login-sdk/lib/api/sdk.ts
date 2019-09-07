@@ -33,7 +33,7 @@ class UniversalLoginSDK {
   sdkConfig: SdkConfig;
   relayerConfig?: PublicRelayerConfig;
   factoryAddress?: string;
-  chainName: string = 'default';
+  network: string = 'default';
 
   constructor(
     relayerUrl: string,
@@ -110,10 +110,10 @@ class UniversalLoginSDK {
   private fetchFutureWalletFactory() {
     ensureNotNull(this.relayerConfig, Error, 'Relayer configuration not yet loaded');
     const futureWalletConfig = {
-      supportedTokens: this.relayerConfig!.networkConfig[this.chainName].supportedTokens,
-      factoryAddress: this.relayerConfig!.networkConfig[this.chainName].factoryAddress,
-      contractWhiteList: this.relayerConfig!.networkConfig[this.chainName].contractWhiteList,
-      chainSpec: this.relayerConfig!.networkConfig[this.chainName].chainSpec
+      supportedTokens: this.relayerConfig!.networkConfig[this.network].supportedTokens,
+      factoryAddress: this.relayerConfig!.networkConfig[this.network].factoryAddress,
+      contractWhiteList: this.relayerConfig!.networkConfig[this.network].contractWhiteList,
+      chainSpec: this.relayerConfig!.networkConfig[this.network].chainSpec
     };
     this.futureWalletFactory = this.futureWalletFactory || new FutureWalletFactory(
       futureWalletConfig,
@@ -170,7 +170,7 @@ class UniversalLoginSDK {
 
   async resolveName(ensName: string) {
     await this.getRelayerConfig();
-    const {ensAddress} = this.relayerConfig!.networkConfig[this.chainName].chainSpec;
+    const {ensAddress} = this.relayerConfig!.networkConfig[this.network].chainSpec;
     return resolveName(this.provider, ensAddress, ensName);
   }
 

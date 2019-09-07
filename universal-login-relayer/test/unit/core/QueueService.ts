@@ -26,7 +26,7 @@ describe('UNIT: Queue Service', async () => {
   const executorReturnsNull: any = {
     execute: sinon.fake.returns(null),
   };
-  const chainName = 'default';
+  const network = 'default';
   let signedMessage: SignedMessage;
   let messageHash: string;
 
@@ -39,14 +39,14 @@ describe('UNIT: Queue Service', async () => {
     await messageRepository.add(
       messageHash,
       createMessageItem(signedMessage),
-      chainName
+      network
     );
     sinon.resetHistory();
   });
 
   it('signedMessage round trip', async () => {
     queueService.start();
-    await queueService.add(signedMessage, chainName);
+    await queueService.add(signedMessage, network);
     await waitExpect(() => expect(executor.execute).to.be.calledOnce);
     expect(wait).to.be.calledAfter(executor.execute);
     expect(onTransactionSent).to.be.calledImmediatelyAfter(wait);
@@ -55,7 +55,7 @@ describe('UNIT: Queue Service', async () => {
   });
 
   it('should execute pending signedMessage after start', async () => {
-    await queueService.add(signedMessage, chainName);
+    await queueService.add(signedMessage, network);
     queueService.start();
     await waitExpect(() => expect(executor.execute).to.be.calledOnce);
     expect(wait).to.be.calledAfter(executor.execute);
@@ -67,8 +67,8 @@ describe('UNIT: Queue Service', async () => {
     const markAsErrorSpy = sinon.spy(messageRepository.markAsError);
     messageRepository.markAsError = markAsErrorSpy;
     queueMemoryStore.remove = sinon.spy(queueMemoryStore.remove);
-    await messageRepository.add(messageHash, createMessageItem(signedMessage), chainName);
-    messageHash = await queueService.add(signedMessage, chainName);
+    await messageRepository.add(messageHash, createMessageItem(signedMessage), network);
+    messageHash = await queueService.add(signedMessage, network);
     await waitExpect(() => expect(messageRepository.markAsError).calledWith(messageHash, 'TypeError: Cannot read property \'hash\' of null'));
     expect(queueMemoryStore.remove).to.be.calledOnce;
     expect(queueMemoryStore.remove).to.be.calledAfter(markAsErrorSpy);

@@ -8,10 +8,10 @@ class ENSService {
   constructor(private multiChainService: MultiChainService) {
   }
 
-  async getDomainsInfo(chainName: string) {
-    const ensRegistrars = this.multiChainService.getRegistrars(chainName);
-    const chainSpec = this.multiChainService.getChainSpec(chainName);
-    const provider = this.multiChainService.getProvider(chainName);
+  async getDomainsInfo(network: string) {
+    const ensRegistrars = this.multiChainService.getRegistrars(network);
+    const chainSpec = this.multiChainService.getChainSpec(network);
+    const provider = this.multiChainService.getProvider(network);
     const ens = new Contract(chainSpec.ensAddress, ENS.interface, provider);
     const domainsInfo : Record<string, ENSDomainInfo>  = {};
     for (let count = 0; count < ensRegistrars.length; count++) {
@@ -23,17 +23,17 @@ class ENSService {
     return domainsInfo;
   }
 
-  async findRegistrar(domain: string, chainName: string) {
-    const domainsInfo = await this.getDomainsInfo(chainName);
+  async findRegistrar(domain: string, network: string) {
+    const domainsInfo = await this.getDomainsInfo(network);
     return domainsInfo[domain] || null;
   }
 
-  async argsFor(ensName: string, chainName: string) {
-    const chainSpec = this.multiChainService.getChainSpec(chainName);
+  async argsFor(ensName: string, network: string) {
+    const chainSpec = this.multiChainService.getChainSpec(network);
     const [label, domain] = parseDomain(ensName);
     const hashLabel = utils.keccak256(utils.toUtf8Bytes(label));
     const node = utils.namehash(`${label}.${domain}`);
-    const registrarConfig = await this.findRegistrar(domain, chainName);
+    const registrarConfig = await this.findRegistrar(domain, network);
     if (registrarConfig === null) {
       return null;
     }
@@ -42,9 +42,9 @@ class ENSService {
     return [hashLabel, ensName, node, chainSpec.ensAddress, registrarAddress, resolverAddress];
   }
 
-  resolveName = async (ensName: string, chainName: string) => {
-    const provider = this.multiChainService.getProvider(chainName);
-    const chainSpec = this.multiChainService.getChainSpec(chainName);
+  resolveName = async (ensName: string, network: string) => {
+    const provider = this.multiChainService.getProvider(network);
+    const chainSpec = this.multiChainService.getChainSpec(network);
     return resolveName(provider, chainSpec.ensAddress, ensName);
   }
 }

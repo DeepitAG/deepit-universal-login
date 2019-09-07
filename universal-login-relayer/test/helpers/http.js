@@ -29,19 +29,19 @@ export const startMultiChainRelayer = async (port = '33111') => {
   return {provider1, provider2, wallet, otherWallet, relayer, deployer1, deployer2, factoryContract1, factoryContract2, walletContract1, walletContract2, mockToken1, mockToken2, ensAddress1, ensAddress2};
 };
 
-export const createWalletContract = async (provider, relayerUrlOrServer, publicKey, ensName = 'marek.mylogin.eth', chainName = 'default') => {
+export const createWalletContract = async (provider, relayerUrlOrServer, publicKey, ensName = 'marek.mylogin.eth', network = 'default') => {
   const result = await chai.request(relayerUrlOrServer)
   .post('/wallet')
   .send({
     managementKey: publicKey,
     ensName,
-    chainName
+    network
   });
   const {transaction} = result.body;
   return waitForContractDeploy(provider, WalletContract, transaction.hash);
 };
 
-export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, keyPair, walletContractAddress, factoryContractAddress, ensAddress, ensName = 'marek.mylogin.eth', chainName = 'default') => {
+export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, keyPair, walletContractAddress, factoryContractAddress, ensAddress, ensName = 'marek.mylogin.eth', network = 'default') => {
   const futureAddress = getFutureAddress(walletContractAddress, factoryContractAddress, keyPair.publicKey);
   await wallet.sendTransaction({to: futureAddress, value: utils.parseEther('1.0')});
   const initData = await getInitData(keyPair, ensName, ensAddress, wallet.provider, TEST_GAS_PRICE);
@@ -53,7 +53,7 @@ export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, k
     ensName,
     gasPrice: TEST_GAS_PRICE,
     signature,
-    chainName
+    network
   });
   return new Contract(futureAddress, WalletContract.interface, wallet);
 };
@@ -79,17 +79,17 @@ export const getInitData = async (keyPair, ensName, ensAddress, provider, gasPri
   return encodeInitializeWithENSData([keyPair.publicKey, hashLabel, ensName, node, ensAddress, registrarAddress, resolverAddress, gasPrice]);
 };
 
-export const postAuthorisationRequest = (relayer, contract, keyPair, chainName) =>
+export const postAuthorisationRequest = (relayer, contract, keyPair, network) =>
   chai.request(relayer.server)
     .post('/authorisation')
     .send({
       walletContractAddress: contract.address,
       key: keyPair.publicKey,
-      chainName
+      network
     });
 
 
-export const getAuthorisation = async (relayer, contract, keyPair, chainName) => {
+export const getAuthorisation = async (relayer, contract, keyPair, network) => {
   const authorisationRequest = {
     contractAddress: contract.address,
     signature: ''
@@ -98,7 +98,7 @@ export const getAuthorisation = async (relayer, contract, keyPair, chainName) =>
   const {signature} = authorisationRequest;
 
   const result = await chai.request(relayer.server)
-    .get(`/authorisation/${chainName}/${contract.address}?signature=${signature}`)
+    .get(`/authorisation/${network}/${contract.address}?signature=${signature}`)
     .send({
       key: keyPair.publicKey,
     });

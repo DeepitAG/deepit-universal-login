@@ -19,7 +19,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
   const relayerPort = '33511';
   const relayerUrl = `http://localhost:${relayerPort}`;
-  const chainName = 'default';
+  const network = 'default';
 
   beforeEach(async () => {
     keyPair = createKeyPair();
@@ -28,16 +28,16 @@ describe('E2E: Relayer - Authorisation routes', async () => {
   });
 
   it('get empty pending authorisations', async () => {
-    const {result} = await getAuthorisation(relayer, contract, keyPair, chainName);
+    const {result} = await getAuthorisation(relayer, contract, keyPair, network);
     expect(result.status).to.eq(200);
     expect(result.body.response).to.deep.eq([]);
   });
 
   it('create and get authorisation', async () => {
     const newKeyPair = createKeyPair();
-    await postAuthorisationRequest(relayer, contract, newKeyPair, chainName);
+    await postAuthorisationRequest(relayer, contract, newKeyPair, network);
 
-    const {result, response} = await getAuthorisation(relayer, contract, keyPair, chainName);
+    const {result, response} = await getAuthorisation(relayer, contract, keyPair, network);
     expect(result.status).to.eq(200);
     expect(response[0]).to.include({
       key: newKeyPair.publicKey,
@@ -51,16 +51,16 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
   it('deny request', async () => {
     const newKeyPair = createKeyPair();
-    await postAuthorisationRequest(relayer, contract, newKeyPair, chainName);
+    await postAuthorisationRequest(relayer, contract, newKeyPair, network);
 
     const authorisationRequest = {contractAddress: contract.address};
     signAuthorisationRequest(authorisationRequest, keyPair.privateKey);
     const result = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
-      .send({authorisationRequest, chainName});
+      .send({authorisationRequest, network});
     expect(result.status).to.eq(204);
 
-    const {result, response} = await getAuthorisation(relayer, contract, keyPair, chainName);
+    const {result, response} = await getAuthorisation(relayer, contract, keyPair, network);
     expect(response).to.deep.eq([]);
   });
 
@@ -69,7 +69,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
     beforeEach(async () => {
       newKeyPair = createKeyPair();
-      await postAuthorisationRequest(relayer, contract, newKeyPair, chainName);
+      await postAuthorisationRequest(relayer, contract, newKeyPair, network);
     });
 
     it('valid request', async () => {
@@ -78,11 +78,11 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
       const result = await chai.request(relayer.server)
         .delete(`/authorisation/${contract.address}`)
-        .send({authorisationRequest, chainName});
+        .send({authorisationRequest, network});
       console.log(result);
       expect(result.status).to.eq(204);
 
-      const {response} = await getAuthorisation(relayer, contract, keyPair, chainName);
+      const {response} = await getAuthorisation(relayer, contract, keyPair, network);
       expect(response).to.deep.eq([]);
     });
 
@@ -93,10 +93,10 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
       const {status} = await chai.request(relayer.server)
         .delete(`/authorisation/${contract.address}`)
-        .send({authorisationRequest, chainName});
+        .send({authorisationRequest, network});
       expect(status).to.eq(401);
 
-      const {response} = await getAuthorisation(relayer, contract, keyPair, chainName);
+      const {response} = await getAuthorisation(relayer, contract, keyPair, network);
       expect(response).to.have.lengthOf(1);
     });
   });
@@ -107,7 +107,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     signAuthorisationRequest(authorisationRequest, keyPair.privateKey);
     const {body, status} = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
-      .send({authorisationRequest, chainName});
+      .send({authorisationRequest, network});
 
     expect(status).to.eq(204);
     expect(body).to.deep.eq({});
@@ -121,7 +121,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     signAuthorisationRequest(authorisationRequest, attackerPrivateKey);
     const {body, status} = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
-      .send({authorisationRequest, chainName});
+      .send({authorisationRequest, network});
 
     expect(status).to.eq(401);
     expect(body.type).to.eq('UnauthorisedAddress');
@@ -134,7 +134,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     signAuthorisationRequest(authorisationRequest, attackerPrivateKey);
 
     const {body, status} = await chai.request(relayer.server)
-      .get(`/authorisation/${chainName}/${contract.address}?signature=${authorisationRequest.signature}`);
+      .get(`/authorisation/${network}/${contract.address}?signature=${authorisationRequest.signature}`);
 
     expect(status).to.eq(401);
     expect(body.type).to.eq('UnauthorisedAddress');

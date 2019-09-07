@@ -24,14 +24,14 @@ describe('INT: WalletService', async () => {
   const keyPair = createKeyPair();
   const ensName = 'alex.mylogin.eth';
   let transaction: utils.Transaction;
-  const chainName = 'default';
+  const network = 'default';
 
   before(async () => {
     provider = createMockProvider();
     [wallet] = getWallets(provider);
     ({provider, wallet, walletService, callback, factoryContract, ensService} = await setupWalletService(wallet));
-    const {futureContractAddress, signature} = await createFutureWallet(keyPair, ensName, factoryContract, wallet, ensService, chainName);
-    transaction = await walletService.deploy({publicKey: keyPair.publicKey, ensName, gasPrice: TEST_GAS_PRICE, signature, chainName});
+    const {futureContractAddress, signature} = await createFutureWallet(keyPair, ensName, factoryContract, wallet, ensService, network);
+    transaction = await walletService.deploy({publicKey: keyPair.publicKey, ensName, gasPrice: TEST_GAS_PRICE, signature, network});
     walletContract = new Contract(futureContractAddress, WalletContract.interface, wallet.provider);
   });
 
@@ -50,7 +50,7 @@ describe('INT: WalletService', async () => {
     });
 
     it('should fail with not existing ENS name', async () => {
-      const creationPromise = walletService.deploy({publicKey: wallet.address, ensName: 'alex.non-existing-id.eth', signature: 'SOME_SIGNATURE', gasPrice: '1', chainName});
+      const creationPromise = walletService.deploy({publicKey: wallet.address, ensName: 'alex.non-existing-id.eth', signature: 'SOME_SIGNATURE', gasPrice: '1', network});
       await expect(creationPromise)
         .to.be.eventually.rejectedWith('ENS domain alex.non-existing-id.eth does not exist or is not compatible with Universal Login');
     });

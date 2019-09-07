@@ -18,7 +18,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
   let otherWallet: Wallet;
   let relayer: any;
   let walletCreator: WalletCreator;
-  const chainName = 'default';
+  const network = 'default';
   const otherChainName = 'otherChain';
   const ensName = 'giulio.mylogin.eth';
 
@@ -28,14 +28,14 @@ describe('E2E: Relayer - Multi-Chain', async () => {
   });
 
   it('create and get authorisation on both chains', async () => {
-    const {contractAddress, keyPair: keyPair1} = await walletCreator.deployWallet(chainName);
+    const {contractAddress, keyPair: keyPair1} = await walletCreator.deployWallet(network);
     const {contractAddress: otherContractAddress, keyPair: keyPair2} = await walletCreator.deployWallet(otherChainName);
     const newKeyPair = createKeyPair();
     const contract1 = new Contract(contractAddress, WalletContract.interface, deployer1);
     const contract2 = new Contract(otherContractAddress, WalletContract.interface, deployer2);
-    await postAuthorisationRequest(relayer, contract1, newKeyPair, chainName);
+    await postAuthorisationRequest(relayer, contract1, newKeyPair, network);
     await postAuthorisationRequest(relayer, contract2, newKeyPair, otherChainName);
-    const req1 = await getAuthorisation(relayer, contract1, keyPair1, chainName);
+    const req1 = await getAuthorisation(relayer, contract1, keyPair1, network);
     const req2 = await getAuthorisation(relayer, contract2, keyPair2, otherChainName);
     expect(req1.result.status).to.eq(200);
     expect(req2.result.status).to.eq(200);
@@ -64,7 +64,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
         ensName,
         gasPrice: TEST_GAS_PRICE,
         signature,
-        chainName: otherChainName
+        network: otherChainName
       });
     expect(result.status).to.eq(201);
     expect(await provider2.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
@@ -88,7 +88,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
     const signedMessage = createSignedMessage(msg, keyPair.privateKey);
     const {status, body} = await chai.request(relayer.server)
       .post('/wallet/execution')
-      .send({signedMessage, chainName: otherChainName});
+      .send({signedMessage, network: otherChainName});
     expect(status).to.eq(201);
     await waitExpect(async () => expect(await provider2.getBalance(otherWallet.address)).to.eq(balanceBefore.add(msg.value)) as any);
     const checkStatusId = async () => {
@@ -100,7 +100,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
   });
 
   it('cannot interact with not supported chain', async () => {
-    const {contractAddress, keyPair} = await walletCreator.deployWallet(chainName, ensName);
+    const {contractAddress, keyPair} = await walletCreator.deployWallet(network, ensName);
     await deployer1.sendTransaction({to: contractAddress, value: utils.parseEther('1.5')});
     const msg = {
       from: contractAddress,
@@ -115,7 +115,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
     const signedMessage = createSignedMessage(msg, keyPair.privateKey);
     const result = await chai.request(relayer.server)
       .post('/wallet/execution')
-      .send({signedMessage, chainName: 'giulioChain'});
+      .send({signedMessage, network: 'giulioChain'});
     expect(result.status).to.eq(409);
     expect(result.error.text).to.be.eq('{"error":"Error: Chain giulioChain is not supported","type":"ChainNotSupported"}');
   });

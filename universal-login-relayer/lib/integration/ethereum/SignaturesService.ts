@@ -7,8 +7,8 @@ export class SignaturesService {
   constructor(private multiChainProvider: MultiChainService) {
   }
 
-  async getRequiredSignatures(walletAddress: string, chainName: string): Promise<utils.BigNumber> {
-    const wallet = this.multiChainProvider.getWallet(chainName);
+  async getRequiredSignatures(walletAddress: string, network: string): Promise<utils.BigNumber> {
+    const wallet = this.multiChainProvider.getWallet(network);
     const walletContract = new Contract(walletAddress, WalletContract.interface, wallet);
     const requiredSignatures = await walletContract.requiredSignatures();
     return requiredSignatures;

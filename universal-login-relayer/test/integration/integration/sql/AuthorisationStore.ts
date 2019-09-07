@@ -19,7 +19,7 @@ describe('INT: Authorisation Store', async () => {
   let database: Knex;
   const keyPair = createKeyPair();
   const ensName = 'justyna.mylogin.eth';
-  const chainName = 'default';
+  const network = 'default';
 
   beforeEach(async () => {
     provider = createMockProvider();
@@ -27,19 +27,19 @@ describe('INT: Authorisation Store', async () => {
     database = getKnexConfig();
     authorisationStore = new AuthorisationStore(database);
     const {walletService, factoryContract, ensService} = await setupWalletService(wallet);
-    const {futureContractAddress, signature} = await createFutureWallet(keyPair, ensName, factoryContract, wallet, ensService, chainName);
-    await walletService.deploy({publicKey: keyPair.publicKey, ensName, gasPrice: TEST_GAS_PRICE, signature, chainName});
+    const {futureContractAddress, signature} = await createFutureWallet(keyPair, ensName, factoryContract, wallet, ensService, network);
+    await walletService.deploy({publicKey: keyPair.publicKey, ensName, gasPrice: TEST_GAS_PRICE, signature, network});
     contractAddress = futureContractAddress;
   });
 
   it('Authorisation roundtrip', async () => {
     const request = {walletContractAddress: contractAddress, key: keyPair.publicKey, deviceInfo};
-    const [id] = await authorisationStore.addRequest(request, chainName);
-    const authorisations = await authorisationStore.getPendingAuthorisations(contractAddress, chainName);
-    expect(authorisations[authorisations.length - 1]).to.deep.eq({...request, id, chainName});
+    const [id] = await authorisationStore.addRequest(request, network);
+    const authorisations = await authorisationStore.getPendingAuthorisations(contractAddress, network);
+    expect(authorisations[authorisations.length - 1]).to.deep.eq({...request, id, network});
 
-    await authorisationStore.removeRequests(otherWallet.address, chainName);
-    const authorisationsAfterDelete = await authorisationStore.getPendingAuthorisations(otherWallet.address, chainName);
+    await authorisationStore.removeRequests(otherWallet.address, network);
+    const authorisationsAfterDelete = await authorisationStore.getPendingAuthorisations(otherWallet.address, network);
     expect(authorisationsAfterDelete).to.deep.eq([]);
   });
 
@@ -47,23 +47,23 @@ describe('INT: Authorisation Store', async () => {
     const requests = [1, 2, 3].map((_) => ({walletContractAddress: contractAddress, key: createKeyPair().publicKey, deviceInfo}));
     const ids = [];
     for (const request of requests) {
-       const [id] = await authorisationStore.addRequest(request, chainName);
+       const [id] = await authorisationStore.addRequest(request, network);
        ids.push(id);
     }
 
-    const authorisations = await authorisationStore.getPendingAuthorisations(contractAddress, chainName);
+    const authorisations = await authorisationStore.getPendingAuthorisations(contractAddress, network);
     expect(authorisations.length).to.eq(3);
-    expect(authorisations[0]).to.deep.eq({...requests[0], id: ids[0], chainName});
-    expect(authorisations[1]).to.deep.eq({...requests[1], id: ids[1], chainName});
-    expect(authorisations[2]).to.deep.eq({...requests[2], id: ids[2], chainName});
+    expect(authorisations[0]).to.deep.eq({...requests[0], id: ids[0], network});
+    expect(authorisations[1]).to.deep.eq({...requests[1], id: ids[1], network});
+    expect(authorisations[2]).to.deep.eq({...requests[2], id: ids[2], network});
 
-    await authorisationStore.removeRequests(otherWallet.address, chainName);
-    const authorisationsAfterDelete = await authorisationStore.getPendingAuthorisations(otherWallet.address, chainName);
+    await authorisationStore.removeRequests(otherWallet.address, network);
+    const authorisationsAfterDelete = await authorisationStore.getPendingAuthorisations(otherWallet.address, network);
     expect(authorisationsAfterDelete).to.deep.eq([]);
   });
 
   it('should return [] array when no pending authorisations', async () => {
-    expect(await authorisationStore.getPendingAuthorisations(contractAddress, chainName)).to.deep.eq([]);
+    expect(await authorisationStore.getPendingAuthorisations(contractAddress, network)).to.deep.eq([]);
   });
 
   afterEach(async () => {

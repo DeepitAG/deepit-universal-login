@@ -10,7 +10,7 @@ import {WalletCreator} from '../../../helpers/WalletCreator';
 chai.use(solidity);
 chai.use(chaiHttp);
 
-const chainName = 'default';
+const network = 'default';
 
 const addKey = async (contractAddress, publicKey, privateKey, tokenAddress, provider) => {
   const data = new utils.Interface(WalletContract.interface).functions['addKey'].encode([publicKey]);
@@ -24,7 +24,7 @@ const addKey = async (contractAddress, publicKey, privateKey, tokenAddress, prov
   const signedMessage = stringifySignedMessageFields(createSignedMessage(message, privateKey));
   await chai.request('http://localhost:33511')
     .post('/wallet/execution')
-    .send({signedMessage, chainName});
+    .send({signedMessage, network});
 };
 
 describe('INT: Token Granting Relayer', async () => {
@@ -38,7 +38,7 @@ describe('INT: Token Granting Relayer', async () => {
   beforeEach(async () => {
     ({relayer, tokenContract} = await startRelayer(wallet, TokenGrantingRelayer));
     const walletCreator = new WalletCreator(relayer);
-    ({contractAddress, keyPair} = await walletCreator.deployWallet(chainName));
+    ({contractAddress, keyPair} = await walletCreator.deployWallet(network));
   });
 
   const isTokenBalanceGreater = (value) => async () =>

@@ -3,7 +3,7 @@ import {fetch} from './fetch';
 
 export class RelayerApi {
   private http: HttpFunction;
-  private chainName = 'default';
+  private network = 'default';
 
   constructor(relayerUrl: string) {
     this.http = http(fetch)(relayerUrl);
@@ -14,7 +14,7 @@ export class RelayerApi {
   }
 
   async execute(message: any) {
-    return this.http('POST', '/wallet/execution', {signedMessage: message, chainName: this.chainName})
+    return this.http('POST', '/wallet/execution', {signedMessage: message, network: this.network})
       .catch((e: any) => {
         // TODO: Maybe wrap this as a custom Error?
         throw new Error(e !== undefined && e.error);
@@ -22,14 +22,14 @@ export class RelayerApi {
   }
 
   async getStatus(messageHash: string) {
-    return this.http('GET', `/wallet/execution/${this.chainName}/${messageHash}`);
+    return this.http('GET', `/wallet/execution/${this.network}/${messageHash}`);
   }
 
   async connect(walletContractAddress: string, key: string) {
     return this.http('POST', '/authorisation', {
       walletContractAddress,
       key,
-      chainName: this.chainName,
+      network: this.network,
     });
   }
 
@@ -37,7 +37,7 @@ export class RelayerApi {
     const {contractAddress} = authorisationRequest;
     return this.http('POST', `/authorisation/${contractAddress}`, {
       authorisationRequest,
-      chainName: this.chainName
+      network: this.network
     }).catch((e: any) => {
       throw new Error(e.error);
     });
@@ -45,7 +45,7 @@ export class RelayerApi {
 
   async getPendingAuthorisations(authorisationRequest: AuthorisationRequest) {
     const {contractAddress, signature} = authorisationRequest;
-    return this.http('GET', `/authorisation/${this.chainName}/${contractAddress}?signature=${signature}`);
+    return this.http('GET', `/authorisation/${this.network}/${contractAddress}?signature=${signature}`);
   }
 
   async cancelConnection(authorisationRequest: AuthorisationRequest) {
@@ -59,7 +59,7 @@ export class RelayerApi {
       ensName,
       gasPrice,
       signature,
-      chainName: this.chainName,
+      network: this.network,
     });
   }
 }

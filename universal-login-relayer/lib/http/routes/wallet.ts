@@ -8,21 +8,21 @@ import {asEthAddress, asBigNumber} from '@restless/ethereum';
 import {asArrayish} from '../utils/sanitizers';
 
 const execution = (messageHandler : MessageHandler) =>
-  async (data: {body: {signedMessage: SignedMessage, chainName: string}}) => {
-    const status = await messageHandler.handleMessage(data.body.signedMessage, data.body.chainName);
+  async (data: {body: {signedMessage: SignedMessage, network: string}}) => {
+    const status = await messageHandler.handleMessage(data.body.signedMessage, data.body.network);
     return responseOf({status}, 201);
   };
 
 const getStatus = (messageHandler: MessageHandler) =>
-  async (data: {messageHash: string, chainName: string}) => {
-    const status = await messageHandler.getStatus(data.messageHash, data.chainName);
+  async (data: {messageHash: string, network: string}) => {
+    const status = await messageHandler.getStatus(data.messageHash, data.network);
     return responseOf(status);
   };
 
 const deploy = (walletContractService: WalletService) =>
   async (data: {body: DeployArgs}) => {
-    const {publicKey, ensName, gasPrice, signature, chainName} = data.body;
-    const transaction = await walletContractService.deploy({publicKey, ensName, gasPrice, signature, chainName});
+    const {publicKey, ensName, gasPrice, signature, network} = data.body;
+    const transaction = await walletContractService.deploy({publicKey, ensName, gasPrice, signature, network});
     return responseOf(transaction, 201);
   };
 
@@ -43,16 +43,16 @@ export default (walletContractService : WalletService, messageHandler: MessageHa
           value: asBigNumber,
           signature: asString
         }),
-        chainName: asString
+        network: asString
       })
     }),
     execution(messageHandler)
   ));
 
-  router.get('/execution/:chainName/:messageHash', asyncHandler(
+  router.get('/execution/:network/:messageHash', asyncHandler(
     sanitize({
       messageHash: asString,
-      chainName: asString
+      network: asString
     }),
     getStatus(messageHandler)
   ));
@@ -64,7 +64,7 @@ export default (walletContractService : WalletService, messageHandler: MessageHa
         ensName: asString,
         gasPrice: asString,
         signature: asString,
-        chainName: asString
+        network: asString
       })
     }),
     deploy(walletContractService)

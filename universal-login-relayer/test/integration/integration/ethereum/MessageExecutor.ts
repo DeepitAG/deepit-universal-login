@@ -14,7 +14,7 @@ describe('INT: MessageExecutor', async () => {
   let wallet: Wallet;
   let walletContract: Contract;
   let multiChainService: MultiChainService;
-  const chainName = 'default';
+  const network = 'default';
 
   before(async () => {
     ({wallet, walletContract, provider, multiChainService} = await loadFixture(basicWalletContractWithMockToken));
@@ -24,7 +24,7 @@ describe('INT: MessageExecutor', async () => {
 
   it('should execute transaction and wait for it', async () =>  {
     const expectedBalance = (await provider.getBalance(signedMessage.to)).add(signedMessage.value);
-    const transactionResponse = await messageExecutor.execute(signedMessage, chainName);
+    const transactionResponse = await messageExecutor.execute(signedMessage, network);
     await transactionResponse.wait();
     const balance = await provider.getBalance(signedMessage.to);
     expect(balance).to.be.eq(expectedBalance);

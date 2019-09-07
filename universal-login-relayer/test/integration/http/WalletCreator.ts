@@ -13,7 +13,7 @@ describe('WalletCreator', () => {
   let provider: providers.Provider;
 
   const relayerPort = '33112';
-  const chainName = 'default';
+  const network = 'default';
 
   beforeEach(async () => {
     provider = createMockProvider();
@@ -28,13 +28,13 @@ describe('WalletCreator', () => {
   });
 
   it('Creates wallet contract', async () => {
-    const applicationWallet = await walletCreator.createFutureWallet(chainName);
+    const applicationWallet = await walletCreator.createFutureWallet(network);
     expect(applicationWallet.keyPair.privateKey).to.be.properPrivateKey;
     expect(applicationWallet.contractAddress).to.be.properAddress;
   });
 
   it('Sends funds to the contract', async () => {
-    const {contractAddress, keyPair} = await walletCreator.deployWallet(chainName);
+    const {contractAddress, keyPair} = await walletCreator.deployWallet(network);
     expect(await provider.getBalance(contractAddress)).to.eq('999999999999500000');
     expect(contractAddress).to.be.properAddress;
     expect(await provider.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
