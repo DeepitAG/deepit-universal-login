@@ -6,7 +6,7 @@ import deployMaster from '../ops/deployMaster';
 import {connectAndDeployFactory} from '../ops/deployFactory';
 import {sendFunds} from '../ops/sendFunds';
 import {ETHER_NATIVE_TOKEN, DEV_DEFAULT_PRIVATE_KEY} from '@universal-login/commons';
-import {registerTestDomain} from '../ENS/registerDomain';
+import {registerTestDomain, registerEthDomain} from '../ENS/registerDomain';
 import {registerENSName} from '../ENS/registerENSName';
 
 const commandLineBuilder = yargs
@@ -63,18 +63,25 @@ const commandLineBuilder = yargs
     (argv) => {
       sendFunds(argv).catch(console.error);
     })
-  .command('register:test:domain [label]', 'Registers test ENS domain',
+  .command('register:test:domain [label] [publicResolverAddress]', 'Registers test ENS domain',
     (yargs) => {
       yargs
         .positional('label', {
           type: 'string',
           describe: 'Label domain to register'
+        })
+        .positional('publicResolverAddress', {
+          type: 'string',
+          describe: 'Address of the public resolver'
+        })
+        .option('ensAddress', {
+          describe: 'ENS address'
         });
     },
     (argv) => {
-      registerTestDomain(argv.label).catch(console.error);
+      registerTestDomain(argv).catch(console.error);
     })
-  .command('register:ens:name [name] [domain]', 'Registers ENS name',
+  .command('register:ens:name [name] [domain] [publicResolverAddress]', 'Registers ENS name',
     (yargs) => {
       yargs
         .positional('name', {
@@ -84,10 +91,34 @@ const commandLineBuilder = yargs
         .positional('domain', {
           type: 'string',
           describe: 'ENS domain'
+        })
+        .positional('publicResolverAddress', {
+          type: 'string',
+          describe: 'Address of the public resolver'
+        })
+        .option('ensAddress', {
+          describe: 'ENS address'
         });
     },
     (argv) => {
-      registerENSName(argv.name, argv.domain).catch(console.error);
+      registerENSName(argv).catch(console.error);
+    })
+  .command('register:eth:domain [label]', 'Registers .eth ENS domain',
+    (yargs) => {
+      yargs
+        .positional('label', {
+          type: 'string',
+          describe: 'Label domain to register'
+        })
+        .option('ensAddress', {
+          describe: 'ENS address'
+        })
+        .option('gasPrice', {
+          describe: 'Gas price'
+        });
+    },
+    (argv) => {
+      registerEthDomain(argv).catch(console.error);
     })
   .demandCommand(1, 'No command provided');
 

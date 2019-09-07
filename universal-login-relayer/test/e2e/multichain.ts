@@ -4,6 +4,7 @@ import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateIni
 import {getDeployData} from '@universal-login/contracts';
 import {utils, Wallet, Contract} from 'ethers';
 import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
+import WalletContract from '@universal-login/contracts/build/Wallet.json';
 import {Provider} from 'ethers/providers';
 import {WalletCreator} from '../helpers/WalletCreator';
 
@@ -30,10 +31,12 @@ describe('E2E: Relayer - Multi-Chain', async () => {
     const {contractAddress, keyPair: keyPair1} = await walletCreator.deployWallet(chainName);
     const {contractAddress: otherContractAddress, keyPair: keyPair2} = await walletCreator.deployWallet(otherChainName);
     const newKeyPair = createKeyPair();
-    await postAuthorisationRequest(relayer, contractAddress, newKeyPair, chainName);
-    await postAuthorisationRequest(relayer, otherContractAddress, newKeyPair, otherChainName);
-    const req1 = await getAuthorisation(relayer, contractAddress, keyPair1, chainName);
-    const req2 = await getAuthorisation(relayer, otherContractAddress, keyPair2, otherChainName);
+    const contract1 = new Contract(contractAddress, WalletContract.interface, deployer1);
+    const contract2 = new Contract(otherContractAddress, WalletContract.interface, deployer2);
+    await postAuthorisationRequest(relayer, contract1, newKeyPair, chainName);
+    await postAuthorisationRequest(relayer, contract2, newKeyPair, otherChainName);
+    const req1 = await getAuthorisation(relayer, contract1, keyPair1, chainName);
+    const req2 = await getAuthorisation(relayer, contract2, keyPair2, otherChainName);
     expect(req1.result.status).to.eq(200);
     expect(req2.result.status).to.eq(200);
     expect(req1.response[0]).to.include({

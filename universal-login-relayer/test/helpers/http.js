@@ -79,26 +79,26 @@ export const getInitData = async (keyPair, ensName, ensAddress, provider, gasPri
   return encodeInitializeWithENSData([keyPair.publicKey, hashLabel, ensName, node, ensAddress, registrarAddress, resolverAddress, gasPrice]);
 };
 
-export const postAuthorisationRequest = (relayer, walletContractAddress, keyPair, chainName) =>
+export const postAuthorisationRequest = (relayer, contract, keyPair, chainName) =>
   chai.request(relayer.server)
     .post('/authorisation')
     .send({
-      walletContractAddress,
+      walletContractAddress: contract.address,
       key: keyPair.publicKey,
       chainName
     });
 
 
-export const getAuthorisation = async (relayer, contractAddress, keyPair, chainName) => {
+export const getAuthorisation = async (relayer, contract, keyPair, chainName) => {
   const authorisationRequest = {
-    contractAddress,
+    contractAddress: contract.address,
     signature: ''
   };
   signAuthorisationRequest(authorisationRequest, keyPair.privateKey);
   const {signature} = authorisationRequest;
 
   const result = await chai.request(relayer.server)
-    .get(`/authorisation/${chainName}/${contractAddress}?signature=${signature}`)
+    .get(`/authorisation/${chainName}/${contract.address}?signature=${signature}`)
     .send({
       key: keyPair.publicKey,
     });
