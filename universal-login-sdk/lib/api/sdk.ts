@@ -115,7 +115,13 @@ class UniversalLoginSDK {
       contractWhiteList: this.relayerConfig!.networkConfig[this.chainName].contractWhiteList,
       chainSpec: this.relayerConfig!.networkConfig[this.chainName].chainSpec
     };
-    this.futureWalletFactory = this.futureWalletFactory || new FutureWalletFactory(futureWalletConfig, this.provider, this.blockchainService, this.relayerApi);
+    this.futureWalletFactory = this.futureWalletFactory || new FutureWalletFactory(
+      futureWalletConfig,
+      this.provider,
+      this.blockchainService,
+      this.relayerApi,
+      this,
+    );
   }
 
   async execute(message: Message, privateKey: string): Promise<Execution> {

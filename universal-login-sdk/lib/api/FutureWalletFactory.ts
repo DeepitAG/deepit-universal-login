@@ -6,6 +6,8 @@ import {BlockchainService} from '../integration/ethereum/BlockchainService';
 import {RelayerApi} from '../integration/http/RelayerApi';
 import {ENSService} from '../integration/ethereum/ENSService';
 import {encodeInitializeWithENSData} from '@universal-login/contracts';
+import {DeployedWallet} from './DeployedWallet';
+import UniversalLoginSDK from './sdk';
 
 export type BalanceDetails = {
   tokenAddress: string,
@@ -16,7 +18,7 @@ export type FutureWallet = {
   privateKey: string,
   contractAddress: string,
   waitForBalance: () => Promise<BalanceDetails>,
-  deploy: (ensName: string, gasPrice: string) => Promise<string>
+  deploy: (ensName: string, gasPrice: string) => Promise<DeployedWallet>
 };
 
 type FutureFactoryConfig = Pick<PublicNetworkData, 'supportedTokens' | 'factoryAddress' | 'contractWhiteList' | 'chainSpec'>;
@@ -28,7 +30,9 @@ export class FutureWalletFactory {
     private config: FutureFactoryConfig,
     private provider: providers.Provider,
     private blockchainService: BlockchainService,
-    private relayerApi: RelayerApi) {
+    private relayerApi: RelayerApi,
+    private sdk: UniversalLoginSDK,
+  ) {
       this.ensService = new ENSService(provider, config.chainSpec.ensAddress);
   }
 
@@ -52,13 +56,15 @@ export class FutureWalletFactory {
       const initData = await this.setupInitData(publicKey, ensName, gasPrice);
       const signature = await calculateInitializeSignature(initData, privateKey);
       await this.relayerApi.deploy(publicKey, ensName, gasPrice, signature);
-      return new Promise(
-        (resolve) => {
-          const deploymentObserver = new DeploymentObserver(this.blockchainService, this.config.contractWhiteList);
-          const onContractDeployed = (contractAddress: string) => resolve(contractAddress);
-          deploymentObserver.startAndSubscribe(contractAddress, onContractDeployed);
-        }
-      ) as Promise<string>;
+
+      const deploymentObserver = new DeploymentObserver(this.blockchainService, this.config.contractWhiteList);
+      const address = await new Promise<string>((resolve) => deploymentObserver.startAndSubscribe(contractAddress, resolve));
+      return new DeployedWallet(
+        address,
+        ensName,
+        privateKey,
+        this.sdk,
+      );
     };
 
     return {
