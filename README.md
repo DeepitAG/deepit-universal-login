@@ -4,7 +4,7 @@
 
 # Ethereum Universal Login
 
-Universal Login is a design pattern for storing funds and connecting to Ethereum applications, aiming to simplify on-boarding of new users.
+Universal Login is a tool for storing funds and connecting to Ethereum applications, aiming to simplify on-boarding of new users.
 
 This repository is a monorepo including the sdk, relayer, smart contracts and examples. Each public sub-package is independently published to NPM.
 
@@ -83,8 +83,6 @@ You can run all of above scripts (`install`, `build`, `test`, `lint`, `clean`) f
 
 To emulate the full CI process:
 ```sh
-yarn clean
-yarn
 yarn ci
 ```
 
