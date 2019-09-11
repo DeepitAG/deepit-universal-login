@@ -1,6 +1,6 @@
 import {providers} from 'ethers';
 import {EventEmitter} from 'fbemitter';
-import {SignedMessage} from '@universal-login/commons';
+import {SignedMessage, DecodedMessageWithFrom} from '@universal-login/commons';
 import {isAddKeyCall, getKeyFromData, isAddKeysCall} from '../utils/utils';
 import AuthorisationStore from '../../integration/sql/services/AuthorisationStore';
 import QueueService from './messages/QueueService';
@@ -52,7 +52,7 @@ class MessageHandler {
     return this.pendingMessages.add(message, network);
   }
 
-  private async removeReqFromAuthService(message: SignedMessage, network: string) {
+  private async removeReqFromAuthService(message: DecodedMessageWithFrom, network: string) {
     const key = getKeyFromData(message.data as string);
     return this.authorisationStore.removeRequest(message.from, key, network);
   }

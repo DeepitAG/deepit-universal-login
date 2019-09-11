@@ -1,6 +1,6 @@
 import chai, {expect} from 'chai';
 import {startMultiChainRelayer, getAuthorisation, postAuthorisationRequest, getInitData} from '../helpers/http';
-import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateInitializeSignature, createSignedMessage, waitExpect, TEST_GAS_PRICE} from '@universal-login/commons';
+import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateInitializeSignature, createSignedMessage, waitExpect, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
 import {getDeployData} from '@universal-login/contracts';
 import {utils, Wallet, Contract} from 'ethers';
 import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
@@ -63,6 +63,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
         publicKey: keyPair.publicKey,
         ensName,
         gasPrice: TEST_GAS_PRICE,
+        gasToken: ETHER_NATIVE_TOKEN.address,
         signature,
         network: otherChainName
       });

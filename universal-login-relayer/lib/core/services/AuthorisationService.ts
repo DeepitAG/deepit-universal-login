@@ -1,4 +1,4 @@
-import {AuthorisationRequest, recoverFromAuthorisationRequest} from '@universal-login/commons';
+import {RelayerRequest, recoverFromRelayerRequest} from '@universal-login/commons';
 import AuthorisationStore from '../../integration/sql/services/AuthorisationStore';
 import WalletMasterContractService from '../../integration/ethereum/services/WalletMasterContractService';
 import {MultiChainService} from './MultiChainService';
@@ -12,18 +12,18 @@ class AuthorisationService {
     return this.authorisationStore.addRequest(requestAuthorisation, network);
   }
 
-  async cancelAuthorisationRequest(authorisationRequest: AuthorisationRequest, network: string) {
-    const recoveredAddress = recoverFromAuthorisationRequest(authorisationRequest);
+  async cancelAuthorisationRequest(authorisationRequest: RelayerRequest, network: string) {
+    const recoveredAddress = recoverFromRelayerRequest(authorisationRequest);
     return this.authorisationStore.removeRequest(authorisationRequest.contractAddress, recoveredAddress, network);
   }
 
-  async removeAuthorisationRequest(authorisationRequest: AuthorisationRequest, network: string) {
+  async removeAuthorisationRequest(authorisationRequest: RelayerRequest, network: string) {
     await this.walletMasterContractService.ensureValidAuthorisationRequestSignature(authorisationRequest, network);
 
     return this.authorisationStore.removeRequests(authorisationRequest.contractAddress, network);
   }
 
-  async getAuthorisationRequests(authorisationRequest: AuthorisationRequest, network: string) {
+  async getAuthorisationRequests(authorisationRequest: RelayerRequest, network: string) {
     await this.walletMasterContractService.ensureValidAuthorisationRequestSignature(authorisationRequest, network);
 
     return this.authorisationStore.getPendingAuthorisations(authorisationRequest.contractAddress, network);

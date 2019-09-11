@@ -12,7 +12,7 @@ class WalletService {
   constructor(private multiChainService: MultiChainService, private ensService: ENSService, private hooks: EventEmitter) {
   }
 
-  async deploy({publicKey, ensName, gasPrice, signature, network}: DeployArgs) {
+  async deploy({publicKey, ensName, gasPrice, gasToken, signature, network}: DeployArgs) {
     const factoryContract = this.multiChainService.getFactoryContract(network);
     const provider = this.multiChainService.getProvider(network);
     const wallet = this.multiChainService.getWallet(network);
@@ -26,7 +26,7 @@ class WalletService {
     const supportedTokens = this.multiChainService.getSupportedTokens('default');
     const contractAddress = computeContractAddress(factoryAddress, publicKey, await walletDeployer.getInitCode());
     ensure(!!await requiredBalanceChecker.findTokenWithRequiredBalance(supportedTokens, contractAddress), NotEnoughBalance);
-    const args = [publicKey, ...ensArgs as string[], gasPrice];
+    const args = [publicKey, ...ensArgs as string[], gasPrice, gasToken];
     const initWithENS = encodeInitializeWithENSData(args);
     ensure(getInitializeSigner(initWithENS, signature) === publicKey, InvalidSignature);
     const transaction = await walletDeployer.deploy({publicKey, signature, intializeData: initWithENS}, {gasLimit: DEPLOY_GAS_LIMIT, gasPrice: utils.bigNumberify(gasPrice)});

@@ -1,7 +1,7 @@
 import chai, {expect} from 'chai';
 import chaiHttp from 'chai-http';
 import {startRelayerWithRefund, createWalletCounterfactually, getAuthorisation, postAuthorisationRequest} from '../helpers/http';
-import {createKeyPair, signAuthorisationRequest} from '@universal-login/commons';
+import {createKeyPair, signRelayerRequest} from '@universal-login/commons';
 import {utils} from 'ethers';
 
 chai.use(chaiHttp);
@@ -54,7 +54,8 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     await postAuthorisationRequest(relayer, contract, newKeyPair, network);
 
     const authorisationRequest = {contractAddress: contract.address};
-    signAuthorisationRequest(authorisationRequest, keyPair.privateKey);
+    signRelayerRequest(authorisationRequest, keyPair.privateKey);
+
     const result = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
       .send({authorisationRequest, network});
@@ -74,7 +75,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
     it('valid request', async () => {
       const authorisationRequest = {contractAddress: contract.address};
-      signAuthorisationRequest(authorisationRequest, newKeyPair.privateKey);
+      signRelayerRequest(authorisationRequest, newKeyPair.privateKey);
 
       const result = await chai.request(relayer.server)
         .delete(`/authorisation/${contract.address}`)
@@ -89,7 +90,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     it('cancel non-existing request', async () => {
       const attackerKeyPair = createKeyPair();
       const authorisationRequest = {contractAddress: contract.address};
-      signAuthorisationRequest(authorisationRequest, attackerKeyPair.privateKey);
+      signRelayerRequest(authorisationRequest, attackerKeyPair.privateKey);
 
       const {status} = await chai.request(relayer.server)
         .delete(`/authorisation/${contract.address}`)
@@ -104,7 +105,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
   it('Send valid cancel request', async () => {
     const authorisationRequest = {contractAddress: contract.address};
 
-    signAuthorisationRequest(authorisationRequest, keyPair.privateKey);
+    signRelayerRequest(authorisationRequest, keyPair.privateKey);
     const {body, status} = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
       .send({authorisationRequest, network});
@@ -118,7 +119,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
     const attackerAddress = utils.computeAddress(attackerPrivateKey);
     const authorisationRequest = {contractAddress: contract.address};
 
-    signAuthorisationRequest(authorisationRequest, attackerPrivateKey);
+    signRelayerRequest(authorisationRequest, attackerPrivateKey);
     const {body, status} = await chai.request(relayer.server)
       .post(`/authorisation/${contract.address}`)
       .send({authorisationRequest, network});
@@ -131,7 +132,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
   it('Forged getPending request', async () => {
     const attackerPrivateKey = createKeyPair().privateKey;
     const authorisationRequest = {contractAddress: contract.address};
-    signAuthorisationRequest(authorisationRequest, attackerPrivateKey);
+    signRelayerRequest(authorisationRequest, attackerPrivateKey);
 
     const {body, status} = await chai.request(relayer.server)
       .get(`/authorisation/${network}/${contract.address}?signature=${authorisationRequest.signature}`);

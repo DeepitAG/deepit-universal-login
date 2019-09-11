@@ -1,6 +1,6 @@
 import {expect} from 'chai';
 import sinon from 'sinon';
-import {TEST_ACCOUNT_ADDRESS, waitUntil, signAuthorisationRequest, AuthorisationRequest, createKeyPair} from '@universal-login/commons';
+import {TEST_ACCOUNT_ADDRESS, waitUntil, signRelayerRequest, RelayerRequest, createKeyPair} from '@universal-login/commons';
 import AuthorisationsObserver from '../../../lib/core/observers/AuthorisationsObserver';
 
 describe('UNIT: AuthorisationsObserver', () => {
@@ -21,16 +21,16 @@ describe('UNIT: AuthorisationsObserver', () => {
   ];
   const relayerApi = {getPendingAuthorisations: async () => ({response: notifications})};
   let authorisationsObserver: AuthorisationsObserver;
-  let authorisationRequest: AuthorisationRequest;
-  let fakeAuthorisationRequest: AuthorisationRequest;
+  let authorisationRequest: RelayerRequest;
+  let fakeAuthorisationRequest: RelayerRequest;
   let privateKey: string;
 
   const createauthorisationRequest = (contractAddress: string, privateKey: string) => {
-    const authorisationRequest: AuthorisationRequest = {
+    const authorisationRequest: RelayerRequest = {
       contractAddress,
       signature: ''
     };
-    signAuthorisationRequest(authorisationRequest, privateKey);
+    signRelayerRequest(authorisationRequest, privateKey);
     return authorisationRequest;
   };
 
@@ -51,7 +51,7 @@ describe('UNIT: AuthorisationsObserver', () => {
   it('new subscription request should be rejected', async () => {
     const callback = sinon.spy();
     const unsubscribe = authorisationsObserver.subscribe(authorisationRequest, callback);
-    expect(() => authorisationsObserver.subscribe(fakeAuthorisationRequest, callback)).to.throw('Another wallet is subscribed.');
+    expect(() => authorisationsObserver.subscribe(fakeAuthorisationRequest, callback)).to.throw('Another wallet is subscribed for authorisations');
     await waitUntil(() => !!callback.secondCall);
     expect(callback).to.have.been.calledWith([]);
     expect(callback).to.have.been.calledWith(notifications);

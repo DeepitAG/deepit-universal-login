@@ -1,7 +1,7 @@
 import {Wallet, utils, Contract} from 'ethers';
 import {RelayerUnderTest} from '../../lib/http/relayers/RelayerUnderTest';
 import {createMockProvider, getWallets} from 'ethereum-waffle';
-import {waitForContractDeploy, calculateInitializeSignature, TEST_GAS_PRICE, parseDomain, signAuthorisationRequest} from '@universal-login/commons';
+import {waitForContractDeploy, calculateInitializeSignature, TEST_GAS_PRICE, parseDomain, ETHER_NATIVE_TOKEN, signRelayerRequest} from '@universal-login/commons';
 import WalletContract from '@universal-login/contracts/build/Wallet.json';
 import ENS from '@universal-login/contracts/build/ENS.json';
 import chai from 'chai';
@@ -52,6 +52,7 @@ export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, k
     publicKey: keyPair.publicKey,
     ensName,
     gasPrice: TEST_GAS_PRICE,
+    gasToken: ETHER_NATIVE_TOKEN.address,
     signature,
     network
   });
@@ -69,14 +70,14 @@ export const startRelayerWithRefund = async (port = '33111') => {
   return {provider, relayer, mockToken, factoryContract, walletContract, deployer, ensAddress, wallet, otherWallet};
 };
 
-export const getInitData = async (keyPair, ensName, ensAddress, provider, gasPrice) => {
+export const getInitData = async (keyPair, ensName, ensAddress, provider, gasPrice, gasToken = ETHER_NATIVE_TOKEN.address) => {
   const [label, domain] = parseDomain(ensName);
   const hashLabel = utils.keccak256(utils.toUtf8Bytes(label));
   const node = utils.namehash(`${label}.${domain}`);
   const ens = new Contract(ensAddress, ENS.interface, provider);
   const resolverAddress = await ens.resolver(utils.namehash(domain));
   const registrarAddress = await ens.owner(utils.namehash(domain));
-  return encodeInitializeWithENSData([keyPair.publicKey, hashLabel, ensName, node, ensAddress, registrarAddress, resolverAddress, gasPrice]);
+  return encodeInitializeWithENSData([keyPair.publicKey, hashLabel, ensName, node, ensAddress, registrarAddress, resolverAddress, gasPrice, gasToken]);
 };
 
 export const postAuthorisationRequest = (relayer, contract, keyPair, network) =>
@@ -94,7 +95,7 @@ export const getAuthorisation = async (relayer, contract, keyPair, network) => {
     contractAddress: contract.address,
     signature: ''
   };
-  signAuthorisationRequest(authorisationRequest, keyPair.privateKey);
+  signRelayerRequest(authorisationRequest, keyPair.privateKey);
   const {signature} = authorisationRequest;
 
   const result = await chai.request(relayer.server)

@@ -1,6 +1,6 @@
 export {Omit, PartialRequired, Procedure, Predicate, DeepPartial} from './core/types/common';
 export {DeviceInfo, Notification} from './core/models/notifications';
-export {PaymentOptions, Message, MessageWithFrom, MessageWithoutFrom, SignedMessage, UnsignedMessage, MessageStatus, MessageState, CollectedSignatureKeyPair} from './core/models/message';
+export {PaymentOptions, Message, MessageWithFrom, MessageWithoutFrom, DecodedMessage, DecodedMessageWithFrom, SignedMessage, UnsignedMessage, MessageStatus, MessageState, CollectedSignatureKeyPair} from './core/models/message';
 export * from './core/models/ContractJSON';
 export {SupportedToken, ContractWhiteList, ChainSpec, OnRampConfig, PublicRelayerConfig, NetworkConfig, NetworkData, PublicNetworkData, PublicNetworkConfig} from './core/models/relayer';
 export {LocalizationConfig, SafelloConfig, RampConfig} from './core/models/onRamp';
@@ -38,8 +38,8 @@ export {debounce} from './core/utils/debounce';
 export {getEnv} from './core/utils/getEnv';
 export {classesForElement} from './react/classesForElement';
 export {getSuggestionId} from './react/getSuggestionId';
-export {AuthorisationRequest} from './core/models/authorisation';
-export {signAuthorisationRequest, verifyAuthorisationRequest, hashAuthorisationRequest, recoverFromAuthorisationRequest} from './core/utils/authorisation';
+export {RelayerRequest} from './core/models/relayerRequest';
+export {signRelayerRequest, verifyRelayerRequest, hashRelayerRequest, recoverFromRelayerRequest} from './core/utils/relayerRequest';
 export {copy} from './react/copy';
 export {escapePressed} from './react/escapePressed';
 export {calculateInitializeWithENSSignature, calculateInitializeSignature, getInitializeSigner} from './core/utils/calculateSignature';

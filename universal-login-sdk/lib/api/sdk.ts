@@ -1,6 +1,6 @@
 import {utils, Contract, providers} from 'ethers';
 import WalletContract from '@universal-login/contracts/build/Wallet.json';
-import {TokensValueConverter, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signAuthorisationRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage} from '@universal-login/commons';
+import {TokensValueConverter, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, Message, createSignedMessage, MessageWithFrom, ensureNotNull, PublicRelayerConfig, createKeyPair, signRelayerRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage} from '@universal-login/commons';
 import AuthorisationsObserver from '../core/observers/AuthorisationsObserver';
 import BlockchainObserver from '../core/observers/BlockchainObserver';
 import {RelayerApi} from '../integration/http/RelayerApi';
@@ -185,13 +185,13 @@ class UniversalLoginSDK {
 
   async denyRequests(contractAddress: string, privateKey: string) {
     const authorisationRequest = {contractAddress};
-    signAuthorisationRequest(authorisationRequest, privateKey);
+    signRelayerRequest(authorisationRequest, privateKey);
     await this.relayerApi.denyConnection(authorisationRequest);
   }
 
   async cancelRequest(contractAddress: string, privateKey: string) {
     const authorisationRequest = {contractAddress};
-    signAuthorisationRequest(authorisationRequest, privateKey);
+    signRelayerRequest(authorisationRequest, privateKey);
     return this.relayerApi.cancelConnection(authorisationRequest);
   }
 
@@ -216,8 +216,14 @@ class UniversalLoginSDK {
 
   subscribeAuthorisations(contractAddress: string, privateKey: string, callback: Function) {
     return this.authorisationsObserver.subscribe(
-      signAuthorisationRequest({contractAddress}, privateKey),
+      signRelayerRequest({contractAddress}, privateKey),
       (notifications: Notification[]) => callback(addCodesToNotifications(notifications))
+    );
+  }
+
+  getConnectedDevices(contractAddress: string, privateKey: string) {
+    return this.relayerApi.getConnectedDevices(
+      signRelayerRequest({contractAddress}, privateKey)
     );
   }
 

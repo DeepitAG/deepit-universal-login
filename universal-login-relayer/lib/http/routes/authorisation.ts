@@ -4,10 +4,11 @@ import {asyncHandler, sanitize, responseOf} from '@restless/restless';
 import {asString, asObject} from '@restless/sanitizers';
 import {asEthAddress} from '@restless/ethereum';
 import {getDeviceInfo} from '../utils/getDeviceInfo';
-import {AuthorisationRequest} from '@universal-login/commons';
-import {asAuthorisationRequest} from '../utils/sanitizers';
+import {RelayerRequest} from '@universal-login/commons';
+import {asRelayerRequest} from '../utils/sanitizers';
 import AuthorisationService from '../../core/services/AuthorisationService';
 import bodyParser = require('body-parser');
+import { network } from './config';
 
 
 const request = (authorisationService: AuthorisationService) =>
@@ -18,8 +19,8 @@ const request = (authorisationService: AuthorisationService) =>
   };
 
 const getPending = (authorisationService: AuthorisationService) =>
-  async (data: {network: string, contractAddress: string, query: {signature: string}}) => {
-    const authorisationRequest: AuthorisationRequest = {
+  async (data: {network: string, contractAddress: string,  query: {signature: string}}) => {
+    const authorisationRequest: RelayerRequest = {
       contractAddress: data.contractAddress,
       signature: data.query.signature
     };
@@ -28,13 +29,13 @@ const getPending = (authorisationService: AuthorisationService) =>
   };
 
 const denyRequest = (authorisationService: AuthorisationService) =>
-  async (data: {body: {authorisationRequest: AuthorisationRequest, network: string}}) => {
+  async (data: {body: {authorisationRequest: RelayerRequest, network: string}}) => {
     const result = await authorisationService.removeAuthorisationRequest(data.body.authorisationRequest, data.body.network);
     return responseOf(result, 204);
   };
 
 const cancelRequest = (authorisationService: AuthorisationService) =>
-  async (data: {body: {authorisationRequest: AuthorisationRequest, network: string}}) => {
+  async (data: {body: {authorisationRequest: RelayerRequest, network: string}}) => {
     const result = await authorisationService.cancelAuthorisationRequest(data.body.authorisationRequest, data.body.network);
     const httpCode = result === 0 ? 401 : 204;
     return responseOf(result, httpCode);
@@ -68,7 +69,7 @@ export default (authorisationService: AuthorisationService) => {
   router.post('/:contractAddress', asyncHandler(
     sanitize({
       body: asObject({
-        authorisationRequest: asAuthorisationRequest,
+        authorisationRequest: asRelayerRequest,
         network: asString
       })
     }),
@@ -78,7 +79,7 @@ export default (authorisationService: AuthorisationService) => {
   router.delete('/:contractAddress', asyncHandler(
     sanitize({
       body: asObject({
-        authorisationRequest: asAuthorisationRequest,
+        authorisationRequest: asRelayerRequest,
         network: asString
       })
     }),

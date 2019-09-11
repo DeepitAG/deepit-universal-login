@@ -1,15 +1,20 @@
 import React from 'react';
-import Accordion from './Accordion';
+import {DeviceInfo} from '@universal-login/commons';
 
-export const ManageDevices = () => (
-  <Accordion
-    title="Manage devices"
-    subtitle="You currently have 3 authorized devices"
-  >
-    <div>
-      <button className="settings-btn">Remove this device</button>
-    </div>
-  </Accordion>
+interface ManageDevicesProps {
+  devices: DeviceInfo[];
+}
+
+export const ManageDevices = ({devices}: ManageDevicesProps) => (
+  <div>
+    {
+      devices.map(({os}: DeviceInfo, index: number) => (
+        <div key={index}>
+          device {index} : {os}
+          <button className="settings-btn">Remove this device</button>
+        </div>))
+    }
+  </div >
 );
 
 export default ManageDevices;
