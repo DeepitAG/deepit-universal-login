@@ -30,7 +30,7 @@ const getPending = (authorisationService: AuthorisationService) =>
 
 const denyRequest = (authorisationService: AuthorisationService) =>
   async (data: {body: {authorisationRequest: RelayerRequest, network: string}}) => {
-    const result = await authorisationService.removeAuthorisationRequest(data.body.authorisationRequest, data.body.network);
+    const result = await authorisationService.removeAuthorisationRequests(data.body.authorisationRequest, data.body.network);
     return responseOf(result, 204);
   };
 

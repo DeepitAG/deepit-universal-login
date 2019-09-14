@@ -11,6 +11,7 @@ describe('INT: MessageHandler', async () => {
   let messageHandler;
   let provider;
   let authorisationStore;
+  let devicesStore;
   let wallet;
   let mockToken;
   let walletContract;
@@ -20,7 +21,7 @@ describe('INT: MessageHandler', async () => {
   const network = 'default';
 
   beforeEach(async () => {
-    ({wallet, provider, messageHandler, mockToken, authorisationStore, walletContract, otherWallet} = await setupMessageService(knex));
+    ({wallet, provider, messageHandler, mockToken, authorisationStore, walletContract, otherWallet, devicesStore} = await setupMessageService(knex));
     msg = {...transferMessage, from: walletContract.address, gasToken: mockToken.address, nonce: await walletContract.lastNonce()};
     messageHandler.start();
   });
@@ -30,7 +31,7 @@ describe('INT: MessageHandler', async () => {
   });
 
   it('Error when not enough tokens', async () => {
-    const message = {...msg, gasLimit: utils.parseEther('2.0')};
+    const message = {...msg, gasLimitExecution: utils.parseEther('2.0')};
     const signedMessage = createSignedMessage(message, wallet.privateKey);
     const {messageHash} = await messageHandler.handleMessage(signedMessage, network);
     await messageHandler.stopLater();
@@ -39,7 +40,7 @@ describe('INT: MessageHandler', async () => {
   });
 
   it('Error when not enough gas', async () => {
-    const message = {...msg, gasLimit: 100};
+    const message = {...msg, gasLimitExecution: 100};
     const signedMessage = createSignedMessage(message, wallet.privateKey);
     const {messageHash} = await messageHandler.handleMessage(signedMessage, network);
     await messageHandler.stopLater();
@@ -82,6 +83,7 @@ describe('INT: MessageHandler', async () => {
         await messageHandler.stopLater();
         const authorisations = await authorisationStore.getPendingAuthorisations(walletContract.address, network);
         expect(authorisations).to.deep.eq([]);
+        expect(await devicesStore.get(walletContract.address)).length(1);
       });
     });
   });

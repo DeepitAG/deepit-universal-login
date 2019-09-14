@@ -9,13 +9,19 @@ import {MessageStatusService} from '../../lib/core/services/messages/MessageStat
 import {SignaturesService} from '../../lib/integration/ethereum/SignaturesService';
 import MessageValidator from '../../lib/core/services/messages/MessageValidator';
 import MessageExecutor from '../../lib/integration/ethereum/MessageExecutor';
+import {DevicesStore} from '../../lib/integration/sql/services/DevicesStore';
+import {DevicesService} from '../../lib/core/services/DevicesService';
+import WalletMasterContractService from '../../lib/integration/ethereum/services/WalletMasterContractService';
 
 export default async function setupMessageService(knex) {
   const {multiChainService, wallet, actionKey, provider, mockToken, walletContract, otherWallet} = await loadFixture(basicWalletContractWithMockToken);
   const hooks = new EventEmitter();
   const authorisationStore = new AuthorisationStore(knex);
   const messageRepository = new MessageSQLRepository(knex);
+  const devicesStore = new DevicesStore();
   const queueStore = new QueueSQLStore(knex);
+  const walletMasterContractService = new WalletMasterContractService(multiChainService);
+  const devicesService = new DevicesService(devicesStore, walletMasterContractService);
   const signaturesService = new SignaturesService(multiChainService);
   const statusService = new MessageStatusService(messageRepository, signaturesService);
   const messageValidator = new MessageValidator(multiChainService);
