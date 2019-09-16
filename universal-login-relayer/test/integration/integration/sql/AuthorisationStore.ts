@@ -2,7 +2,7 @@ import chai, {expect} from 'chai';
 import Knex from 'knex';
 import {Wallet} from 'ethers';
 import {getWallets, createMockProvider} from 'ethereum-waffle';
-import {createKeyPair, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
+import {createKeyPair, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN, EMPTY_DEVICE_INFO} from '@universal-login/commons';
 import setupWalletService, {createFutureWallet} from '../../../helpers/setupWalletService';
 import AuthorisationStore from '../../../../lib/integration/sql/services/AuthorisationStore';
 import {getKnexConfig} from '../../../helpers/knex';
@@ -28,7 +28,7 @@ describe('INT: Authorisation Store', async () => {
     authorisationStore = new AuthorisationStore(database);
     const {walletService, factoryContract, ensService} = await setupWalletService(wallet);
     const {futureContractAddress, signature} = await createFutureWallet(keyPair, ensName, factoryContract, wallet, ensService, network);
-    await walletService.deploy({publicKey: keyPair.publicKey, ensName, gasPrice: TEST_GAS_PRICE, signature, gasToken: ETHER_NATIVE_TOKEN.address, network});
+    await walletService.deploy({publicKey: keyPair.publicKey, ensName, gasPrice: TEST_GAS_PRICE, signature, gasToken: ETHER_NATIVE_TOKEN.address, network}, EMPTY_DEVICE_INFO);
     contractAddress = futureContractAddress;
   });
 
@@ -45,17 +45,17 @@ describe('INT: Authorisation Store', async () => {
 
   it('Authorisation add-remove roundtrip', async () => {
     const request = {walletContractAddress: contractAddress, key: keyPair.publicKey, deviceInfo};
-    await authorisationStore.addRequest(request);
-    const authorisations = await authorisationStore.getPendingAuthorisations(contractAddress);
+    await authorisationStore.addRequest(request, network);
+    const authorisations = await authorisationStore.getPendingAuthorisations(contractAddress, network);
     expect(authorisations).length(1);
     const itemToRemove = await authorisationStore.get(contractAddress, keyPair.publicKey);
-    const removedItemsCount = await authorisationStore.removeRequest(contractAddress, keyPair.publicKey);
+    const removedItemsCount = await authorisationStore.removeRequest(contractAddress, keyPair.publicKey, network);
     expect(itemToRemove).to.deep.eq(request);
     expect(removedItemsCount).to.be.eq(1);
   });
 
   it('Remove non-existing item', async () => {
-    const removedItemsCount = await authorisationStore.removeRequest(contractAddress, keyPair.publicKey);
+    const removedItemsCount = await authorisationStore.removeRequest(contractAddress, keyPair.publicKey, network);
     expect(removedItemsCount).to.be.eq(0);
   });
 

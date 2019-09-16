@@ -83,7 +83,7 @@ describe('INT: MessageHandler', async () => {
         await messageHandler.stopLater();
         const authorisations = await authorisationStore.getPendingAuthorisations(walletContract.address, network);
         expect(authorisations).to.deep.eq([]);
-        expect(await devicesStore.get(walletContract.address)).length(1);
+        expect(await devicesStore.get(walletContract.address, network)).length(1);
       });
     });
   });

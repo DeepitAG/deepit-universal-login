@@ -1,11 +1,12 @@
 import React, {useState} from 'react';
-import {DeviceInfo} from '@universal-login/commons';
+import {Device} from '@universal-login/commons';
 
-export interface ConnectedDevicesItemProps extends DeviceInfo {
+export interface ConnectedDevicesItemProps extends Device {
   devicesAmount: number;
 }
 
-export const ConnectedDevicesItem = ({devicesAmount, os, name, ipAddress, city, time}: ConnectedDevicesItemProps) => {
+export const ConnectedDevicesItem = ({devicesAmount, deviceInfo}: ConnectedDevicesItemProps) => {
+  const {os, name, ipAddress, city, time} = deviceInfo;
   const [toBeRemoved, setToBeRemoved] = useState(false);
 
   return (
@@ -22,15 +23,15 @@ export const ConnectedDevicesItem = ({devicesAmount, os, name, ipAddress, city, 
       </div>
       {toBeRemoved
         ? <div className="connected-devices-buttons">
-            <button onClick={() => setToBeRemoved(false)} className="connected-devices-cancel">Cancel</button>
-            <button className="connected-devices-delete">Delete</button>
-          </div>
+          <button onClick={() => setToBeRemoved(false)} className="connected-devices-cancel">Cancel</button>
+          <button className="connected-devices-delete">Delete</button>
+        </div>
         : <div>
-            <div className="connected-devices-trash-btn-wrapper">
-              <WarningMessage devicesAmount={devicesAmount} />
-              <button onClick={() => setToBeRemoved(true)} className="connected-devices-trash-btn" />
-            </div>
+          <div className="connected-devices-trash-btn-wrapper">
+            <WarningMessage devicesAmount={devicesAmount} />
+            <button onClick={() => setToBeRemoved(true)} className="connected-devices-trash-btn" />
           </div>
+        </div>
       }
     </li>
   );

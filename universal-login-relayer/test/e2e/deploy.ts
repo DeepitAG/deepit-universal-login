@@ -2,7 +2,7 @@ import chai, {expect} from 'chai';
 import chaiHttp from 'chai-http';
 import {utils, providers, Contract, Wallet} from 'ethers';
 import {getDeployData} from '@universal-login/contracts';
-import {createKeyPair, getDeployedBytecode, computeContractAddress, KeyPair, calculateInitializeSignature, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
+import {createKeyPair, getDeployedBytecode, computeContractAddress, KeyPair, calculateInitializeSignature, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN, signRelayerRequest, DEPLOYMENT_REFUND} from '@universal-login/commons';
 import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
 import {startRelayerWithRefund, createWalletCounterfactually, getInitData} from '../helpers/http';
 import Relayer from '../../lib';
@@ -51,6 +51,26 @@ describe('E2E: Relayer - counterfactual deployment', () => {
     expect(result.status).to.eq(201);
     expect(await provider.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
     expect(await deployer.getBalance()).to.be.above(initialRelayerBalance);
+
+    const {body} = await chai.request(relayerUrl)
+      .get(`/devices/${network}/${contractAddress}?signature=${signRelayerRequest({contractAddress}, keyPair.privateKey).signature}`)
+      .send({
+        key: keyPair.publicKey
+      });
+    expect(body).length(1);
+    expect(body).to.be.deep.eq([{
+      contractAddress,
+      publicKey: keyPair.publicKey,
+      deviceInfo: {
+        browser: 'node-superagent',
+        city: 'unknown',
+        ipAddress: '::ffff:127.0.0.1',
+        name: 'unknown',
+        os: 'unknown',
+        time: body[0].deviceInfo.time,
+      },
+      network
+    }]);
   });
 
 
@@ -93,7 +113,7 @@ describe('E2E: Relayer - counterfactual deployment', () => {
       });
     expect(result.status).to.eq(201);
     expect(await provider.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
-    expect(await mockToken.balanceOf(deployer.address)).to.eq(initialRelayerBalance.add(utils.bigNumberify(500000)));
+    expect(await mockToken.balanceOf(deployer.address)).to.eq(initialRelayerBalance.add(DEPLOYMENT_REFUND));
   });
 
   it('Counterfactual deployment fail if not enough balance', async () => {

@@ -1,7 +1,7 @@
 import {expect} from 'chai';
-import {providers, Contract} from 'ethers';
+import {providers, Contract, utils} from 'ethers';
 import {createMockProvider, getWallets} from 'ethereum-waffle';
-import {getDeployedBytecode} from '@universal-login/commons';
+import {getDeployedBytecode, DEPLOYMENT_REFUND} from '@universal-login/commons';
 import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
 import WalletMasterWithRefund from '@universal-login/contracts/build/Wallet.json';
 import {WalletCreator} from '../../helpers/WalletCreator';
@@ -34,11 +34,12 @@ describe('WalletCreator', () => {
   });
 
   it('Sends funds to the contract', async () => {
-    const {contractAddress, keyPair} = await walletCreator.deployWallet(network);
-    expect(await provider.getBalance(contractAddress)).to.eq('999999999999500000');
+    const initialBalance = utils.parseEther('1');
+    const {contractAddress, keyPair: {publicKey}} = await walletCreator.deployWallet(network);
+    expect(await provider.getBalance(contractAddress)).to.eq(initialBalance.sub(DEPLOYMENT_REFUND));
     expect(contractAddress).to.be.properAddress;
     expect(await provider.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
     const walletContract = new Contract(contractAddress, WalletMasterWithRefund.interface, provider);
-    expect(await walletContract.keyExist(keyPair.publicKey)).to.be.true;
+    expect(await walletContract.keyExist(publicKey)).to.be.true;
   });
 });

@@ -1,18 +1,19 @@
 import {EventEmitter} from 'fbemitter';
 import {utils} from 'ethers';
-import {ensureNotNull, ensure, RequiredBalanceChecker, BalanceChecker, computeContractAddress, DeployArgs, getInitializeSigner, DEPLOY_GAS_LIMIT} from '@universal-login/commons';
+import {ensureNotNull, ensure, RequiredBalanceChecker, BalanceChecker, computeContractAddress, DeployArgs, getInitializeSigner, DEPLOY_GAS_LIMIT, DeviceInfo} from '@universal-login/commons';
 import {encodeInitializeWithENSData} from '@universal-login/contracts';
 import ENSService from './ensService';
 import {InvalidENSDomain, NotEnoughBalance, EnsNameTaken, InvalidSignature} from '../../core/utils/errors';
 import {WalletDeployer} from '../ethereum/WalletDeployer';
 import {MultiChainService} from '../../core/services/MultiChainService';
+import {DevicesService} from '../../core/services/DevicesService';
 
 class WalletService {
 
-  constructor(private multiChainService: MultiChainService, private ensService: ENSService, private hooks: EventEmitter) {
+  constructor(private multiChainService: MultiChainService, private ensService: ENSService, private hooks: EventEmitter, private devicesSevice: DevicesService) {
   }
 
-  async deploy({publicKey, ensName, gasPrice, gasToken, signature, network}: DeployArgs) {
+  async deploy({publicKey, ensName, gasPrice, gasToken, signature, network}: DeployArgs, deviceInfo: DeviceInfo) {
     const factoryContract = this.multiChainService.getFactoryContract(network);
     const provider = this.multiChainService.getProvider(network);
     const wallet = this.multiChainService.getWallet(network);
@@ -30,6 +31,7 @@ class WalletService {
     const initWithENS = encodeInitializeWithENSData(args);
     ensure(getInitializeSigner(initWithENS, signature) === publicKey, InvalidSignature);
     const transaction = await walletDeployer.deploy({publicKey, signature, intializeData: initWithENS}, {gasLimit: DEPLOY_GAS_LIMIT, gasPrice: utils.bigNumberify(gasPrice)});
+    await this.devicesSevice.addOrUpdate(contractAddress, publicKey, deviceInfo, network);
     this.hooks.emit('created', {transaction, contractAddress, network});
     return transaction;
   }

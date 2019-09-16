@@ -19,81 +19,23 @@ contract Executor {
     }
 
     function etherRefundCharge() public pure returns(uint) {
-        return 14300;
+        return 16000;
     }
 
     function tokenRefundCharge() public pure returns(uint) {
-        return 19800;
+        return 21000;
+    }
+
+    function transactionGasCost(uint gasData) public pure returns(uint) {
+        return gasData.add(21000); // 21000 - cost for initiating transaction
+    }
+
+    function computeGasUsedWithFee(uint gasUsed) public pure returns(uint) {
+        return gasUsed.div(5).mul(6); // 20% fee
     }
 
     function keyExist(address _key) public view returns(bool);
 
-    function canExecute(
-        address to,
-        uint256 value,
-        bytes memory data,
-        uint nonce,
-        uint gasPrice,
-        address gasToken,
-        uint gasLimit,
-        bytes memory signatures) public view returns (bool)
-    {
-        bytes32 hash = calculateMessageHash(
-            address(this),
-            to,
-            value,
-            data,
-            nonce,
-            gasPrice,
-            gasToken,
-            gasLimit).toEthSignedMessageHash();
-        return areSignaturesValid(signatures, hash);
-    }
-
-    function calculateMessageHash(
-        address from,
-        address to,
-        uint256 value,
-        bytes memory data,
-        uint nonce,
-        uint gasPrice,
-        address gasToken,
-        uint gasLimit) public pure returns (bytes32)
-    {
-        return keccak256(
-            abi.encodePacked(
-                from,
-                to,
-                value,
-                keccak256(data),
-                nonce,
-                gasPrice,
-                gasToken,
-                gasLimit
-        ));
-    }
-
-    function getSigner(
-        address from,
-        address to,
-        uint value,
-        bytes memory data,
-        uint nonce,
-        uint gasPrice,
-        address gasToken,
-        uint gasLimit,
-        bytes memory signatures) public pure returns (address)
-    {
-        return calculateMessageHash(
-            from,
-            to,
-            value,
-            data,
-            nonce,
-            gasPrice,
-            gasToken,
-            gasLimit).toEthSignedMessageHash().recover(signatures);
-    }
 
     function executeSigned(
         address to,
@@ -101,22 +43,22 @@ contract Executor {
         bytes memory data,
         uint gasPrice,
         address gasToken,
-        uint gasLimit,
+        uint gasLimitExecution,
         uint gasData,
         bytes memory signatures) public returns (bytes32)
     {
+        uint256 startingGas = gasleft();
         require(signatures.length != 0, "Invalid signatures");
         require(signatures.length >= requiredSignatures * 65, "Not enough signatures");
-        require(canExecute(to, value, data, lastNonce, gasPrice, gasToken, gasLimit, signatures), "Invalid signature or nonce");
+        bytes32 messageHash = calculateMessageHash(address(this), to, value, data, lastNonce, gasPrice, gasToken, gasLimitExecution, gasData);
+        require(verifySignatures(signatures, messageHash.toEthSignedMessageHash()), "Invalid signature or nonce");
         lastNonce++;
-        uint256 startingGas = gasleft();
         bytes memory _data;
         bool success;
         /* solium-disable-next-line security/no-call-value */
         (success, _data) = to.call.gas(gasleft().sub(refundGas(gasToken))).value(value)(data);
-        bytes32 messageHash = calculateMessageHash(address(this), to, value, data, lastNonce.sub(1), gasPrice, gasToken, gasLimit);
         emit ExecutedSigned(messageHash, lastNonce.sub(1), success);
-        uint256 gasUsed = startingGas.sub(gasleft());
+        uint256 gasUsed = startingGas.sub(gasleft()).add(transactionGasCost(gasData)).add(refundGas(gasToken));
         refund(gasUsed, gasPrice, gasToken, msg.sender);
         return messageHash;
     }
@@ -124,9 +66,9 @@ contract Executor {
     function refund(uint256 gasUsed, uint gasPrice, address gasToken, address payable beneficiary) internal {
         if (gasToken != address(0)) {
             ERC20 token = ERC20(gasToken);
-            token.transfer(beneficiary, gasUsed.mul(gasPrice));
+            token.transfer(beneficiary, computeGasUsedWithFee(gasUsed).mul(gasPrice));
         } else {
-            beneficiary.transfer(gasUsed.mul(gasPrice));
+            beneficiary.transfer(computeGasUsedWithFee(gasUsed).mul(gasPrice));
         }
     }
 
@@ -138,7 +80,32 @@ contract Executor {
         }
     }
 
-    function areSignaturesValid(bytes memory signatures, bytes32 dataHash) private view returns(bool) {
+    function calculateMessageHash(
+        address from,
+        address to,
+        uint256 value,
+        bytes memory data,
+        uint nonce,
+        uint gasPrice,
+        address gasToken,
+        uint gasLimitExecution,
+        uint gasData) public pure returns (bytes32)
+    {
+        return keccak256(
+            abi.encodePacked(
+                from,
+                to,
+                value,
+                keccak256(data),
+                nonce,
+                gasPrice,
+                gasToken,
+                gasLimitExecution,
+                gasData
+        ));
+    }
+
+    function verifySignatures(bytes memory signatures, bytes32 dataHash) private view returns(bool) {
         // There cannot be an owner with address 0.
         uint sigCount = signatures.length / 65;
         address lastSigner = address(0);

@@ -1,21 +1,30 @@
-import {DeviceInfo} from '@universal-login/commons';
-
-export interface DeviceEntry {
-  contractAddress: string;
-  publicKey: string;
-  deviceInfo: DeviceInfo;
-}
+import {Device, DeviceInfo} from '@universal-login/commons';
+import Knex = require('knex');
 
 export class DevicesStore {
-  private devices: DeviceEntry[] = [];
+  private devices: Device[] = [];
+  private tableName: string = 'devices';
 
-  async add(contractAddress: string, publicKey: string, deviceInfo: DeviceInfo) {
-    this.devices.push({contractAddress, publicKey, deviceInfo});
+  constructor(public database: Knex) {
   }
 
-  async get(contractAddress: string) {
-    return this.devices
-      .filter((deviceEntry: DeviceEntry) => deviceEntry.contractAddress === contractAddress)
-      .map((deviceEntry: DeviceEntry) => deviceEntry.deviceInfo);
+  async add(contractAddress: string, publicKey: string, deviceInfo: DeviceInfo, network: string) {
+    this.devices.push({contractAddress, publicKey, deviceInfo});
+    return this.database(this.tableName).insert({contractAddress, publicKey, deviceInfo, network});
+  }
+
+  async get(contractAddress: string, network: string): Promise<Device[]> {
+    return this.database(this.tableName)
+      .where({contractAddress})
+      .andWhere({network})
+      .select();
+  }
+
+  async remove(contractAddress: string, publicKey: string, network: string) {
+    return this.database(this.tableName)
+      .where({contractAddress})
+      .andWhere({publicKey})
+      .andWhere({network})
+      .delete();
   }
 }

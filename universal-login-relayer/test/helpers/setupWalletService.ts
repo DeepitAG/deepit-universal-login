@@ -13,10 +13,13 @@ export default async function setupWalletService(wallet: Wallet) {
   const factoryContract = multiChainService.getFactoryContract('default');
   const provider = multiChainService.getProvider('default');
   const hooks = new EventEmitter();
-  const walletService = new WalletService(multiChainService, ensService, hooks);
+  const fakeDevicesService = {
+    addOrUpdate: sinon.spy()
+  };
+  const walletService = new WalletService(multiChainService, ensService, hooks, fakeDevicesService as any);
   const callback = sinon.spy();
   hooks.addListener('created', callback);
-  return {provider, wallet, walletService, callback, factoryContract, ensService};
+  return {multiChainService, provider, wallet, walletService, callback, factoryContract, ensService, fakeDevicesService};
 }
 
 export const createFutureWallet = async (keyPair: KeyPair, ensName: string, factoryContract: Contract, wallet: Wallet, ensService: ENSService, network: string) => {

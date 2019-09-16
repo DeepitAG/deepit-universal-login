@@ -1,14 +1,16 @@
 import chai, {expect} from 'chai';
 import chaiAsPromised from 'chai-as-promised';
-import {solidity, getWallets, loadFixture} from 'ethereum-waffle';
+import {solidity, getWallets, loadFixture, deployContract} from 'ethereum-waffle';
 import {constants, utils, providers, Wallet, Contract} from 'ethers';
 import WalletContract from '../../../build/Wallet.json';
 import {transferMessage, failedTransferMessage, callMessage, failedCallMessage, executeSetRequiredSignatures, executeAddKey} from '../../helpers/ExampleMessages';
 import walletAndProxy from '../../fixtures/walletAndProxy';
-import {calculateMessageHash, calculateMessageSignature, DEFAULT_GAS_PRICE, DEFAULT_GAS_LIMIT, TEST_ACCOUNT_ADDRESS, UnsignedMessage, signString, createKeyPair} from '@universal-login/commons';
-import {DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN} from '../../../lib/defaultPaymentOptions';
-import {getExecutionArgs} from '../../helpers/argumentsEncoding';
+import {calculateMessageHash, calculateMessageSignature, DEFAULT_GAS_PRICE, DEFAULT_GAS_LIMIT, TEST_ACCOUNT_ADDRESS, UnsignedMessage, signString, createKeyPair, createSignedMessage} from '@universal-login/commons';
+import {TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN} from '../../../lib/defaultPaymentOptions';
+import {getExecutionArgs, setupUpdateMessage} from '../../helpers/argumentsEncoding';
 import {walletContractFixture} from '../../fixtures/walletContract';
+import UpgradedWallet from '../../../build/UpgradedWallet.json';
+import {encodeDataForExecuteSigned} from '../../../lib/index.js';
 
 chai.use(chaiAsPromised);
 chai.use(solidity);
@@ -32,9 +34,10 @@ describe('WalletContract', async () => {
   let relayerBalance: utils.BigNumber;
   let relayerTokenBalance: utils.BigNumber;
   let publicKey: string;
+  let walletContractMaster: Contract;
 
   beforeEach(async () => {
-    ({provider, publicKey, walletContractProxy, proxyAsWalletContract, privateKey, mockToken, mockContract, wallet} = await loadFixture(walletAndProxy));
+    ({provider, publicKey, walletContractProxy, proxyAsWalletContract, privateKey, mockToken, mockContract, walletContractMaster, wallet} = await loadFixture(walletAndProxy));
     executeSignedFunc = new utils.Interface(WalletContract.interface).functions.executeSigned;
     msg = {...transferMessage, from: walletContractProxy.address};
     signature = calculateMessageSignature(privateKey, msg);
@@ -57,36 +60,7 @@ describe('WalletContract', async () => {
     it('zero key does not exist', async () => {
       expect(await proxyAsWalletContract.keyExist(constants.AddressZero)).to.be.false;
     });
-
-    it('calculates hash', async () => {
-      const jsHash = calculateMessageHash(msg);
-      const solidityHash = await proxyAsWalletContract.calculateMessageHash(
-        msg.from,
-        msg.to,
-        msg.value,
-        msg.data,
-        msg.nonce,
-        msg.gasPrice,
-        msg.gasToken,
-        msg.gasLimitExecution);
-      expect(jsHash).to.eq(solidityHash);
-    });
-
-    it('recovers signature', async () => {
-      const recoveredAddress = await proxyAsWalletContract.getSigner(
-        msg.from,
-        msg.to,
-        msg.value,
-        msg.data,
-        msg.nonce,
-        msg.gasPrice,
-        msg.gasToken,
-        msg.gasLimitExecution,
-        signature);
-      expect(recoveredAddress).to.eq(publicKey);
-    });
   });
-
   describe('Transfer', async () => {
     describe('successful execution of transfer', () => {
       it('transfers funds', async () => {
@@ -215,18 +189,18 @@ describe('WalletContract', async () => {
 
       it('called method', async () => {
         expect(await mockContract.wasCalled()).to.be.false;
-        await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN);
+        await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN);
         expect(await mockContract.wasCalled()).to.be.true;
       });
 
       it('increase nonce', async () => {
-        await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN);
+        await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN);
         expect(await proxyAsWalletContract.lastNonce()).to.eq(1);
       });
 
       it('should emit ExecutedSigned', async () => {
         const messageHash = calculateMessageHash(msgToCall);
-        await expect(proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN))
+        await expect(proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN))
           .to.emit(proxyAsWalletContract, 'ExecutedSigned')
           .withArgs(messageHash, 0, true);
       });
@@ -236,7 +210,7 @@ describe('WalletContract', async () => {
           msgToCall = {...callMessage, from: walletContractProxy.address, to: mockContract.address};
           signatureToCall = calculateMessageSignature(privateKey, msgToCall);
 
-          const transaction = await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN);
+          const transaction = await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN);
 
           const {gasUsed} = await provider.getTransactionReceipt(transaction.hash);
           const totalCost = gasUsed!.mul(utils.bigNumberify(DEFAULT_GAS_PRICE));
@@ -247,7 +221,7 @@ describe('WalletContract', async () => {
         it('should refund tokens', async () => {
           msgToCall = {...callMessage, from: walletContractProxy.address, to: mockContract.address, gasToken: mockToken.address};
           signatureToCall = calculateMessageSignature(privateKey, msgToCall);
-          await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN);
+          await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN);
           expect(await mockToken.balanceOf(wallet.address)).to.be.above(relayerTokenBalance);
         });
       });
@@ -260,13 +234,13 @@ describe('WalletContract', async () => {
       });
 
       it('should increase nonce', async () => {
-        await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN);
+        await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN);
         expect(await proxyAsWalletContract.lastNonce()).to.eq(1);
       });
 
       it('should emit ExecutedSigned event', async () => {
         const messageHash = calculateMessageHash(msgToCall);
-        await expect(proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN))
+        await expect(proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN))
           .to.emit(proxyAsWalletContract, 'ExecutedSigned')
           .withArgs(messageHash, 0, false);
       });
@@ -275,13 +249,13 @@ describe('WalletContract', async () => {
         msg = {...msgToCall, nonce: 2};
         signature = calculateMessageSignature(privateKey, msg);
 
-        await expect(proxyAsWalletContract.executeSigned(...getExecutionArgs(msg), signature, DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN))
+        await expect(proxyAsWalletContract.executeSigned(...getExecutionArgs(msg), signature, TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN))
           .to.be.revertedWith('Invalid signature or nonce');
       });
 
       describe('refund', () => {
         it('should refund ether', async () => {
-          const transaction = await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN);
+          const transaction = await proxyAsWalletContract.executeSigned(...getExecutionArgs(msgToCall), signatureToCall, TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN);
 
           const {gasUsed} = await provider.getTransactionReceipt(transaction.hash);
           const totalCost = gasUsed!.mul(utils.bigNumberify(DEFAULT_GAS_PRICE));
@@ -292,7 +266,7 @@ describe('WalletContract', async () => {
         it('should refund tokens', async () => {
           msg = {...msgToCall, gasToken: mockToken.address};
           signature = calculateMessageSignature(privateKey, msg);
-          await proxyAsWalletContract.executeSigned(...getExecutionArgs(msg), signature, DEFAULT_PAYMENT_OPTIONS_NO_GAS_TOKEN);
+          await proxyAsWalletContract.executeSigned(...getExecutionArgs(msg), signature, TEST_PAYMENT_OPTIONS_NO_GAS_TOKEN);
           expect(await mockToken.balanceOf(wallet.address)).to.be.above(relayerTokenBalance);
         });
       });
@@ -332,6 +306,41 @@ describe('WalletContract', async () => {
     it('don`t change the number of required signatures if the new amount is higher than keyCount', async () => {
       await executeSetRequiredSignatures(proxyAsWalletContract, (await proxyAsWalletContract.keyCount()).add(1), privateKey);
       expect(await proxyAsWalletContract.requiredSignatures()).to.eq(1);
+    });
+  });
+
+  describe('Upgrade', () => {
+    let newWallet: Contract;
+    let updateData: string;
+
+    beforeEach(async () => {
+      newWallet = await deployContract(wallet, UpgradedWallet);
+      const signedMessage = createSignedMessage(await setupUpdateMessage(proxyAsWalletContract, newWallet.address), privateKey);
+      updateData = encodeDataForExecuteSigned(signedMessage);
+    });
+
+    it('before upgrade', async () => {
+      expect(await walletContractProxy.implementation()).to.eq(walletContractMaster.address);
+    });
+
+    it('updates master', async () => {
+      await wallet.sendTransaction({to: proxyAsWalletContract.address, data: updateData, gasLimit: DEFAULT_GAS_LIMIT});
+      expect(await walletContractProxy.implementation()).to.eq(newWallet.address);
+      const proxyAsUpdatedWallet = new Contract(proxyAsWalletContract.address, UpgradedWallet.abi, wallet);
+      expect(await proxyAsUpdatedWallet.getFive()).to.eq(5);
+      expect(await proxyAsUpdatedWallet.lastNonce()).to.eq(1);
+    });
+
+    it('updates store', async () => {
+      await wallet.sendTransaction({to: proxyAsWalletContract.address, data: updateData, gasLimit: DEFAULT_GAS_LIMIT});
+      const proxyAsUpdatedWallet = new Contract(proxyAsWalletContract.address, UpgradedWallet.abi, wallet);
+      expect(await proxyAsUpdatedWallet.someNumber()).to.eq(0);
+      await proxyAsUpdatedWallet.change(10);
+      expect(await proxyAsUpdatedWallet.someNumber()).to.eq(10);
+    });
+
+    it('updates master fails when sender has no permission', async () => {
+      await expect(walletContractProxy.upgradeTo(newWallet.address)).to.be.revertedWith('Unauthorized');
     });
   });
 });

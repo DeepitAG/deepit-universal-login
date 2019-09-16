@@ -83,7 +83,9 @@ describe('E2E: Relayer - Multi-Chain', async () => {
       nonce: '0',
       gasToken: '0x0000000000000000000000000000000000000000',
       gasPrice: 110000000,
+      gasLimitExecution: 1000000,
       gasLimit: 1000000,
+      gasData: 0,
     };
     const balanceBefore = await provider2.getBalance(otherWallet.address);
     const signedMessage = createSignedMessage(msg, keyPair.privateKey);
@@ -111,7 +113,9 @@ describe('E2E: Relayer - Multi-Chain', async () => {
       nonce: '0',
       gasToken: '0x0000000000000000000000000000000000000000',
       gasPrice: 110000000,
+      gasLimitExecution: 1000000,
       gasLimit: 1000000,
+      gasData: 0,
     };
     const signedMessage = createSignedMessage(msg, keyPair.privateKey);
     const result = await chai.request(relayer.server)

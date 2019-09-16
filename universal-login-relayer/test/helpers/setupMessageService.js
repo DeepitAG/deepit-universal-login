@@ -18,7 +18,7 @@ export default async function setupMessageService(knex) {
   const hooks = new EventEmitter();
   const authorisationStore = new AuthorisationStore(knex);
   const messageRepository = new MessageSQLRepository(knex);
-  const devicesStore = new DevicesStore();
+  const devicesStore = new DevicesStore(knex);
   const queueStore = new QueueSQLStore(knex);
   const walletMasterContractService = new WalletMasterContractService(multiChainService);
   const devicesService = new DevicesService(devicesStore, walletMasterContractService);
@@ -26,6 +26,6 @@ export default async function setupMessageService(knex) {
   const statusService = new MessageStatusService(messageRepository, signaturesService);
   const messageValidator = new MessageValidator(multiChainService);
   const messageExecutor = new MessageExecutor(multiChainService, messageValidator);
-  const messageHandler = new MessageHandler(multiChainService, authorisationStore, hooks, messageRepository, queueStore, messageExecutor, statusService);
-  return { wallet, actionKey, provider, mockToken, authorisationStore, messageHandler, walletContract, otherWallet };
+  const messageHandler = new MessageHandler(multiChainService, authorisationStore, devicesService, hooks, messageRepository, queueStore, messageExecutor, statusService);
+  return { wallet, actionKey, provider, mockToken, authorisationStore, messageHandler, walletContract, devicesStore, devicesService, otherWallet };
 }

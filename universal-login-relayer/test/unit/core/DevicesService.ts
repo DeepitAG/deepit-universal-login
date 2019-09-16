@@ -10,6 +10,7 @@ chai.use(chaiAsPromised);
 chai.use(sinonChai);
 
 describe('UNIT: DevicesService', () => {
+  const network = 'default';
   const keyPair = createKeyPair();
   const relayerRequest = signRelayerRequest({contractAddress: TEST_CONTRACT_ADDRESS}, keyPair.privateKey);
   const invalidRequest = signRelayerRequest({contractAddress: TEST_CONTRACT_ADDRESS}, TEST_PRIVATE_KEY);
@@ -18,7 +19,8 @@ describe('UNIT: DevicesService', () => {
   };
   const devicesStore: any = {
     add: sinon.stub().resolves(),
-    get: sinon.stub().resolves([TEST_DEVICE_INFO])
+    get: sinon.stub().resolves([{deviceInfo: TEST_DEVICE_INFO, contractAddress: TEST_CONTRACT_ADDRESS, pubilcKey: TEST_ACCOUNT_ADDRESS}]),
+    remove: sinon.stub().resolves(1)
   };
   let devicesService: DevicesService;
 
@@ -32,26 +34,34 @@ describe('UNIT: DevicesService', () => {
   });
 
   it('add device', async () => {
-    await devicesService.add(TEST_CONTRACT_ADDRESS, TEST_ACCOUNT_ADDRESS, TEST_DEVICE_INFO);
+    await devicesService.add(TEST_CONTRACT_ADDRESS, TEST_ACCOUNT_ADDRESS, TEST_DEVICE_INFO, network);
     expect(devicesStore.add).to.be.calledOnce;
     expect(devicesStore.get).to.not.be.called;
   });
 
   it('get devices', async () => {
-    const devices = await devicesService.getDevices(relayerRequest);
-    expect(devices).to.be.deep.eq([TEST_DEVICE_INFO]);
-    expect(devicesStore.get).to.be.calledOnce;
+    await devicesService.getDevices(relayerRequest, network);
+    expect(devicesStore.get).to.be.calledOnceWithExactly(relayerRequest.contractAddress, network);
     expect(devicesStore.add).to.not.be.called;
   });
 
   it('unauthorised get devices', async () => {
-    await expect(devicesService.getDevices(invalidRequest)).rejectedWith('Unauthorised address: 0x1FB1E54022BcB566883A0A518E23f9e954C2ED83');
+    await expect(devicesService.getDevices(invalidRequest, network)).rejectedWith('Unauthorised address: 0x1FB1E54022BcB566883A0A518E23f9e954C2ED83');
     expect(devicesStore.get).to.not.be.called;
     expect(devicesStore.add).to.not.be.called;
+  });
+
+  it('add or update device', async () => {
+    await devicesService.addOrUpdate(TEST_CONTRACT_ADDRESS, TEST_ACCOUNT_ADDRESS, TEST_DEVICE_INFO, network);
+    expect(devicesStore.remove).to.be.calledOnce;
+    expect(devicesStore.remove).to.be.calledWithExactly(TEST_CONTRACT_ADDRESS, TEST_ACCOUNT_ADDRESS, network);
+    expect(devicesStore.add).to.be.calledOnce;
+    expect(devicesStore.add).to.be.calledWithExactly(TEST_CONTRACT_ADDRESS, TEST_ACCOUNT_ADDRESS, TEST_DEVICE_INFO, network);
   });
 
   afterEach(() => {
     devicesStore.get.resetHistory();
     devicesStore.add.resetHistory();
+    devicesStore.remove.resetHistory();
   });
 });

@@ -5,21 +5,22 @@ import {RelayerRequest} from '@universal-login/commons';
 import {DevicesService} from '../../core/services/DevicesService';
 
 const getDevices = (devicesService: DevicesService) =>
-  async (data: {contractAddress: string, query: {signature: string}}) => {
+  async (data: {network: string, contractAddress: string, query: {signature: string}}) => {
     const devicesRequest: RelayerRequest = {
       contractAddress: data.contractAddress,
       signature: data.query.signature
     };
 
-    const result = await devicesService.getDevices(devicesRequest);
+    const result = await devicesService.getDevices(devicesRequest, data.network);
     return responseOf(result, 201);
   };
 
 export default (devicesService: DevicesService) => {
   const router = Router();
 
-  router.get('/:contractAddress', asyncHandler(
+  router.get('/:network/:contractAddress', asyncHandler(
     sanitize({
+      network: asString,
       contractAddress: asString,
       query: asObject({
         signature: asString

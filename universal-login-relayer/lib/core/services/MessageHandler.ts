@@ -59,7 +59,7 @@ class MessageHandler {
     const authorisationEntry = await this.authorisationStore.get(contractAddress, key);
     const deviceInfo = authorisationEntry ? authorisationEntry.deviceInfo : EMPTY_DEVICE_INFO;
     await this.authorisationStore.removeRequest(contractAddress, key, network);
-    await this.devicesService.add(contractAddress, key, deviceInfo);
+    await this.devicesService.add(contractAddress, key, deviceInfo, network);
   }
 
   async getStatus(messageHash: string, network: string) {
