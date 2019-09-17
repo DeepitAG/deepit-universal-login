@@ -19,4 +19,8 @@ export class DevicesService {
     await this.walletMasterContractService.ensureValidRelayerRequestSignature(devicesRequest, network);
     return this.devicesStore.get(devicesRequest.contractAddress, network);
   }
+
+  async remove(contractAddress: string, publicKey: string, network: string) {
+    return this.devicesStore.remove(contractAddress, publicKey, network);
+  }
 }

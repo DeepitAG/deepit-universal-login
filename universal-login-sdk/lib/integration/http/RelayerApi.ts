@@ -55,7 +55,7 @@ export class RelayerApi {
 
   async getConnectedDevices(deviceRequest: RelayerRequest) {
     const {contractAddress, signature} = deviceRequest;
-    return this.http('GET', `/devices/${contractAddress}?signature=${signature}`);
+    return this.http('GET', `/devices/${this.network}/${contractAddress}?signature=${signature}`);
   }
 
   async deploy(publicKey: string, ensName: string, gasPrice: string, gasToken: string, signature: string) {
