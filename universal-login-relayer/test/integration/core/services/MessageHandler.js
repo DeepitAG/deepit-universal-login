@@ -6,6 +6,7 @@ import setupMessageService from '../../../helpers/setupMessageService';
 import defaultDeviceInfo from '../../../config/defaults';
 import {getKnexConfig} from '../../../helpers/knex';
 import {clearDatabase} from '../../../../lib/http/relayers/RelayerUnderTest';
+import {messageToSignedMessage} from '@universal-login/contracts';
 
 describe('INT: MessageHandler', async () => {
   let messageHandler;
@@ -31,7 +32,7 @@ describe('INT: MessageHandler', async () => {
   });
 
   it('Error when not enough tokens', async () => {
-    const message = {...msg, gasLimitExecution: utils.parseEther('2.0')};
+    const message = {...msg, gasLimitExecution: utils.parseEther('2.0'), gasData: 8976};
     const signedMessage = createSignedMessage(message, wallet.privateKey);
     const {messageHash} = await messageHandler.handleMessage(signedMessage, network);
     await messageHandler.stopLater();
@@ -40,7 +41,7 @@ describe('INT: MessageHandler', async () => {
   });
 
   it('Error when not enough gas', async () => {
-    const message = {...msg, gasLimitExecution: 100};
+    const message = {...msg, gasLimitExecution: 100, gasData: 8976};
     const signedMessage = createSignedMessage(message, wallet.privateKey);
     const {messageHash} = await messageHandler.handleMessage(signedMessage, network);
     await messageHandler.stopLater();
@@ -53,7 +54,7 @@ describe('INT: MessageHandler', async () => {
   describe('Transfer', async () => {
     it('successful execution of transfer', async () => {
       const expectedBalance = (await provider.getBalance(msg.to)).add(msg.value);
-      const signedMessage = createSignedMessage(msg, wallet.privateKey);
+      const signedMessage = messageToSignedMessage(msg, wallet.privateKey);
       const {messageHash} = await messageHandler.handleMessage(signedMessage, network);
       await messageHandler.stopLater();
       expect(await provider.getBalance(msg.to)).to.eq(expectedBalance);
@@ -66,7 +67,7 @@ describe('INT: MessageHandler', async () => {
   describe('Add Key', async () => {
     it('execute add key', async () => {
       msg = {...addKeyMessage, from: walletContract.address, gasToken: mockToken.address, to: walletContract.address, nonce: await walletContract.lastNonce()};
-      const signedMessage = createSignedMessage(msg, wallet.privateKey);
+      const signedMessage = messageToSignedMessage(msg, wallet.privateKey);
 
       await messageHandler.handleMessage(signedMessage, network);
       await messageHandler.stopLater();
@@ -78,7 +79,7 @@ describe('INT: MessageHandler', async () => {
         const request = {walletContractAddress: walletContract.address, key: otherWallet.address, deviceInfo: defaultDeviceInfo};
         await authorisationStore.addRequest(request, network);
         msg = {...addKeyMessage, from: walletContract.address, gasToken: mockToken.address, to: walletContract.address, nonce: await walletContract.lastNonce()};
-        const signedMessage = createSignedMessage(msg, wallet.privateKey);
+        const signedMessage = messageToSignedMessage(msg, wallet.privateKey);
         await messageHandler.handleMessage(signedMessage, network);
         await messageHandler.stopLater();
         const authorisations = await authorisationStore.getPendingAuthorisations(walletContract.address, network);
@@ -91,14 +92,15 @@ describe('INT: MessageHandler', async () => {
   describe('Remove key ', async () => {
     beforeEach(async () => {
       const message =  {...addKeyMessage, from: walletContract.address, gasToken: mockToken.address, to: walletContract.address, nonce: await walletContract.lastNonce()};
-      const signedMessage = createSignedMessage(message, wallet.privateKey);
+      const signedMessage = messageToSignedMessage(message, wallet.privateKey);
+
       await messageHandler.handleMessage(signedMessage, network);
     });
 
     it('should remove key', async () => {
       await waitExpect(async () => expect((await walletContract.keyExist(otherWallet.address))).to.be.true);
       const message =  {...removeKeyMessage, from: walletContract.address, gasToken: mockToken.address, to: walletContract.address, nonce: await walletContract.lastNonce()};
-      const signedMessage = createSignedMessage(message, wallet.privateKey);
+      const signedMessage = messageToSignedMessage(message, wallet.privateKey);
 
       await messageHandler.handleMessage(signedMessage, network);
       await messageHandler.stopLater();

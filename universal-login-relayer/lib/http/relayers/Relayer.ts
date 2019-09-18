@@ -26,6 +26,8 @@ import {MessageStatusService} from '../../core/services/messages/MessageStatusSe
 import {SignaturesService} from '../../integration/ethereum/SignaturesService';
 import {MultiChainService} from '../../core/services/MultiChainService';
 import {PublicRelayerConfig} from '@universal-login/commons';
+import IMessageValidator from '../../core/services/validators/IMessageValidator';
+import MessageValidator from '../../integration/ethereum/validators/MessageValidator';
 import MessageExecutor from '../../integration/ethereum/MessageExecutor';
 import {DevicesStore} from '../../integration/sql/services/DevicesStore';
 import {DevicesService} from '../../core/services/DevicesService';
@@ -53,6 +55,7 @@ class Relayer {
   private messageRepository: IMessageRepository = {} as IMessageRepository;
   private signaturesService: SignaturesService = {} as SignaturesService;
   private statusService: MessageStatusService = {} as MessageStatusService;
+  private messageValidator: IMessageValidator = {} as IMessageValidator;
   private messageExecutor: MessageExecutor = {} as MessageExecutor;
   private app: Application = {} as Application;
   protected server: Server = {} as Server;
