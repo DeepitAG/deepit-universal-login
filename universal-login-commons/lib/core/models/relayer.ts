@@ -33,6 +33,7 @@ export interface NetworkData {
   walletContractAddress: string;
   contractWhiteList: ContractWhiteList;
   tokenContractAddress?: string;
+  maxGasLimit: number;
 }
 
 export declare type NetworkConfig = Record<string, NetworkData>;
@@ -44,6 +45,7 @@ export interface PublicNetworkData {
   ensRegistrars: string[];
   walletContractAddress: string;
   contractWhiteList: ContractWhiteList;
+  maxGasLimit: number;
 }
 
 export declare type PublicNetworkConfig = Record<string, PublicNetworkData>;

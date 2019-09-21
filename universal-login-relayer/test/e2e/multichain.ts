@@ -7,6 +7,8 @@ import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
 import WalletContract from '@universal-login/contracts/build/Wallet.json';
 import {Provider} from 'ethers/providers';
 import {WalletCreator} from '../helpers/WalletCreator';
+import console = require('console');
+import {stringifySignedMessageFields} from '@universal-login/commons';
 
 describe('E2E: Relayer - Multi-Chain', async () => {
   let provider2: Provider;
@@ -89,14 +91,16 @@ describe('E2E: Relayer - Multi-Chain', async () => {
     };
     const balanceBefore = await provider2.getBalance(otherWallet.address);
     const signedMessage = createSignedMessage(msg, keyPair.privateKey);
-    const {status, body} = await chai.request(relayer.server)
+    const stringifiedMessage = stringifySignedMessageFields(signedMessage);
+    const result = await chai.request(relayer.server)
       .post('/wallet/execution')
-      .send({signedMessage, network: otherChainName});
-    expect(status).to.eq(201);
+      .send({signedMessage: stringifiedMessage, network: otherChainName});
+    console.log(result);
+    expect(result.status).to.eq(201);
     await waitExpect(async () => expect(await provider2.getBalance(otherWallet.address)).to.eq(balanceBefore.add(msg.value)) as any);
     const checkStatusId = async () => {
       const statusById = await chai.request(relayer.server)
-        .get(`/wallet/execution/status/${otherChainName}/${body.transaction}`);
+        .get(`/wallet/execution/status/${otherChainName}/${result.body.transaction}`);
       expect(statusById.body.transactionHash).to.not.be.null;
     };
     await waitExpect(() => checkStatusId());

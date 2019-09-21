@@ -58,6 +58,7 @@ function getRelayerConfig(jsonRpcUrl: string, wallet: Wallet, walletContractAddr
       }
     },
     database: databaseConfig,
+<<<<<<< HEAD
     networkConfig: {
       default: {
         jsonRpcUrl,
@@ -75,6 +76,9 @@ function getRelayerConfig(jsonRpcUrl: string, wallet: Wallet, walletContractAddr
         tokenContractAddress: tokenAddress,
       }
     },
+=======
+    maxGasLimit: 500000
+>>>>>>> upstream/master
   };
 }
 

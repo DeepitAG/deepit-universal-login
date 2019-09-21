@@ -27,7 +27,8 @@ export async function setupMultiChainService(provider: Provider, ensRegistrars =
       privateKey: wallet.privateKey,
       ensRegistrars,
       walletContractAddress: walletContract.address,
-      contractWhiteList
+      contractWhiteList,
+      maxGasLimit: 500000
     }
   };
   const multiChainService = new MultiChainService(configuration);

@@ -80,7 +80,6 @@ describe('E2E: Relayer - Authorisation routes', async () => {
       const result = await chai.request(relayer.server)
         .delete(`/authorisation/${contract.address}`)
         .send({authorisationRequest, network});
-      console.log(result);
       expect(result.status).to.eq(204);
 
       const {response} = await getAuthorisation(relayer, contract, keyPair, network);

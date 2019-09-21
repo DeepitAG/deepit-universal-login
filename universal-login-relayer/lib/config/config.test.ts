@@ -50,6 +50,7 @@ export const config: Config =  Object.freeze({
         address: 'GENERATED',
         minimalAmount: 'GENERATED'
       }],
+      maxGasLimit: 500000
     }
   },
 });

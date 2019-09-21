@@ -27,10 +27,12 @@ import {SignaturesService} from '../../integration/ethereum/SignaturesService';
 import {MultiChainService} from '../../core/services/MultiChainService';
 import {PublicRelayerConfig} from '@universal-login/commons';
 import IMessageValidator from '../../core/services/validators/IMessageValidator';
-import MessageValidator from '../../integration/ethereum/validators/MessageValidator';
+import MessageExecutionValidator from '../../integration/ethereum/validators/MessageExecutionValidator';
 import MessageExecutor from '../../integration/ethereum/MessageExecutor';
 import {DevicesStore} from '../../integration/sql/services/DevicesStore';
 import {DevicesService} from '../../core/services/DevicesService';
+import {GasValidator} from '../../core/services/validators/GasValidator';
+
 const defaultPort = '3311';
 
 
@@ -52,10 +54,11 @@ class Relayer {
   private walletContractService: WalletService = {} as WalletService;
   private queueStore: IQueueStore = {} as IQueueStore;
   private messageHandler: MessageHandler = {} as MessageHandler;
+  private gasValidator: GasValidator = {} as GasValidator;
   private messageRepository: IMessageRepository = {} as IMessageRepository;
   private signaturesService: SignaturesService = {} as SignaturesService;
   private statusService: MessageStatusService = {} as MessageStatusService;
-  private messageValidator: IMessageValidator = {} as IMessageValidator;
+  private messageExecutionValidator: IMessageValidator = {} as IMessageValidator;
   private messageExecutor: MessageExecutor = {} as MessageExecutor;
   private app: Application = {} as Application;
   protected server: Server = {} as Server;
@@ -93,7 +96,6 @@ class Relayer {
     this.queueStore = new QueueSQLStore(this.database);
     this.signaturesService = new SignaturesService(this.multiChainService);
     this.statusService = new MessageStatusService(this.messageRepository, this.signaturesService);
-    this.messageExecutor = new MessageExecutor(this.multiChainService);
     this.messageHandler = new MessageHandler(this.multiChainService, this.authorisationStore, this.devicesService, this.hooks, this.messageRepository, this.queueStore, this.messageExecutor, this.statusService);
     this.app.use(bodyParser.json());
     this.app.use('/wallet', WalletRouter(this.walletContractService, this.messageHandler));

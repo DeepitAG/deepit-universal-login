@@ -60,6 +60,7 @@ export class RelayerUnderTest extends Relayer {
           factoryAddress: factoryContract.address,
           supportedTokens,
           provider: providerWithENS,
+          maxGasLimit: 500000
         }
       }
     };
@@ -113,6 +114,7 @@ export class RelayerUnderTest extends Relayer {
           factoryAddress: factoryContract1.address,
           supportedTokens: supportedTokens1,
           provider: provider1,
+          maxGasLimit: 500000
         },
         otherChain: {
           privateKey: wallet2.privateKey,
@@ -123,6 +125,7 @@ export class RelayerUnderTest extends Relayer {
           factoryAddress: factoryContract2.address,
           supportedTokens: supportedTokens2,
           provider: provider2,
+          maxGasLimit: 500000
         }
       }
     };

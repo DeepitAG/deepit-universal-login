@@ -8,8 +8,6 @@ import basicWalletContractWithMockToken from '../fixtures/basicWalletContractWit
 import MessageSQLRepository from '../../lib/integration/sql/services/MessageSQLRepository';
 import {MessageStatusService} from '../../lib/core/services/messages/MessageStatusService';
 import {SignaturesService} from '../../lib/integration/ethereum/SignaturesService';
-import IMessageValidator from '../../lib/core/services/validators/IMessageValidator';
-import MessageValidator from '../../lib/integration/ethereum/validators/MessageValidator';
 import MessageExecutor from '../../lib/integration/ethereum/MessageExecutor';
 import {DevicesStore} from '../../lib/integration/sql/services/DevicesStore';
 import {DevicesService} from '../../lib/core/services/DevicesService';
@@ -27,6 +25,7 @@ export default async function setupMessageService(knex: Knex) {
   const signaturesService = new SignaturesService(multiChainService);
   const statusService = new MessageStatusService(messageRepository, signaturesService);
   const messageExecutor = new MessageExecutor(multiChainService);
+  const MAX_GAS_LIMIT = 500000;
   const messageHandler = new MessageHandler(wallet, authorisationStore, devicesService, hooks, messageRepository, queueStore, messageExecutor, statusService);
   return { wallet, actionKey, provider, mockToken, authorisationStore, devicesStore, messageHandler, walletContract, otherWallet };
 }

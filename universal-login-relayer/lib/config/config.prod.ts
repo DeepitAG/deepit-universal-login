@@ -52,6 +52,7 @@ export const config: Config =  Object.freeze({
         address: ETHER_NATIVE_TOKEN.address,
         minimalAmount: '500000'
       }],
+      maxGasLimit: 500000
     }
   },
 });

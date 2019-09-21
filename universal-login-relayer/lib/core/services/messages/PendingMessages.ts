@@ -48,11 +48,11 @@ export default class PendingMessages {
     ensure(!messageItem.transactionHash, DuplicatedExecution);
     const isContainSignature = await this.messageRepository.containSignature(messageHash, message.signature, network);
     ensure(!isContainSignature, DuplicatedSignature);
-    await this.ensureCorrectKeyPurpose(message, messageItem.walletAddress, wallet);
+    await this.ensureKeyExist(message, messageItem.walletAddress, wallet);
     await this.messageRepository.addSignature(messageHash, message.signature, network);
   }
 
-  private async ensureCorrectKeyPurpose(message: SignedMessage, walletAddress: string, wallet: Wallet) {
+  private async ensureKeyExist(message: SignedMessage, walletAddress: string, wallet: Wallet) {
     const key = getKeyFromHashAndSignature(
       calculateMessageHash(message),
       message.signature

@@ -2,7 +2,8 @@ import {providers, Wallet, Contract} from 'ethers';
 import {NetworkConfig} from '@universal-login/commons';
 import WalletProxyFactory from '@universal-login/contracts/build/WalletProxyFactory.json';
 import Token from '@universal-login/commons/lib/contracts/Token.json';
-import {ensureChainSupport} from '../../integration/ethereum/validations';
+import {ensureChainSupport} from '../utils/validations';
+import console = require('console');
 
 export class MultiChainService {
 
@@ -60,5 +61,10 @@ export class MultiChainService {
     const tokenAddress = this.networkConfig[network].tokenContractAddress as string;
     const wallet = this.getWallet(network);
     return new Contract(tokenAddress, Token.abi, wallet);
+  }
+
+  getMaxGasLimit(network: string) {
+    ensureChainSupport(this.networkConfig, network);
+    return this.networkConfig[network].maxGasLimit;
   }
 }

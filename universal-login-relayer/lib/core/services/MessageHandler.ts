@@ -11,14 +11,12 @@ import IMessageRepository from './messages/IMessagesRepository';
 import IQueueStore from './messages/IQueueStore';
 import {MessageStatusService} from './messages/MessageStatusService';
 import {MultiChainService} from '../../core/services/MultiChainService';
-import {ensureChainSupport} from '../../integration/ethereum/validations';
 import {DevicesService} from './DevicesService';
 import {GasValidator} from './validators/GasValidator';
 
 class MessageHandler {
   private pendingMessages: PendingMessages;
   private queueService: QueueService;
-  private gasValidator: GasValidator;
 
   constructor(
     private multiChainService: MultiChainService,
@@ -28,11 +26,10 @@ class MessageHandler {
     messageRepository: IMessageRepository,
     queueStore: IQueueStore,
     messageExecutor: MessageExecutor,
-    statusService: MessageStatusService
+    statusService: MessageStatusService,
   ) {
     this.queueService = new QueueService(messageExecutor, queueStore, messageRepository, this.onTransactionMined.bind(this));
     this.pendingMessages = new PendingMessages(multiChainService, messageRepository, this.queueService, statusService);
-    this.gasValidator = new GasValidator();
   }
 
   start() {
@@ -51,13 +48,20 @@ class MessageHandler {
         const [key] = decodeParametersFromData(message.data as string, ['address']);
         await this.devicesService.remove(to, key, network);
       } else if (isAddKeysCall(message.data as string)) {
-        this.hooks.emit('keysAdded', {transaction: sentTransaction, contractAddress: to, network});
+        const [keys] = decodeParametersFromData(message.data as string, ['address[]']);
+        for (const key of keys) {
+          await this.updateDevicesAndAuthorisations(to, key, network);
+        }
+        this.hooks.emit('keysAdded', {transaction: sentTransaction, contractAddress: to});
       }
     }
   }
 
   async handleMessage(message: SignedMessage, network: string) {
-    this.gasValidator.validate(message);
+    const maxGasLimit = this.multiChainService.getMaxGasLimit(network);
+    console.log(maxGasLimit);
+    const gasValidator = new GasValidator(maxGasLimit);
+    await gasValidator.validate(message);
     return this.pendingMessages.add(message, network);
   }
 
