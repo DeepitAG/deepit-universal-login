@@ -8,6 +8,7 @@ import {getKeyFromHashAndSignature} from '../../utils/encodeData';
 import QueueService from './QueueService';
 import {MultiChainService} from '../MultiChainService';
 import {createMessageItem} from '../../utils/messages/serialisation';
+import console = require('console');
 
 export default class PendingMessages {
 

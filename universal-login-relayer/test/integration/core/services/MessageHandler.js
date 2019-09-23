@@ -7,6 +7,7 @@ import MockToken from '@universal-login/contracts/build/MockToken';
 import {transferMessage, addKeyMessage, removeKeyMessage} from '../../../fixtures/basicWalletContract';
 import setupMessageService from '../../../helpers/setupMessageService';
 import defaultDeviceInfo from '../../../config/defaults';
+import {getConfig} from '../../../../lib';
 import {getKnexConfig} from '../../../helpers/knex';
 import {clearDatabase} from '../../../../lib/http/relayers/RelayerUnderTest';
 import {messageToSignedMessage} from '@universal-login/contracts';
@@ -20,11 +21,13 @@ describe('INT: MessageHandler', async () => {
   let walletContract;
   let msg;
   let otherWallet;
+  let multiChainService;
+  const config = getConfig('test');
   const knex = getKnexConfig();
   const network = 'default';
 
   beforeEach(async () => {
-    ({wallet, provider, messageHandler, authorisationStore, walletContract, otherWallet, devicesStore} = await setupMessageService(knex));
+    ({multiChainService, wallet, provider, messageHandler, authorisationStore, walletContract, otherWallet, devicesStore} = await setupMessageService(knex, config));
     msg = {...transferMessage, from: walletContract.address, nonce: await walletContract.lastNonce()};
     messageHandler.start();
   });
@@ -70,7 +73,6 @@ describe('INT: MessageHandler', async () => {
     it('execute add key', async () => {
       msg = {...addKeyMessage, from: walletContract.address, to: walletContract.address, nonce: await walletContract.lastNonce()};
       const signedMessage = messageToSignedMessage(msg, wallet.privateKey);
-
       await messageHandler.handleMessage(signedMessage, network);
       await messageHandler.stopLater();
       expect(await walletContract.keyExist(otherWallet.address)).to.be.true;
@@ -97,10 +99,10 @@ describe('INT: MessageHandler', async () => {
       const data = encodeFunction(WalletContract, 'addKeys', [keys]);
       msg = {...addKeyMessage, from: walletContract.address, to: walletContract.address, nonce: await walletContract.lastNonce(), data};
       const signedMessage0 = messageToSignedMessage(msg, wallet.privateKey);
-      await messageHandler.handleMessage(signedMessage0);
+      await messageHandler.handleMessage(signedMessage0, network);
       await messageHandler.stopLater();
       expect(await walletContract.keyExist(otherWallet.address)).to.be.true;
-      const devices = await devicesStore.get(walletContract.address);
+      const devices = await devicesStore.get(walletContract.address, network);
       expect(devices.map(({publicKey}) => publicKey)).to.be.deep.eq(keys);
     });
   });

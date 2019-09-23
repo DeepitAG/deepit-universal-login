@@ -59,7 +59,6 @@ class MessageHandler {
 
   async handleMessage(message: SignedMessage, network: string) {
     const maxGasLimit = this.multiChainService.getMaxGasLimit(network);
-    console.log(maxGasLimit);
     const gasValidator = new GasValidator(maxGasLimit);
     await gasValidator.validate(message);
     return this.pendingMessages.add(message, network);

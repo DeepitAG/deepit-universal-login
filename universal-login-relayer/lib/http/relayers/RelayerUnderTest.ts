@@ -3,7 +3,7 @@ import {providers, Wallet, utils, Contract} from 'ethers';
 const ENSBuilder = require('ens-builder');
 import {withENS, getContractHash, ContractJSON, ETHER_NATIVE_TOKEN, deployContract, ChainSpec} from '@universal-login/commons';
 import {deployFactory} from '@universal-login/contracts';
-import WalletMasterWithRefund from '@universal-login/contracts/build/Wallet.json';
+import WalletContract from '@universal-login/contracts/build/Wallet.json';
 import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
 import MockToken from '@universal-login/contracts/build/MockToken.json';
 import {Config} from '../../config/relayer';
@@ -23,7 +23,7 @@ type CreateRelayerArgs = {
 
 export class RelayerUnderTest extends Relayer {
   static async createPreconfigured(wallet: Wallet, port = '33111') {
-    const walletContract = await deployContract(wallet, WalletMasterWithRefund);
+    const walletContract = await deployContract(wallet, WalletContract);
     const factoryContract = await deployFactory(wallet, walletContract.address);
     return this.createPreconfiguredRelayer({port, wallet, walletContract, factoryContract});
   }
@@ -74,8 +74,8 @@ export class RelayerUnderTest extends Relayer {
     const contractWhiteList = getContractWhiteList();
     const mockToken1 = await deployContract(wallet1, MockToken as any);
     const mockToken2 = await deployContract(wallet2, MockToken as any);
-    const walletContract1 = await deployContract(wallet1, WalletMasterWithRefund as any);
-    const walletContract2 = await deployContract(wallet2, WalletMasterWithRefund as any);
+    const walletContract1 = await deployContract(wallet1, WalletContract as any);
+    const walletContract2 = await deployContract(wallet2, WalletContract as any);
     const factoryContract1 = await deployFactory(wallet1, walletContract1.address);
     const factoryContract2 = await deployFactory(wallet2, walletContract2.address);
     const supportedTokens1 = [
@@ -165,6 +165,6 @@ export async function clearDatabase(knex: Knex) {
 }
 
 export const getContractWhiteList = () => ({
-  wallet: [],
+  wallet: [getContractHash(WalletContract as ContractJSON)],
   proxy: [getContractHash(ProxyContract as ContractJSON)]
 });

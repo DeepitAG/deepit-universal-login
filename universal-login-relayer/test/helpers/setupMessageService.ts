@@ -12,8 +12,9 @@ import MessageExecutor from '../../lib/integration/ethereum/MessageExecutor';
 import {DevicesStore} from '../../lib/integration/sql/services/DevicesStore';
 import {DevicesService} from '../../lib/core/services/DevicesService';
 import WalletMasterContractService from '../../lib/integration/ethereum/services/WalletMasterContractService';
+import {Config} from '../../lib';
 
-export default async function setupMessageService(knex: Knex) {
+export default async function setupMessageService(knex: Knex, config: Config) {
   const {multiChainService, wallet, actionKey, provider, mockToken, walletContract, otherWallet} = await loadFixture(basicWalletContractWithMockToken);
   const hooks = new EventEmitter();
   const authorisationStore = new AuthorisationStore(knex);
@@ -25,7 +26,6 @@ export default async function setupMessageService(knex: Knex) {
   const signaturesService = new SignaturesService(multiChainService);
   const statusService = new MessageStatusService(messageRepository, signaturesService);
   const messageExecutor = new MessageExecutor(multiChainService);
-  const MAX_GAS_LIMIT = 500000;
-  const messageHandler = new MessageHandler(wallet, authorisationStore, devicesService, hooks, messageRepository, queueStore, messageExecutor, statusService);
-  return { wallet, actionKey, provider, mockToken, authorisationStore, devicesStore, messageHandler, walletContract, otherWallet };
+  const messageHandler = new MessageHandler(multiChainService, authorisationStore, devicesService, hooks, messageRepository, queueStore, messageExecutor, statusService);
+  return { multiChainService, wallet, actionKey, provider, mockToken, authorisationStore, devicesStore, messageHandler, walletContract, otherWallet };
 }

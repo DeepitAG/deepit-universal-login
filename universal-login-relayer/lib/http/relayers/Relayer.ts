@@ -96,6 +96,7 @@ class Relayer {
     this.queueStore = new QueueSQLStore(this.database);
     this.signaturesService = new SignaturesService(this.multiChainService);
     this.statusService = new MessageStatusService(this.messageRepository, this.signaturesService);
+    this.messageExecutor = new MessageExecutor(this.multiChainService);
     this.messageHandler = new MessageHandler(this.multiChainService, this.authorisationStore, this.devicesService, this.hooks, this.messageRepository, this.queueStore, this.messageExecutor, this.statusService);
     this.app.use(bodyParser.json());
     this.app.use('/wallet', WalletRouter(this.walletContractService, this.messageHandler));

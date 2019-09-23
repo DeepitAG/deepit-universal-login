@@ -18,7 +18,7 @@ describe('INT: CorrectProxyValidator', async () => {
   before(async () => {
     ({mockToken, wallet, walletContract} = await loadFixture(basicWalletContractWithMockToken));
     message = {from: walletContract.address, gasToken: mockToken.address, to: TEST_ACCOUNT_ADDRESS};
-    validator = new CorrectProxyValidator(wallet, contractWhiteList);
+    validator = new CorrectProxyValidator(wallet.provider, contractWhiteList);
   });
 
   it('successfully pass the validation', async () => {
@@ -36,9 +36,18 @@ describe('INT: CorrectProxyValidator', async () => {
     await expect(validator.validate(signedMessage)).to.be.eventually.fulfilled;
   });
 
+  it('passes when invalid master but valid proxy', async () => {
+    const validatorWithInvalidMaster = new CorrectProxyValidator(wallet.provider, {
+      wallet: [TEST_ACCOUNT_ADDRESS],
+      proxy: contractWhiteList.proxy
+    });
+    const signedMessage = createSignedMessage({...message}, wallet.privateKey);
+    await expect(validatorWithInvalidMaster.validate(signedMessage)).to.be.eventually.fulfilled;
+  });
+
   it('throws when invalid proxy', async () => {
-    const messageValidatorWithInvalidProxy = new CorrectProxyValidator(wallet, {
-      wallet: [],
+    const messageValidatorWithInvalidProxy = new CorrectProxyValidator(wallet.provider, {
+      wallet: contractWhiteList.wallet,
       proxy: [TEST_ACCOUNT_ADDRESS]
     });
     const signedMessage = createSignedMessage({...message}, wallet.privateKey);

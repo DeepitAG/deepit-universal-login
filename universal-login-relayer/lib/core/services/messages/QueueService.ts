@@ -4,6 +4,8 @@ import IQueueStore from './IQueueStore';
 import MessageExecutor from '../../../integration/ethereum/MessageExecutor';
 import IMessageRepository from './IMessagesRepository';
 import {TransactionHashNotFound} from '../../utils/errors';
+import console = require('console');
+import {network} from '../../../http/routes/config';
 
 type QueueState = 'running' | 'stopped' | 'stopping';
 

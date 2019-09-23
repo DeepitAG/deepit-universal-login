@@ -147,7 +147,7 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         network
       });
     expect(result.status).to.eq(404);
-    expect(result.body.type).to.eq('NotFound');
+    expect(result.body.type).to.eq('InvalidENSDomain');
     expect(result.body.error).to.eq(`Error: ENS domain ${invalidEnsName} does not exist or is not compatible with Universal Login`);
   });
 

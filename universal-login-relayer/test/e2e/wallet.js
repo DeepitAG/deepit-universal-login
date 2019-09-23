@@ -42,7 +42,7 @@ describe('E2E: Relayer - WalletContract routes', async () => {
     const balanceBefore = await otherWallet.getBalance();
     const signedMessage = messageToSignedMessage(msg, keyPair.privateKey);
     const stringifiedMessage = stringifySignedMessageFields(signedMessage);
-    const result = await chai.request(relayer.server)
+    const {status, body} = await chai.request(relayer.server)
       .post('/wallet/execution')
       .send({signedMessage: stringifiedMessage, network});
     expect(status).to.eq(201);

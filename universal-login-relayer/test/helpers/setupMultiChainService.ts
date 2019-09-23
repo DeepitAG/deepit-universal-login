@@ -9,7 +9,7 @@ import {deployFactory} from '@universal-login/contracts';
 
 export async function setupMultiChainService(provider: Provider, ensRegistrars = []) {
   const [wallet] = getWallets(provider);
-  const walletContract = await deployContract(wallet, Wallet as ContractJSON);
+  const walletContract = await deployContract(wallet, Wallet as any);
   await walletContract.deployed();
   const contractWhiteList = getContractWhiteList();
   const factory = await deployFactory(wallet, walletContract.address);
