@@ -43,7 +43,7 @@ class MessageHandler {
       if (isAddKeyCall(message.data as string)) {
         const [key] = decodeParametersFromData(message.data as string, ['address']);
         await this.updateDevicesAndAuthorisations(to, key, network);
-        this.hooks.emit('added', {transaction: sentTransaction, contractAddress: to});
+        this.hooks.emit('added', {transaction: sentTransaction, contractAddress: to, network});
       } else if (isRemoveKeyCall(message.data as string)) {
         const [key] = decodeParametersFromData(message.data as string, ['address']);
         await this.devicesService.remove(to, key, network);
@@ -52,7 +52,7 @@ class MessageHandler {
         for (const key of keys) {
           await this.updateDevicesAndAuthorisations(to, key, network);
         }
-        this.hooks.emit('keysAdded', {transaction: sentTransaction, contractAddress: to});
+        this.hooks.emit('keysAdded', {transaction: sentTransaction, contractAddress: to, network});
       }
     }
   }
