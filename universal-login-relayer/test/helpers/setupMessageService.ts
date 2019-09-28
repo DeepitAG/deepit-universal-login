@@ -13,6 +13,7 @@ import {DevicesStore} from '../../lib/integration/sql/services/DevicesStore';
 import {DevicesService} from '../../lib/core/services/DevicesService';
 import WalletMasterContractService from '../../lib/integration/ethereum/services/WalletMasterContractService';
 import {Config} from '../../lib';
+import ExecutionWorker from '../../lib/core/services/messages/ExecutionWorker';
 
 export default async function setupMessageService(knex: Knex, config: Config) {
   const {multiChainService, wallet, actionKey, provider, mockToken, walletContract, otherWallet} = await loadFixture(basicWalletContractWithMockToken);
@@ -20,12 +21,13 @@ export default async function setupMessageService(knex: Knex, config: Config) {
   const authorisationStore = new AuthorisationStore(knex);
   const messageRepository = new MessageSQLRepository(knex);
   const devicesStore = new DevicesStore(knex);
-  const queueStore = new QueueSQLStore(knex);
+  const executionQueue = new QueueSQLStore(knex);
   const walletMasterContractService = new WalletMasterContractService(multiChainService);
   const devicesService = new DevicesService(devicesStore, walletMasterContractService);
   const signaturesService = new SignaturesService(multiChainService);
   const statusService = new MessageStatusService(messageRepository, signaturesService);
-  const messageExecutor = new MessageExecutor(multiChainService);
-  const messageHandler = new MessageHandler(multiChainService, authorisationStore, devicesService, hooks, messageRepository, queueStore, messageExecutor, statusService);
-  return { multiChainService, wallet, actionKey, provider, mockToken, authorisationStore, devicesStore, messageHandler, walletContract, otherWallet };
+  const messageHandler = new MessageHandler(multiChainService, authorisationStore, devicesService, hooks, messageRepository, statusService, executionQueue);
+  const messageExecutor = new MessageExecutor(multiChainService, messageRepository, messageHandler.onTransactionMined.bind(messageHandler));
+  const executionWorker = new ExecutionWorker(messageExecutor, executionQueue);
+  return { multiChainService, wallet, actionKey, provider, mockToken, authorisationStore, devicesStore, messageHandler, walletContract, otherWallet, executionWorker };
 }

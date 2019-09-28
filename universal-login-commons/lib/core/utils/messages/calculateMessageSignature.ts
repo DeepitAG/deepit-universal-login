@@ -1,7 +1,13 @@
 import {utils, Wallet} from 'ethers';
 import {UnsignedMessage} from '../../models/message';
-import {sign} from '../signatures';
+import {signHexString} from '../signatures';
+import {DeployArgs} from '../../models/deploy';
 
+export const calculateDeployHash = (msg: DeployArgs) => {
+  return utils.solidityKeccak256(
+    ['string', 'string', 'string', 'string', 'string'],
+    [msg.publicKey, msg.ensName, msg.gasPrice, msg.gasToken, msg.signature]);
+};
 
 export const calculateMessageHash = (msg: UnsignedMessage) => {
   const dataHash = utils.solidityKeccak256(['bytes'], [msg.data]);
@@ -11,7 +17,7 @@ export const calculateMessageHash = (msg: UnsignedMessage) => {
 };
 
 export const calculateMessageSignature = (privateKey: string, msg: UnsignedMessage) => {
-  return sign(calculateMessageHash(msg), privateKey);
+  return signHexString(calculateMessageHash(msg), privateKey);
 };
 
 export const calculateMessageSignatures = async (privateKeys: string[], msg: UnsignedMessage) => {

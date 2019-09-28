@@ -5,7 +5,7 @@ import {getTestSignedMessage} from '../../../config/message';
 import {getKnexConfig} from '../../../helpers/knex';
 import QueueSQLStore from '../../../../lib/integration/sql/services/QueueSQLStore';
 import QueueMemoryStore from '../../../helpers/QueueMemoryStore';
-import IQueueStore from '../../../../lib/core/services/messages/IQueueStore';
+import {IExecutionQueue} from '../../../../lib/core/services/messages/IExecutionQueue';
 import {clearDatabase} from '../../../../lib/http/relayers/RelayerUnderTest';
 
 for (const config of [{
@@ -15,7 +15,7 @@ for (const config of [{
 }]
 ) {
 describe(`INT: IQueueStore: ${config.type.name}`, async () => {
-  let queueStore: IQueueStore;
+  let executionQueue: IExecutionQueue;
   let signedMessage: SignedMessage;
   let expectedMessageHash: string;
   const knex = getKnexConfig();
@@ -31,33 +31,33 @@ describe(`INT: IQueueStore: ${config.type.name}`, async () => {
     if (config.type.name.includes('SQL')) {
       args = knex;
     }
-    queueStore = new config.type(args);
+    executionQueue = new config.type(args);
   });
 
   it('construction: queue is empty', async () =>  {
-    const nextTransaction = await queueStore.getNext();
+    const nextTransaction = await executionQueue.getNext();
     expect(nextTransaction).to.be.undefined;
   });
 
   it('add message', async () =>  {
-    const messageHash = await queueStore.add(signedMessage, network);
+    const messageHash = await executionQueue.addMessage(signedMessage, network);
     expect(messageHash).to.be.a('string');
     expect(messageHash).to.be.eq(expectedMessageHash);
   });
 
   it('message round trip', async () => {
-    const messageHash1 = await queueStore.add(signedMessage, network);
+    const messageHash1 = await executionQueue.addMessage(signedMessage, network);
     const signedMessage2 = getTestSignedMessage({value: utils.parseEther('2')});
-    const messageHash2 = await queueStore.add(signedMessage2, network);
-    const nextMessageHash = (await queueStore.getNext())!.hash;
+    const messageHash2 = await executionQueue.addMessage(signedMessage2, network);
+    const nextMessageHash = (await executionQueue.getNext())!.hash;
     expect(nextMessageHash).to.be.equal(messageHash1);
     expect(nextMessageHash).to.be.eq(expectedMessageHash);
-    await queueStore.remove(messageHash1);
-    const nextMessageHash2 = (await queueStore.getNext())!.hash;
+    await executionQueue.remove(messageHash1, network);
+    const nextMessageHash2 = (await executionQueue.getNext())!.hash;
     expect(nextMessageHash2).to.be.equal(messageHash2);
     expect(nextMessageHash2).to.be.eq(calculateMessageHash(signedMessage2));
-    await queueStore.remove(messageHash2);
-    expect(await queueStore.getNext()).to.be.undefined;
+    await executionQueue.remove(messageHash2, network);
+    expect(await executionQueue.getNext()).to.be.undefined;
   });
 
   afterEach(async () => {

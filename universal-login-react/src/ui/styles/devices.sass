@@ -1,13 +1,18 @@
 .universal-login-devices
 
   .devices
+    position: relative
+    min-height: 635px
+    padding: 45px 0 55px
+
+  .devices-inner
     max-width: 770px
     margin: 0 auto
-    padding-top: 45px
 
   .devices-message
     position: relative
     padding: 30px 35px 25px 70px
+    margin-bottom: 40px
     border: 1px solid
     border-radius: 3px
 
@@ -47,9 +52,6 @@
     font-size: 14px
     text-align: center
 
-  .connected-devices
-    margin-top: 40px
-
   .connected-devices-header
     display: flex
     align-items: center
@@ -71,15 +73,65 @@
     font-size: 12px
     margin-right: 10px
 
+  .devices-confirmation-input-wrapper
+    position: relative
+    margin-right: 10px
+    border: 1px solid
+
   .devices-confirmation-input
     width: 60px
     height: 45px
+    padding-right: 20px
     border-radius: 3px
     font-weight: 500
     font-size: 14px
     text-align: center
-    margin-right: 10px
-    border: 1px solid
+    border: none
+
+  .devices-amount-buttons
+    position: absolute
+    top: 0
+    right: 0
+    height: 100%
+    width: 20px
+    display: flex
+    flex-direction: column
+    border-left: 1px solid
+
+  .devices-amount-increase-btn,
+  .devices-amount-decrease-btn
+    position: relative
+    width: 100%
+    height: 50%
+    border: none
+    background: none
+
+  .devices-amount-increase-btn:active,
+  .devices-amount-decrease-btn:active
+    opacity: 0.5
+
+  .devices-amount-decrease-btn
+    border-top: 1px solid
+
+  .devices-amount-increase-btn::before,
+  .devices-amount-decrease-btn::before
+    content: ''
+    position: absolute
+    top: 9px
+    left: 50%
+    transform: translate(-50%, 0)
+    width: 0
+    height: 0
+
+  .devices-amount-increase-btn::before
+    border-left: 4px solid transparent
+    border-right: 4px solid transparent
+    border-bottom: 4px solid #000
+
+  .devices-amount-decrease-btn::before
+    border-left: 4px solid transparent
+    border-right: 4px solid transparent
+    border-top: 4px solid #000
 
   .devices-confirmation-edit-button, .devices-confirmation-save-button
     width: 90px
@@ -207,3 +259,14 @@
     border-top: 5px solid transparent
     border-bottom: 5px solid transparent
     border-left: 5px solid rgba(252,75,97,0.30)
+
+  .delete-account-link
+    position: absolute
+    bottom: 35px
+    left: 40px
+    padding: 0
+    font-weight: 600
+    font-size: 12px
+    border: none
+    background: none
+    cursor: pointer

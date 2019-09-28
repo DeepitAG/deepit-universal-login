@@ -7,4 +7,5 @@ export default interface MessageItem {
   walletAddress: string;
   message: SignedMessage;
   state: MessageState;
+  network: string;
 }

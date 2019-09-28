@@ -44,11 +44,12 @@ const dataToMessage = (data: any): DecodedMessage => ({
   signature: data[7]
 });
 
-export const createMessageItem = (signedMessage: SignedMessage) : MessageItem => ({
+export const createMessageItem = (signedMessage: SignedMessage, network: string) : MessageItem => ({
   walletAddress: signedMessage.from,
   collectedSignatureKeyPairs: [],
   transactionHash: null,
   error: null,
   message: signedMessage,
-  state: 'AwaitSignature'
+  state: 'AwaitSignature',
+  network
 });

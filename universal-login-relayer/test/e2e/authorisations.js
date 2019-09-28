@@ -29,6 +29,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
   it('get empty pending authorisations', async () => {
     const {result} = await getAuthorisation(relayer, contract, keyPair, network);
+    //console.log(result);
     expect(result.status).to.eq(200);
     expect(result.body.response).to.deep.eq([]);
   });
@@ -94,7 +95,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
       const {status} = await chai.request(relayer.server)
         .delete(`/authorisation/${contract.address}`)
         .send({authorisationRequest, network});
-      expect(status).to.eq(401);
+      expect(status).to.eq(404);
 
       const {response} = await getAuthorisation(relayer, contract, keyPair, network);
       expect(response).to.have.lengthOf(1);

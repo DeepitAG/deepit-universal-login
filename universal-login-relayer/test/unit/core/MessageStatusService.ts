@@ -23,7 +23,7 @@ describe('UNIT: MessageStatusService', async () => {
     messageRepository = new MessageMemoryRepository();
     messageStatusService = new MessageStatusService(messageRepository, signaturesService);
     message = getTestSignedMessage();
-    messageItem = createMessageItem(message);
+    messageItem = createMessageItem(message, network);
     messageHash = calculateMessageHash(message);
     await messageRepository.add(messageHash, messageItem);
   });

@@ -3,41 +3,67 @@ import {Config, getConfigForNetwork, Network} from './config';
 import UniversalLoginSDK, {WalletService} from '@universal-login/sdk';
 import {MetamaskService} from './services/MetamaskService';
 import {UIController} from './services/UIController';
-import {initUi} from './ui';
 import {providers, utils} from 'ethers';
 import {Callback, JsonRPCRequest, JsonRPCResponse} from './models/rpc';
-import {ensure, Message} from '@universal-login/commons';
-import {waitFor} from './utils';
+import {ensure, Message, walletFromBrain} from '@universal-login/commons';
+import {waitForTrue} from './utils';
+import {initUi} from './ui';
+import {AppProps} from './ui/App';
+import {StorageService, WalletStorageService} from '@universal-login/react';
+import {combine, Property} from 'reactive-properties';
+
+export interface ULWeb3ProviderOptions {
+  provider: Provider;
+  relayerUrl: string;
+  ensDomains: string[];
+  uiInitializer?: (services: AppProps) => void;
+  storageService?: StorageService;
+}
 
 export class ULWeb3Provider implements Provider {
   static getDefaultProvider(networkOrConfig: Network | Config) {
     const config = typeof networkOrConfig === 'string' ? getConfigForNetwork(networkOrConfig) : networkOrConfig;
 
-    return new ULWeb3Provider(
-      config.provider,
-      config.relayerUrl,
-      config.ensDomains,
-    );
+    return new ULWeb3Provider({
+      provider: config.provider,
+      relayerUrl: config.relayerUrl,
+      ensDomains: config.ensDomains,
+    });
   }
 
+  public readonly isUniversalLogin = true;
+
+  private readonly provider: Provider;
   private readonly sdk: UniversalLoginSDK;
   private readonly walletService: WalletService;
   private readonly metamaskService: MetamaskService;
   private readonly uiController: UIController;
 
-  constructor(
-    private provider: Provider,
-    relayerUrl: string,
-    ensDomains: string[],
-    uiInitializer = initUi,
-  ) {
+  public readonly isLoggedIn: Property<boolean>;
+
+  constructor(options: ULWeb3ProviderOptions) {
+    const {
+      provider,
+      relayerUrl,
+      ensDomains,
+      uiInitializer = initUi,
+      storageService = new StorageService(),
+    } = options;
+
+    this.provider = provider;
     this.sdk = new UniversalLoginSDK(
       relayerUrl,
       new providers.Web3Provider(this.provider as any),
     );
-    this.walletService = new WalletService(this.sdk);
+    const walletStorageService = new WalletStorageService(storageService);
+    this.walletService = new WalletService(this.sdk, walletFromBrain, walletStorageService);
     this.metamaskService = new MetamaskService();
     this.uiController = new UIController(this.walletService, this.metamaskService);
+
+    this.isLoggedIn = combine(
+      [this.walletService.isAuthorized, this.metamaskService.metamaskProvider],
+      (walletCreated, metamask) => walletCreated || !!metamask,
+    );
 
     uiInitializer({
       sdk: this.sdk,
@@ -58,6 +84,7 @@ export class ULWeb3Provider implements Provider {
       case 'eth_sendTransaction':
       case 'eth_accounts':
       case 'eth_sign':
+      case 'personal_sign':
         try {
           this.handle(payload.method, payload.params).then((result: any) => {
             callback(null, {
@@ -84,6 +111,10 @@ export class ULWeb3Provider implements Provider {
         return this.getAccounts();
       case 'eth_sign':
         return this.sign(params[0], params[1]);
+      case 'personal_sign':
+        return this.sign(params[1], params[0]);
+      default:
+        throw new Error(`Method not supported: ${method}`);
     }
   }
 
@@ -96,14 +127,8 @@ export class ULWeb3Provider implements Provider {
   }
 
   async sendTransaction(tx: Partial<Message>): Promise<string> {
-    if (!this.walletService.walletDeployed.get()) {
-      this.uiController.requireWallet();
-      await waitFor((x: boolean) => x)(this.walletService.walletDeployed);
-    }
-    return this.executeTransaction(tx);
-  }
+    await this.ensureWalletIsDeployed();
 
-  async executeTransaction(tx: Partial<Message>): Promise<string> {
     const execution = await this.walletService.getDeployedWallet().execute({
       ...tx,
       from: this.walletService.getDeployedWallet().contractAddress,
@@ -115,18 +140,25 @@ export class ULWeb3Provider implements Provider {
     return succeeded.transactionHash;
   }
 
-  async sign(address: string, message: string): Promise<string> {
-    const wallet = await this.walletService.getDeployedWallet();
+  async sign(address: string, message: string) {
+    await this.ensureWalletIsDeployed();
+
+    const wallet = this.walletService.getDeployedWallet();
     ensure(wallet.contractAddress !== address, Error, `Address ${address} is not available to sign`);
 
-    const signingKey = new utils.SigningKey(wallet.privateKey);
-    const signature = signingKey.signDigest(
-      utils.hashMessage(utils.arrayify(message)),
-    );
-    return utils.joinSignature(signature);
+    return wallet.signMessage(utils.arrayify(message));
   }
 
-  create() {
+  async create() {
     this.uiController.requireWallet();
+
+    await waitForTrue(this.isLoggedIn);
+  }
+
+  private async ensureWalletIsDeployed() {
+    if (!this.walletService.walletDeployed.get()) {
+      this.uiController.requireWallet();
+      await waitForTrue(this.walletService.walletDeployed);
+    }
   }
 }

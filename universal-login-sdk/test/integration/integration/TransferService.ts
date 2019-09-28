@@ -6,8 +6,8 @@ import {TEST_ACCOUNT_ADDRESS, ETHER_NATIVE_TOKEN, TokenDetailsService} from '@un
 import {deployMockToken} from '@universal-login/commons/testutils';
 import UniversalLoginSDK from '../../../lib/api/sdk';
 import {WalletService} from '../../../lib/core/services/WalletService';
-import {TransferService} from '../../../lib/integration/ethereum/TransferService';
-import {TokensDetailsStore} from '../../../lib/integration/ethereum/TokensDetailsStore';
+import {TransferService} from '../../../lib/core/services/TransferService';
+import {TokensDetailsStore} from '../../../lib/core/services/TokensDetailsStore';
 import {createAndSetWallet} from '../../helpers/createWallet';
 import {setupSdk} from '../../helpers/setupSdk';
 
@@ -40,7 +40,7 @@ describe('INT: TransferService', () => {
   it('Should transfer tokens', async () => {
     const to = TEST_ACCOUNT_ADDRESS;
     const amount = '1.0';
-    const currency = 'Mock';
+    const currency = 'DAI';
     const {waitToBeSuccess} = await transferService.transfer({to, amount, currency});
     await waitToBeSuccess();
     expect(await mockTokenContract.balanceOf(to)).to.deep.eq(utils.parseEther(amount));

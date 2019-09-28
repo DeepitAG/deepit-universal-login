@@ -36,7 +36,7 @@ describe('INT: PendingMessages', () => {
     spy = sinon.fake.returns({hash: '0x0000000000000000000000000000000000000000000000000000000000000000'});
     signaturesService = new SignaturesService(multiChainService);
     statusService = new MessageStatusService(messageRepository, signaturesService);
-    pendingMessages = new PendingMessages(multiChainService, messageRepository, {add: spy} as any, statusService);
+    pendingMessages = new PendingMessages(multiChainService, messageRepository, {addMessage: spy} as any, statusService);
     message = createSignedMessage({from: walletContract.address, to: '0x'}, wallet.privateKey);
     messageHash = calculateMessageHash(message);
     await executeSetRequiredSignatures(walletContract, 2, wallet.privateKey);
@@ -69,10 +69,10 @@ describe('INT: PendingMessages', () => {
   });
 
   it('should get added signed transaction', async () => {
-    const messageItem = createMessageItem(message);
+    const messageItem = createMessageItem(message, network);
     await pendingMessages.add(message, network);
     const key = getKeyFromHashAndSignature(messageHash, message.signature);
-    await messageItem.collectedSignatureKeyPairs.push({signature: message.signature, key});
+    await messageItem.collectedSignatureKeyPairs!.push({signature: message.signature, key});
     expect((await messageRepository.get(messageHash, network)).toString()).to.eq(messageItem.toString());
   });
 

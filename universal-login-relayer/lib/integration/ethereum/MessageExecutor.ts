@@ -1,12 +1,41 @@
-import {providers} from 'ethers';
-import {SignedMessage} from '@universal-login/commons';
-import {MultiChainService} from '../../core/services/MultiChainService';
+import {Wallet, providers} from 'ethers';
+import {SignedMessage, ensureNotNull} from '@universal-login/commons';
 import {messageToTransaction} from '../../core/utils/messages/serialisation';
+import {QueueItem} from '../../core/models/QueueItem';
+import {IExecutor} from '../../core/services/execution/IExecutor';
+import IMessageRepository from '../../core/services/messages/IMessagesRepository';
+import {TransactionHashNotFound} from '../../core/utils/errors';
+import {MultiChainService} from '../../core/services/MultiChainService';
 import MessageExecutionValidator from './validators/MessageExecutionValidator';
 
-export class MessageExecutor {
+export type OnTransactionMined = (transaction: providers.TransactionResponse, network: string) => Promise<void>;
 
-  constructor(private multiChainService: MultiChainService) {
+export class MessageExecutor implements IExecutor<SignedMessage> {
+
+  constructor(
+    private multiChainService: MultiChainService,
+    private messageRepository: IMessageRepository,
+    private onTransactionMined: OnTransactionMined,
+  ) {}
+
+  canExecute(item: QueueItem): boolean {
+    return item.type === 'Message';
+  }
+
+  async handleExecute(messageHash: string, network: string) {
+    try {
+      const signedMessage = await this.messageRepository.getMessage(messageHash, network);
+      const transactionResponse = await this.execute(signedMessage, network);
+      const {hash, wait} = transactionResponse;
+      ensureNotNull(hash, TransactionHashNotFound);
+      await this.messageRepository.markAsPending(messageHash, hash!, network);
+      await wait();
+      await this.onTransactionMined(transactionResponse, network);
+      await this.messageRepository.setMessageState(messageHash, 'Success', network);
+    } catch (error) {
+      const errorMessage = `${error.name}: ${error.message}`;
+      await this.messageRepository.markAsError(messageHash, errorMessage, network);
+    }
   }
 
   async execute(signedMessage: SignedMessage, network: string): Promise<providers.TransactionResponse> {

@@ -58,7 +58,7 @@ class QueueService {
     do {
       const nextMessage = await this.queueStore.getNext();
       if (nextMessage){
-        await this.execute(nextMessage.hash, nextMessage.network);
+        await this.execute(nextMessage.transactionHash!, nextMessage.network);
       } else {
         if (this.state === 'stopping'){
           this.state = 'stopped';

@@ -10,8 +10,8 @@ export class MessageStatusService {
     const message = await this.messageRepository.get(messageHash, network);
     const required = await this.signaturesService.getRequiredSignatures(message.walletAddress, network);
     const status: MessageStatus =  {
-      collectedSignatures: message.collectedSignatureKeyPairs.map((collected) => collected.signature),
-      totalCollected: message.collectedSignatureKeyPairs.length,
+      collectedSignatures: message.collectedSignatureKeyPairs!.map((collected) => collected.signature),
+      totalCollected: message.collectedSignatureKeyPairs!.length,
       required: required.toNumber(),
       state: message.state,
       messageHash

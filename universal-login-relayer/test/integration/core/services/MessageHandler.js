@@ -22,28 +22,28 @@ describe('INT: MessageHandler', async () => {
   let msg;
   let otherWallet;
   let multiChainService;
+  let executionWorker;
   const config = getConfig('test');
   const knex = getKnexConfig();
   const network = 'default';
 
   beforeEach(async () => {
-    ({multiChainService, wallet, provider, messageHandler, authorisationStore, walletContract, otherWallet, devicesStore} = await setupMessageService(knex, config));
+    ({multiChainService, wallet, provider, messageHandler, authorisationStore, walletContract, otherWallet, devicesStore, executionWorker} = await setupMessageService(knex, config));
     msg = {...transferMessage, from: walletContract.address, nonce: await walletContract.lastNonce()};
-    messageHandler.start();
+    executionWorker.start();
   });
 
   afterEach(async () => {
-    messageHandler.stopLater();
+    executionWorker.stopLater();
     await clearDatabase(knex);
   });
 
   it('Error when not enough tokens', async () => {
     const mockToken = await deployContract(wallet, MockToken);
     await mockToken.transfer(walletContract.address, 1);
-
     const signedMessage = messageToSignedMessage({...msg, gasToken: mockToken.address}, wallet.privateKey);
     const {messageHash} = await messageHandler.handleMessage(signedMessage, network);
-    await messageHandler.stopLater();
+    await executionWorker.stopLater();
     const messageEntry = await messageHandler.getStatus(messageHash, network);
     expect(messageEntry.error).to.be.eq('Error: Not enough tokens');
   });
@@ -61,7 +61,7 @@ describe('INT: MessageHandler', async () => {
       const expectedBalance = (await provider.getBalance(msg.to)).add(msg.value);
       const signedMessage = messageToSignedMessage(msg, wallet.privateKey);
       const {messageHash} = await messageHandler.handleMessage(signedMessage, network);
-      await messageHandler.stopLater();
+      await executionWorker.stopLater();
       expect(await provider.getBalance(msg.to)).to.eq(expectedBalance);
       const {state, transactionHash} = await messageHandler.getStatus(messageHash, network);
       expect(transactionHash).to.not.be.null;
@@ -73,8 +73,9 @@ describe('INT: MessageHandler', async () => {
     it('execute add key', async () => {
       msg = {...addKeyMessage, from: walletContract.address, to: walletContract.address, nonce: await walletContract.lastNonce()};
       const signedMessage = messageToSignedMessage(msg, wallet.privateKey);
+
       await messageHandler.handleMessage(signedMessage, network);
-      await messageHandler.stopLater();
+      await executionWorker.stopLater();
       expect(await walletContract.keyExist(otherWallet.address)).to.be.true;
     });
 
@@ -85,7 +86,7 @@ describe('INT: MessageHandler', async () => {
         msg = {...addKeyMessage, from: walletContract.address, to: walletContract.address, nonce: await walletContract.lastNonce()};
         const signedMessage = messageToSignedMessage(msg, wallet.privateKey);
         await messageHandler.handleMessage(signedMessage, network);
-        await messageHandler.stopLater();
+        await executionWorker.stopLater();
         const authorisations = await authorisationStore.getPendingAuthorisations(walletContract.address, network);
         expect(authorisations).to.deep.eq([]);
         expect(await devicesStore.get(walletContract.address, network)).length(1);
@@ -100,7 +101,7 @@ describe('INT: MessageHandler', async () => {
       msg = {...addKeyMessage, from: walletContract.address, to: walletContract.address, nonce: await walletContract.lastNonce(), data};
       const signedMessage0 = messageToSignedMessage(msg, wallet.privateKey);
       await messageHandler.handleMessage(signedMessage0, network);
-      await messageHandler.stopLater();
+      await executionWorker.stopLater();
       expect(await walletContract.keyExist(otherWallet.address)).to.be.true;
       const devices = await devicesStore.get(walletContract.address, network);
       expect(devices.map(({publicKey}) => publicKey)).to.be.deep.eq(keys);
@@ -121,7 +122,7 @@ describe('INT: MessageHandler', async () => {
       const signedMessage = messageToSignedMessage(message, wallet.privateKey);
 
       await messageHandler.handleMessage(signedMessage, network);
-      await messageHandler.stopLater();
+      await executionWorker.stopLater();
       expect(await devicesStore.get(walletContract.address, otherWallet.address)).to.be.deep.eq([]);
       expect(await walletContract.keyExist(otherWallet.address)).to.eq(false);
     });

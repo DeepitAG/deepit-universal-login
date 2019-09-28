@@ -6,6 +6,7 @@ import {SignedMessage, createSignedMessage, TEST_ACCOUNT_ADDRESS} from '@univers
 import {providers, Wallet, Contract} from 'ethers';
 import {bigNumberify} from 'ethers/utils';
 import {MultiChainService} from '../../../../lib/core/services/MultiChainService';
+import MessageMemoryRepository from '../../../helpers/MessageMemoryRepository';
 
 describe('INT: MessageExecutor', async () => {
   let messageExecutor: MessageExecutor;
@@ -17,8 +18,8 @@ describe('INT: MessageExecutor', async () => {
   const network = 'default';
 
   before(async () => {
-    ({wallet, walletContract, provider, multiChainService} = await loadFixture(basicWalletContractWithMockToken));
-    messageExecutor = new MessageExecutor(multiChainService);
+    ({multiChainService, wallet, walletContract, provider} = await loadFixture(basicWalletContractWithMockToken));
+    messageExecutor = new MessageExecutor(multiChainService, new MessageMemoryRepository(), async () => {});
     signedMessage = createSignedMessage({from: walletContract.address, to: TEST_ACCOUNT_ADDRESS, value: bigNumberify(2), nonce: await walletContract.lastNonce()}, wallet.privateKey);
   });
 

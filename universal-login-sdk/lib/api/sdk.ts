@@ -13,10 +13,10 @@ import {SdkConfigDefault} from '../config/SdkConfigDefault';
 import {SdkConfig} from '../config/SdkConfig';
 import {AggregateBalanceObserver, OnAggregatedBalanceChange} from '../core/observers/AggregateBalanceObserver';
 import {PriceObserver, OnTokenPricesChange} from '../core/observers/PriceObserver';
-import {TokensDetailsStore} from '../integration/ethereum/TokensDetailsStore';
+import {TokensDetailsStore} from '../core/services/TokensDetailsStore';
 import {messageToUnsignedMessage} from '@universal-login/contracts';
 import {ensureSufficientGas} from '../core/utils/validation';
-import {GasPriceOracle} from '../integration/http/gasPriceOracle';
+import {GasPriceOracle} from '../integration/ethereum/gasPriceOracle';
 import {GasModeService} from '../core/services/GasModeService';
 
 class UniversalLoginSDK {
@@ -60,8 +60,8 @@ class UniversalLoginSDK {
     this.tokensDetailsStore = new TokensDetailsStore(this.tokenDetailsService, this.sdkConfig.observedTokensAddresses);
     this.priceObserver = new PriceObserver(this.tokensDetailsStore, this.sdkConfig.observedCurrencies);
     this.gasPriceOracle = new GasPriceOracle(this.provider);
-    this.gasModeService = new GasModeService(this.tokensDetailsStore, this.gasPriceOracle, this.priceObserver);
     this.tokensValueConverter = new TokensValueConverter(this.sdkConfig.observedCurrencies);
+    this.gasModeService = new GasModeService(this.tokensDetailsStore, this.gasPriceOracle, this.priceObserver, this.tokensValueConverter);
   }
 
   async createFutureWallet() {
@@ -135,7 +135,7 @@ class UniversalLoginSDK {
   async execute(message: Partial<Message>, privateKey: string): Promise<Execution> {
     const {gasLimit, gasPrice, gasToken} = this.sdkConfig.paymentOptions;
     ensureNotNull(this.relayerConfig, Error, 'Relayer configuration not yet loaded');
-    ensure(gasLimit <= this.relayerConfig!.maxGasLimit, InvalidGasLimit, `${gasLimit} provided, when relayer's max gas limit is ${this.relayerConfig!.maxGasLimit}`);
+    ensure(gasLimit <= this.relayerConfig!.networkConfig[this.network].maxGasLimit, InvalidGasLimit, `${gasLimit} provided, when relayer's max gas limit is ${this.relayerConfig!.networkConfig[this.network].maxGasLimit}`);
 
     const unsignedMessage = messageToUnsignedMessage({gasLimit, gasPrice, gasToken, ...message});
     unsignedMessage.nonce = unsignedMessage.nonce || parseInt(await this.getNonce(message.from!), 10);

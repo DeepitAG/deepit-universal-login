@@ -5,17 +5,16 @@ import {MessageStatusService} from './MessageStatusService';
 import {DuplicatedSignature, InvalidSignature, DuplicatedExecution, NotEnoughSignatures} from '../../utils/errors';
 import IMessageRepository from './IMessagesRepository';
 import {getKeyFromHashAndSignature} from '../../utils/encodeData';
-import QueueService from './QueueService';
 import {MultiChainService} from '../MultiChainService';
 import {createMessageItem} from '../../utils/messages/serialisation';
-import console = require('console');
+import {IExecutionQueue} from './IExecutionQueue';
 
 export default class PendingMessages {
 
   constructor(
     private multiChainService : MultiChainService,
     private messageRepository: IMessageRepository,
-    private queueService: QueueService,
+    private executionQueue: IExecutionQueue,
     private statusService: MessageStatusService
   ) {}
 
@@ -26,8 +25,8 @@ export default class PendingMessages {
   async add(message: SignedMessage, network: string) : Promise<MessageStatus> {
     const messageHash = calculateMessageHash(message);
     if (!await this.isPresent(messageHash, network)) {
-      const messageItem = createMessageItem(message);
-      await this.messageRepository.add(messageHash, messageItem, network);
+      const messageItem = createMessageItem(message, network);
+      await this.messageRepository.add(messageHash, messageItem);
     }
     await this.addSignatureToPendingMessage(messageHash, message, network);
     const status = await this.getStatus(messageHash, network);
@@ -40,7 +39,8 @@ export default class PendingMessages {
 
   private async onReadyToExecute(messageHash: string, message: SignedMessage, network: string) {
     await this.ensureCorrectExecution(messageHash, network);
-    return this.queueService.add(message, network);
+    await this.messageRepository.setMessageState(messageHash, 'Queued', network);
+    return this.executionQueue.addMessage(message, network);
   }
 
   private async addSignatureToPendingMessage(messageHash: string, message: SignedMessage, network: string) {
