@@ -1,6 +1,6 @@
 pragma solidity ^0.5.2;
-
 import "openzeppelin-solidity/contracts/math/SafeMath.sol";
+import "../openzeppelin/contracts/utils/Address.sol";
 
 
 contract KeyHolder {
@@ -29,12 +29,18 @@ contract KeyHolder {
         _;
     }
 
+    modifier onlySufficientKeyCount() {
+        revert("Always reverts");
+        _;
+    }
+
     function keyExist(address _key) public view returns(bool) {
         return keys[_key];
     }
 
     function addKey(address _key) public onlyAuthorised returns(bool success) {
         require(!keyExist(_key), "Key already added");
+        require(!OpenZeppelinUpgradesAddress.isContract(_key), "Contract cannot be a key");
         keys[_key] = true;
         keyCount = keyCount.add(1);
         emit KeyAdded(_key);
@@ -44,14 +50,13 @@ contract KeyHolder {
 
     function addKeys(address[] memory _keys) public onlyAuthorised returns(bool success) {
         for (uint i = 0; i < _keys.length; i++) {
-            require(_keys[i] != msg.sender, "Invalid key");
             addKey(_keys[i]);
         }
         emit MultipleKeysAdded(_keys.length);
         return true;
     }
 
-    function removeKey(address _key) public  onlyAuthorised returns(bool success) {
+    function removeKey(address _key) public onlyAuthorised onlySufficientKeyCount returns(bool success) {
         require(keyExist(_key), "Cannot remove a non-existing key");
         emit KeyRemoved(_key);
 

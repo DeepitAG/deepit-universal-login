@@ -1,5 +1,5 @@
 import {Contract} from 'ethers';
-import {computeContractAddress, KeyPair, calculateInitializeSignature} from '@universal-login/commons';
+import {computeCounterfactualAddress, KeyPair, calculateInitializeSignature, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
 import ProxyContract from '../build/WalletProxy.json';
 import {EnsDomainData, createProxyDeployWithENSArgs, getDeployData, encodeInitializeData} from '.';
 
@@ -29,8 +29,8 @@ export function createFutureDeploymentWithENS({keyPair, walletContractAddress, e
   };
 }
 
-export function createFutureDeployment(keyPair: KeyPair, walletContractAddress: string, factoryContract: Contract): FutureDeployment {
-  const initializeData = encodeInitializeData(keyPair.publicKey);
+export function createFutureDeployment(keyPair: KeyPair, walletContractAddress: string, factoryContract: Contract, gasPrice = '1', gasToken = ETHER_NATIVE_TOKEN.address): FutureDeployment {
+  const initializeData = encodeInitializeData([keyPair.publicKey, gasPrice, gasToken]);
   const signature = calculateInitializeSignature(initializeData, keyPair.privateKey);
   const futureAddress = getFutureAddress(walletContractAddress, factoryContract.address, keyPair.publicKey);
   return {
@@ -42,5 +42,5 @@ export function createFutureDeployment(keyPair: KeyPair, walletContractAddress: 
 
 export function getFutureAddress(walletContractAddress: string, factoryContractAddress: string, publicKey: string) {
   const initData = getDeployData(ProxyContract as any, [walletContractAddress]);
-  return computeContractAddress(factoryContractAddress, publicKey, initData);
+  return computeCounterfactualAddress(factoryContractAddress, publicKey, initData);
 }

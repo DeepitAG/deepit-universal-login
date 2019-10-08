@@ -17,8 +17,12 @@
   transform: translateY(-50%);
 }
 
-.universal-login .input-wallet-selector ,
-.universal-login .button-web3-provider ,
+.universal-login .input-wallet-selector {
+  text-transform: lowercase;
+}
+
+.universal-login .input-wallet-selector,
+.universal-login .button-web3-provider,
 .universal-login .ethereum-account {
   width: 100%;
   height: 45px;
@@ -30,6 +34,10 @@
 .universal-login .button-web3-provider ,
 .universal-login .ethereum-account {
   transition: transform 0.8s;
+  -webkit-perspective: 0;
+  -webkit-backface-visibility: hidden;
+  -webkit-transform: translate3d(0,0,0);
+  visibility:visible;
   transform-style: preserve-3d;
   transform: rotateX(170deg);
   backface-visibility: hidden;

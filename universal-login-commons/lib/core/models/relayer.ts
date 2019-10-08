@@ -1,5 +1,6 @@
 import {LocalizationConfig, SafelloConfig, RampConfig} from './onRamp';
 import {Provider} from 'ethers/providers';
+import {IPGeolocationApiConfig} from './IPGeolocationApiConfig';
 
 export interface SupportedToken {
   address: string;
@@ -54,4 +55,5 @@ export interface PublicRelayerConfig {
   localization: LocalizationConfig;
   onRampProviders: OnRampConfig;
   networkConfig: PublicNetworkConfig;
+  ipGeolocationApi: IPGeolocationApiConfig;
 }

@@ -10,7 +10,7 @@ export class BalanceObserver extends ObserverRunner {
   private lastTokenBalances: TokenDetailsWithBalance[] = [];
   private callbacks: OnBalanceChange[] = [];
 
-  constructor(private balanceChecker: BalanceChecker, private walletAddress: string, private tokenDetailsStore: TokensDetailsStore, tick: number = 500) {
+  constructor(private balanceChecker: BalanceChecker, private walletAddress: string, private tokenDetailsStore: TokensDetailsStore, tick: number) {
     super();
     this.tick = tick;
   }
@@ -32,15 +32,16 @@ export class BalanceObserver extends ObserverRunner {
     const newTokenBalances = await this.getBalances();
     if (!deepEqual(this.lastTokenBalances, newTokenBalances)) {
       this.lastTokenBalances = clonedeep(newTokenBalances);
-      this.callbacks.forEach((callback) => callback(newTokenBalances));
+      this.callbacks.forEach((callback) => callback(this.lastTokenBalances));
     }
-    return this.lastTokenBalances;
   }
 
   subscribe(callback: OnBalanceChange) {
     this.callbacks.push(callback);
-
-    this.isStopped() ? this.start() : callback(this.lastTokenBalances);
+    if (this.isStopped()) {
+      this.start();
+    }
+    callback(this.lastTokenBalances);
 
     const unsubscribe = () => {
       this.callbacks = this.callbacks.filter((element) => callback !== element);

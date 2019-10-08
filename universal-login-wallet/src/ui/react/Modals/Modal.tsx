@@ -2,19 +2,20 @@ import React, {useContext} from 'react';
 import ModalWrapperWithoutClose from './ModalWrapper';
 import ModalTransfer from './Transfer/ModalTransfer';
 import ModalRequest from './ModalRequest';
-import {useServices, useRelayerConfig} from '../../hooks';
+import {useRelayerConfig, useServices} from '../../hooks';
 import ModalWrapperClosable from './ModalWrapperClosable';
 import ModalWaitingFor from './ModalWaitingFor';
-import {Safello, TopUp, ModalWrapper} from '@universal-login/react';
+import {ModalWrapper, Safello, TopUp} from '@universal-login/react';
 import {ModalTxnSuccess} from './ModalTxnSuccess';
-import {WalletModalContext} from '../../../core/entities/WalletModalContext';
+import {TopUpModalProps, WalletModalContext} from '../../../core/entities/WalletModalContext';
+import {hideTopUpModal} from '../../../core/utils/hideTopUpModal';
 
 const Modal = () => {
   const modalService = useContext(WalletModalContext);
-  const {walletPresenter} = useServices();
+  const {walletPresenter, walletService, sdk} = useServices();
   const relayerConfig = useRelayerConfig();
 
-  switch (modalService.modalState) {
+  switch (modalService.modalName) {
     case 'transfer':
       return (
         <ModalWrapperClosable hideModal={modalService.hideModal}>
@@ -30,24 +31,26 @@ const Modal = () => {
     case 'topUpAccount':
       return relayerConfig ? (
         <TopUp
+          sdk={sdk}
+          {...modalService.modalProps as TopUpModalProps}
           modalClassName="topup-modal-wrapper"
-          topUpClassName="jarvis-topup"
-          onRampConfig={relayerConfig.onRampProviders}
+          topUpClassName="jarvis-styles"
           contractAddress={walletPresenter.getContractAddress()}
           isModal
           logoColor="black"
+          hideModal={() => hideTopUpModal(walletService, modalService)}
         />
       ) : null;
     case 'waitingForDeploy':
       return (
         <ModalWrapper modalClassName="jarvis-modal">
-          <ModalWaitingFor action={'Wallet creation'} chainName={relayerConfig!.chainSpec.name} transactionHash={'0x5a63…f3a68a'}/>
+          <ModalWaitingFor {...modalService.modalProps} action={'Wallet creation'} chainName={relayerConfig!.chainSpec.name} transactionHash={'0x5a63…f3a68a'}/>
         </ModalWrapper>
       );
     case 'waitingForTransfer':
       return (
         <ModalWrapperWithoutClose>
-          <ModalWaitingFor action={'Transferring funds'} chainName={relayerConfig!.chainSpec.name} transactionHash={modalService.modalProps.toString()}/>
+          <ModalWaitingFor {...modalService.modalProps} action={'Transferring funds'} chainName={relayerConfig!.chainSpec.name} />
         </ModalWrapperWithoutClose>
       );
     case 'transactionSuccess':
@@ -60,8 +63,8 @@ const Modal = () => {
       return relayerConfig ? (
         <ModalWrapperWithoutClose>
           <Safello
-            localizationConfig={relayerConfig.localization}
-            safelloConfig={relayerConfig.onRampProviders.safello}
+            localizationConfig={relayerConfig!.localization}
+            safelloConfig={relayerConfig!.onRampProviders.safello}
             contractAddress={walletPresenter.getContractAddress()}
             crypto="eth"
           />

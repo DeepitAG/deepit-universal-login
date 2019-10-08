@@ -66,6 +66,7 @@ export class RelayerUnderTest extends Relayer {
       database: testConfig.database,
       onRampProviders: testConfig.onRampProviders,
       localization: testConfig.localization,
+      ipGeolocationApi: testConfig.ipGeolocationApi,
       networkConfig: {
         default: {
           privateKey: wallet.privateKey,
@@ -120,6 +121,7 @@ export class RelayerUnderTest extends Relayer {
       database: testConfig.database,
       onRampProviders: testConfig.onRampProviders,
       localization: testConfig.localization,
+      ipGeolocationApi: testConfig.ipGeolocationApi,
       networkConfig: {
         default: {
           privateKey: wallet1.privateKey,
@@ -164,6 +166,14 @@ export class RelayerUnderTest extends Relayer {
 
   url() {
     return `http://127.0.0.1:${this.port}`;
+  }
+
+  getConfig() {
+    return this.config;
+  }
+
+  getServer() {
+    return this.server;
   }
 
   async clearDatabase() {

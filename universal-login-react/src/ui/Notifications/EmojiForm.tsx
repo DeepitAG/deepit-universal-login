@@ -9,6 +9,7 @@ import {EmojiKeyboard} from './EmojiKeyboard';
 import {EmojiPanelWithFakes} from './EmojiPanelWithFakes';
 import {GasPrice} from '../commons/GasPrice';
 import CheckmarkIcon from './../assets/icons/correct.svg';
+import {FooterSection} from '../commons/FooterSection';
 
 type InputModeType = 'keyboard' | 'panelWithFakes' | 'none';
 
@@ -23,18 +24,20 @@ const getInputModeFor = (addresses: string[], currentInputMode: InputModeType): 
 
 interface EmojiFormProps {
   deployedWallet: DeployedWallet;
+  onConnectionSuccess: () => void;
+  onDenyRequests?: () => void;
   hideTitle?: () => void;
   className?: string;
 }
 
-export const EmojiForm = ({deployedWallet, hideTitle, className}: EmojiFormProps) => {
-  const [gasParameters, setGasParameters] = useState<GasParameters>(INITIAL_GAS_PARAMETERS);
+export const EmojiForm = ({deployedWallet, hideTitle, className, onDenyRequests, onConnectionSuccess}: EmojiFormProps) => {
   const [enteredCode, setEnteredCode] = useState<number[]>([]);
   const [notifications, setNotifications] = useState<Notification[]>([]);
   const [inputMode, setInputMode] = useState<InputModeType>('none');
   const [addresses, setAddresses] = useState<string[]>([]);
   const {progressBar, showProgressBar} = useProgressBar();
   const [isInputValid, setIsInputValid] = useState(false);
+  let gasParameters = INITIAL_GAS_PARAMETERS;
 
   useEffect(() => deployedWallet.subscribeAuthorisations((notifications: Notification[]) => {
     setNotifications(notifications);
@@ -54,9 +57,11 @@ export const EmojiForm = ({deployedWallet, hideTitle, className}: EmojiFormProps
     return isValidCode(enteredCode, addresses[0]);
   };
 
-  const confirmCode = (address: string) => {
-    deployedWallet.addKey(address, {...transactionDetails, ...gasParameters});
+  const confirmCode = async (address: string) => {
+    const {waitToBeSuccess} = await deployedWallet.addKey(address, {...transactionDetails, ...gasParameters});
     showProgressBar();
+    await waitToBeSuccess();
+    onConnectionSuccess();
   };
 
   const onEmojiAdd = (code: number) => {
@@ -94,6 +99,11 @@ export const EmojiForm = ({deployedWallet, hideTitle, className}: EmojiFormProps
     );
   };
 
+  const onCancelClick = () => {
+    deployedWallet.denyRequests();
+    onDenyRequests ? onDenyRequests() : null;
+  };
+
   const renderContent = () => {
     if (isInputValid) {
       return (
@@ -106,18 +116,26 @@ export const EmojiForm = ({deployedWallet, hideTitle, className}: EmojiFormProps
             className={className}
           />
           <div className="correct-input-footer">
-            <GasPrice deployedWallet={deployedWallet} onGasParametersChanged={setGasParameters} className={className}/>
-            <div className="connect-buttons-row">
-              <button onClick={() => deployedWallet.denyRequests()} className="connect-cancel-btn">Cancel</button>
-              <button onClick={() => confirmCode(addresses[0])} className="connect-approve-btn">Connect device</button>
-            </div>
+            <FooterSection className={className}>
+              <GasPrice
+                isDeployed={true}
+                deployedWallet={deployedWallet}
+                gasLimit={transactionDetails.gasLimit!}
+                onGasParametersChanged={(parameters: GasParameters) => { gasParameters = parameters; }}
+                className={className}
+              />
+              <div className="connect-buttons-row">
+                <button onClick={onCancelClick} className="connect-cancel-btn">Cancel</button>
+                <button onClick={() => confirmCode(addresses[0])} className="connect-approve-btn">Connect device</button>
+              </div>
+            </FooterSection>
           </div>
         </div>
       );
     }
 
     return (
-      <>
+      <div className="approve-device-form">
         <EmojiPlaceholders
           enteredCode={enteredCode}
           onEmojiClick={onEmojiRemove}
@@ -127,11 +145,11 @@ export const EmojiForm = ({deployedWallet, hideTitle, className}: EmojiFormProps
         <button
           className="emojis-form-reject"
           id="reject"
-          onClick={() => deployedWallet.denyRequests()}
+          onClick={onCancelClick}
         >
           Deny
         </button>
-      </>
+      </div>
     );
   };
 

@@ -2,15 +2,19 @@ import chai, {expect} from 'chai';
 import chaiAsPromised from 'chai-as-promised';
 import {solidity, loadFixture} from 'ethereum-waffle';
 import {providers, Contract, Wallet, utils} from 'ethers';
-import {createKeyPair, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
-import {ensAndMasterFixture} from '../../fixtures/walletContract';
+import {createKeyPair, ETHER_NATIVE_TOKEN, getDeployTransaction, ContractJSON, KeyPair} from '@universal-login/commons';
+import WalletContract from '../../../build/Wallet.json';
+import {ensAndMasterFixture, walletContractFixture} from '../../fixtures/walletContract';
 import {EnsDomainData, createFutureDeploymentWithENS, createFutureDeployment} from '../../../lib';
+import {executeAddKey} from '../../helpers/ExampleMessages.js';
 
 chai.use(chaiAsPromised);
 chai.use(solidity);
 
-const deployProxyCost = '380000';
+const deployProxyCost = '385000';
 const deployProxyWithENSCost = '570000';
+const deployWalletCost = '3400000';
+const executeAddKeyCost = '103000';
 
 
 describe('Performance test', async () => {
@@ -43,6 +47,34 @@ describe('Performance test', async () => {
     const {gasUsed} = await provider.getTransactionReceipt(transaction.hash!);
     gasCosts['Proxy deploy with ENS'] = gasUsed;
     expect(gasUsed).to.be.below(deployProxyWithENSCost);
+  });
+
+  it('Wallet deployment', async () => {
+    const deployTransaction = getDeployTransaction(WalletContract as ContractJSON);
+    const transaction = await deployer.sendTransaction(deployTransaction);
+    const {gasUsed} = await provider.getTransactionReceipt(transaction.hash!);
+    gasCosts['Wallet deployment'] = gasUsed;
+    expect(gasUsed).to.be.below(deployWalletCost);
+  });
+
+  describe('Functions call', () => {
+    let proxyWallet: Contract;
+    let provider: providers.Provider;
+    let keyPair: KeyPair;
+    let deployer: Wallet;
+    let proxyWithSigner: Contract;
+
+    before(async () => {
+      ({provider, proxyWallet, keyPair, deployer} = await loadFixture(walletContractFixture));
+      proxyWithSigner = proxyWallet.connect(deployer);
+    });
+
+    it('Execute addKey function', async () => {
+      const transaction = await executeAddKey(proxyWithSigner, createKeyPair().publicKey, keyPair.privateKey);
+      const {gasUsed} = await provider.getTransactionReceipt(transaction.hash!);
+      gasCosts['Execute addKey function'] = gasUsed;
+      expect(gasUsed).to.be.below(executeAddKeyCost);
+    });
   });
 
   after(() => {

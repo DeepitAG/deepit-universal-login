@@ -1,10 +1,10 @@
 import React, {useState} from 'react';
-import UniversalLoginSDK, {WalletService, FutureWallet} from '@universal-login/sdk';
+import UniversalLoginSDK, {FutureWallet, WalletService} from '@universal-login/sdk';
 import {WalletSelector} from '../WalletSelector/WalletSelector';
 import Modals from '../Modals/Modals';
-import {ApplicationWallet, ETHER_NATIVE_TOKEN, defaultDeployOptions} from '@universal-login/commons';
+import {ApplicationWallet, GasParameters, INITIAL_GAS_PARAMETERS} from '@universal-login/commons';
 import {getStyleForTopLevelComponent} from '../../core/utils/getStyleForTopLevelComponent';
-import {ReactModalContext, ReactModalType, ReactModalProps} from '../../core/models/ReactModalContext';
+import {ReactModalContext, ReactModalProps, ReactModalType, TopUpProps} from '../../core/models/ReactModalContext';
 import {createModalService} from '../../core/services/createModalService';
 
 export interface OnboardingWalletService {
@@ -31,16 +31,17 @@ export const Onboarding = (props: OnboardingProps) => {
   };
 
   const onCreateClick = async (ensName: string) => {
+    let gasParameters = INITIAL_GAS_PARAMETERS;
     const {deploy, waitForBalance, contractAddress} = await walletService.createFutureWallet();
-    const relayerConfig = await props.sdk.getRelayerConfig();
-    const topUpProps = {
+    const topUpProps: TopUpProps = {
       contractAddress,
-      onRampConfig: relayerConfig!.onRampProviders
+      onGasParametersChanged: (parameters: GasParameters) => { gasParameters = parameters; },
+      sdk: props.sdk
     };
     modalService.showModal('topUpAccount', topUpProps);
     await waitForBalance();
     modalService.showModal('waitingForDeploy');
-    const wallet = await deploy(ensName, defaultDeployOptions.gasPrice.toString(), ETHER_NATIVE_TOKEN.address);
+    const wallet = await deploy(ensName, gasParameters.gasPrice.toString(), gasParameters.gasToken);
     walletService.setDeployed(ensName);
     modalService.hideModal();
     props.onCreate && props.onCreate(wallet);
@@ -50,7 +51,7 @@ export const Onboarding = (props: OnboardingProps) => {
   return (
     <div className="universal-login">
       <div className={getStyleForTopLevelComponent(props.className)}>
-      <ReactModalContext.Provider value={modalService}>
+        <ReactModalContext.Provider value={modalService}>
           <div className="perspective">
             <WalletSelector
               sdk={props.sdk}
@@ -60,7 +61,7 @@ export const Onboarding = (props: OnboardingProps) => {
               tryEnablingMetamask={props.tryEnablingMetamask}
             />
           </div>
-          <Modals modalClassName={props.modalClassName}/>
+          <Modals modalClassName={props.modalClassName} />
         </ReactModalContext.Provider>
       </div>
     </div>

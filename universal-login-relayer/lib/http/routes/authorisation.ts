@@ -10,8 +10,8 @@ import {AddAuthorisationRequest} from '../../core/models/AddAuthorisationRequest
 
 
 const request = (authorisationService: AuthorisationService) =>
-  async (data: {body: {key: string, walletContractAddress: string, network: string}}, req: Request) => {
-    const addAuthorisationRequest: AddAuthorisationRequest = {...data.body, deviceInfo: getDeviceInfo(req)};
+  async (data: {body: {key: string, walletContractAddress: string, network: string, applicationName: string}}, req: Request) => {
+    const addAuthorisationRequest: AddAuthorisationRequest = {...data.body, deviceInfo: getDeviceInfo(req, data.body.applicationName)};
     const result = await authorisationService.addRequest(addAuthorisationRequest, data.body.network);
     return responseOf({response: result}, 201);
   };
@@ -47,7 +47,8 @@ export default (authorisationService: AuthorisationService) => {
       body: asObject({
         network: asString,
         walletContractAddress: asEthAddress,
-        key: asString
+        key: asString,
+        applicationName: asString
       })
     }),
     request(authorisationService)

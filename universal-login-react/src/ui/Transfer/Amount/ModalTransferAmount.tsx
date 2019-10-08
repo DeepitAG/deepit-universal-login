@@ -1,25 +1,23 @@
 import React from 'react';
-import UniversalLoginSDK from '@universal-login/sdk';
-import {TransferDetails} from '@universal-login/commons';
+import {DeployedWallet} from '@universal-login/sdk';
+import {TransferDetails, TokenDetails} from '@universal-login/commons';
 import {TransferAmount} from './TransferAmount';
 import {getStyleForTopLevelComponent} from '../../../core/utils/getStyleForTopLevelComponent';
 
 export interface ModalTransferAmountProps {
-  sdk: UniversalLoginSDK;
-  ensName: string;
+  deployedWallet: DeployedWallet;
   onSelectRecipientClick: () => void;
   updateTransferDetailsWith: (transferDetails: Partial<TransferDetails>) => void;
-  currency: string;
+  tokenDetails: TokenDetails;
   modalLayoutClassName?: string;
   transferAmountClassName?: string;
 }
 
 export const ModalTransferAmount = ({
-  sdk,
-  ensName,
+  deployedWallet,
   onSelectRecipientClick,
   updateTransferDetailsWith,
-  currency,
+  tokenDetails,
   modalLayoutClassName,
   transferAmountClassName
 }: ModalTransferAmountProps) => {
@@ -32,11 +30,10 @@ export const ModalTransferAmount = ({
           </div>
           <div className="modal-content">
             <TransferAmount
-              sdk={sdk}
-              ensName={ensName}
+              deployedWallet={deployedWallet}
               onSelectRecipientClick={onSelectRecipientClick}
               updateTransferDetailsWith={updateTransferDetailsWith}
-              currency={currency}
+              tokenDetails={tokenDetails}
               transferAmountClassName={transferAmountClassName}
             />
           </div>

@@ -1,7 +1,7 @@
 import chai, {expect} from 'chai';
 import chaiHttp from 'chai-http';
 import {startRelayerWithRefund, createWalletCounterfactually, getAuthorisation, postAuthorisationRequest} from '../helpers/http';
-import {createKeyPair, signRelayerRequest} from '@universal-login/commons';
+import {signRelayerRequest, createKeyPair, TEST_APPLICATION_NAME} from '@universal-login/commons';
 import {utils} from 'ethers';
 
 chai.use(chaiHttp);
@@ -62,7 +62,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
       .send({authorisationRequest, network});
     expect(result.status).to.eq(204);
 
-    const {result, response} = await getAuthorisation(relayer, contract, keyPair, network);
+    const {response} = await getAuthorisation(relayer, contract, keyPair, network);
     expect(response).to.deep.eq([]);
   });
 

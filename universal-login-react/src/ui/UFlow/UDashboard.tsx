@@ -1,45 +1,66 @@
-import React, {useState, useEffect} from 'react';
+import React, {useEffect, useState} from 'react';
 import {ModalWrapper} from '../Modals/ModalWrapper';
 import {UHeader} from './UHeader';
 import {Funds} from './Funds';
-import {ApplicationWallet, TransferDetails} from '@universal-login/commons';
-import UniversalLoginSDK, {DeployedWallet, TransferService} from '@universal-login/sdk';
-import {useAsync} from '../hooks/useAsync';
+import {asTransferDetails, TransferDetails, DEFAULT_GAS_LIMIT, GasParameters} from '@universal-login/commons';
+import {DeployedWallet, TransferService, setBetaNotice} from '@universal-login/sdk';
 import logoIcon from '../assets/icons/U.svg';
 import {DashboardContentType} from '../../core/models/ReactUDashboardContentType';
 import './../styles/udashboard.sass';
 import {TopUp} from '../TopUp/TopUp';
-import {ApproveDevice} from './ApproveDevice';
 import {TransferAmount} from '../Transfer/Amount/TransferAmount';
 import {TransferRecipient} from '../Transfer/Recipient/TransferRecipient';
 import {TransferInProgress} from './TransferInProgress';
 import {Devices} from './Devices/Devices';
 import BackupCodes from '../BackupCodes/BackupCodes';
-import {DeleteAccount} from './DeleteAccount';
+import {cast} from '@restless/sanitizers';
+import {InvalidTransferDetails} from '../../core/utils/errors';
+import {Notice} from '../commons/Notice';
+import {GasPrice} from '../commons/GasPrice';
 
 export interface UDashboardProps {
-  applicationWallet: ApplicationWallet;
-  sdk: UniversalLoginSDK;
+  deployedWallet: DeployedWallet;
 }
 
-export const UDashboard = ({applicationWallet, sdk}: UDashboardProps) => {
-  const [transferDetails, setTransferDetails] = useState({currency: sdk.tokensDetailsStore.tokensDetails[0].symbol} as TransferDetails);
+function sanitizeTransferDetails(details: Partial<TransferDetails>) {
+  try {
+    return cast(details, asTransferDetails);
+  } catch (e) {
+    throw new InvalidTransferDetails();
+  }
+}
+
+export const UDashboard = ({deployedWallet}: UDashboardProps) => {
+  const {contractAddress, privateKey, sdk} = deployedWallet;
+  const [transferDetails, setTransferDetails] = useState<Partial<TransferDetails>>({transferToken: sdk.tokensDetailsStore.tokensDetails[0].address} as TransferDetails);
+  const selectedToken = sdk.tokensDetailsStore.getTokenByAddress(transferDetails.transferToken!);
   const [dashboardContent, setDashboardContent] = useState<DashboardContentType>('none');
   const [dashboardVisibility, setDashboardVisibility] = useState(false);
-  const [relayerConfig] = useAsync(() => sdk.getRelayerConfig(), []);
-  const {contractAddress, name, privateKey} = applicationWallet;
+
+  const [notice, setNotice] = useState('');
+  useEffect(() => {
+    setBetaNotice(sdk);
+    setNotice(sdk.getNotice());
+  });
 
   const [newNotifications, setNewNotifications] = useState([] as Notification[]);
-  useEffect(() => sdk.subscribeAuthorisations(applicationWallet.contractAddress, applicationWallet.privateKey, setNewNotifications), []);
+  useEffect(() => sdk.subscribeAuthorisations(contractAddress, privateKey, setNewNotifications), []);
 
   const updateTransferDetailsWith = (args: Partial<TransferDetails>) => {
     setTransferDetails({...transferDetails, ...args});
   };
 
-  const transferService = new TransferService(sdk, applicationWallet);
-
   const onUButtonClick = () => {
     setDashboardVisibility(true);
+    setDashboardContent('funds');
+  };
+
+  const transferService = new TransferService(deployedWallet);
+
+  const onTransferSendClick = async () => {
+    const sanitizedDetails = sanitizeTransferDetails(transferDetails);
+    setDashboardContent('waitingForTransfer');
+    await transferService.transfer(sanitizedDetails);
     setDashboardContent('funds');
   };
 
@@ -48,49 +69,45 @@ export const UDashboard = ({applicationWallet, sdk}: UDashboardProps) => {
       case 'funds':
         return (
           <Funds
-            contractAddress={applicationWallet.contractAddress}
-            ensName={applicationWallet.name}
-            sdk={sdk}
+            deployedWallet={deployedWallet}
             onTopUpClick={() => setDashboardContent('topup')}
             onSendClick={() => setDashboardContent('transferAmount')}
-          />
-        );
-      case 'approveDevice':
-        return (
-          <ApproveDevice
-            deployedWallet={new DeployedWallet(contractAddress, name, privateKey, sdk)}
           />
         );
       case 'topup':
         return (
           <TopUp
+            sdk={sdk}
+            onGasParametersChanged={() => {}}
             hideModal={() => setDashboardVisibility(false)}
-            contractAddress={applicationWallet.contractAddress}
-            onRampConfig={relayerConfig!.onRampProviders}
+            contractAddress={contractAddress}
           />
         );
       case 'transferAmount':
         return (
           <TransferAmount
-            sdk={sdk}
-            ensName={applicationWallet.name}
+            deployedWallet={deployedWallet}
             onSelectRecipientClick={() => setDashboardContent('transferRecipient')}
             updateTransferDetailsWith={updateTransferDetailsWith}
-            currency={transferDetails.currency}
+            tokenDetails={selectedToken}
           />
         );
       case 'transferRecipient':
-        const onGenerateClick = async () => {
-          setDashboardContent('waitingForTransfer');
-          await transferService.transfer(transferDetails);
-          setDashboardContent('funds');
-        };
         return (
-          <TransferRecipient
-            onRecipientChange={event => updateTransferDetailsWith({to: event.target.value})}
-            onSendClick={onGenerateClick}
-            transferDetails={transferDetails}
-          />
+          <div>
+            <TransferRecipient
+              symbol={selectedToken.symbol}
+              onRecipientChange={event => updateTransferDetailsWith({to: event.target.value})}
+              onSendClick={onTransferSendClick}
+              transferDetails={transferDetails}
+            />
+            <GasPrice
+              isDeployed={true}
+              deployedWallet={deployedWallet}
+              gasLimit={DEFAULT_GAS_LIMIT}
+              onGasParametersChanged={(gasParameters: GasParameters) => updateTransferDetailsWith({gasParameters})}
+            />
+          </div>
         );
       case 'waitingForTransfer':
         return (
@@ -99,25 +116,13 @@ export const UDashboard = ({applicationWallet, sdk}: UDashboardProps) => {
       case 'devices':
         return (
           <Devices
-            sdk={sdk}
-            contractAddress={applicationWallet.contractAddress}
-            privateKey={applicationWallet.privateKey}
-            ensName={applicationWallet.name}
-            onManageDevicesClick={() => setDashboardContent('approveDevice')}
-            onDeleteAccountClick={() => setDashboardContent('deleteAccount')}
-          />
-        );
-      case 'deleteAccount':
-        return (
-          <DeleteAccount
-            onCancelClick={() => setDashboardContent('devices')}
-            onConfirmDeleteClick={() => {}}
+            deployedWallet={deployedWallet}
           />
         );
       case 'backup':
         return (
           <BackupCodes
-            deployedWallet={new DeployedWallet(contractAddress, name, privateKey, sdk)}
+            deployedWallet={deployedWallet}
           />
         );
       default:
@@ -137,6 +142,7 @@ export const UDashboard = ({applicationWallet, sdk}: UDashboardProps) => {
           modalClassName="udashboard-modal"
         >
           <UHeader activeTab={dashboardContent} setActiveTab={setDashboardContent} />
+          <Notice message={notice}/>
           <div className="udashboard-content">
             {renderDashboardContent()}
           </div>

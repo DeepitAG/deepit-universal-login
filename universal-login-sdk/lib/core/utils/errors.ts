@@ -1,12 +1,13 @@
 type ErrorType =
   'InsufficientGas' |
-  'ApplicationWalletNotFound' |
+  'WalletNotFound' |
   'ConcurrentAuthorisation' |
   'ConcurrentDeployment' |
   'UnsupportedBytecode' |
   'InvalidAddress' |
   'MissingConfiguration' |
   'TransactionHashNotFound' |
+  'TokenNotFound' |
   'MissingMessageHash' |
   'InvalidPassphrase' |
   'TimeoutError' |
@@ -16,6 +17,7 @@ type ErrorType =
   'FutureWalletNotSet' |
   'InvalidContract' |
   'NoSet' |
+  'UnexpectedError' |
   'InvalidGasLimit';
 
 export class SDKError extends Error {
@@ -25,6 +27,13 @@ export class SDKError extends Error {
     super(message);
     this.errorType = errorType;
     Object.setPrototypeOf(this, SDKError.prototype);
+  }
+}
+
+export class UnexpectedError extends SDKError {
+  constructor(message: string) {
+    super(`Unexpected error: ${message}`, 'UnexpectedError');
+    Object.setPrototypeOf(this, UnexpectedError.prototype);
   }
 }
 
@@ -136,10 +145,17 @@ export class MissingMessageHash extends NotFound {
   }
 }
 
-export class ApplicationWalletNotFound extends NotFound {
+export class WalletNotFound extends NotFound {
   constructor() {
-    super('Application wallet not found', 'ApplicationWalletNotFound');
-    Object.setPrototypeOf(this, ApplicationWalletNotFound.prototype);
+    super('Wallet not found', 'WalletNotFound');
+    Object.setPrototypeOf(this, WalletNotFound.prototype);
+  }
+}
+
+export class TokenNotFound extends NotFound {
+  constructor(tokenAddress: string) {
+    super(`Token not found (address = ${tokenAddress})`, 'TokenNotFound');
+    Object.setPrototypeOf(this, TokenNotFound.prototype);
   }
 }
 

@@ -1,6 +1,6 @@
 import chai, {expect} from 'chai';
 import {startMultiChainRelayer, getAuthorisation, postAuthorisationRequest, getInitData} from '../helpers/http';
-import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateInitializeSignature, createSignedMessage, waitExpect, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
+import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateInitializeSignature, waitExpect, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN, computeCounterfactualAddress, TEST_APPLICATION_NAME} from '@universal-login/commons';
 import {getDeployData, messageToSignedMessage} from '@universal-login/contracts';
 import {utils, Wallet, Contract} from 'ethers';
 import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
@@ -25,6 +25,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
   const network = 'default';
   const otherChainName = 'otherChain';
   const ensName = 'giulio.mylogin.eth';
+  const applicationName = TEST_APPLICATION_NAME;
 
   beforeEach(async () => {
     ({provider2, mockToken2, deployer1, deployer2, ensAddress2, walletContract2, factoryContract2, otherWallet, relayer} = await startMultiChainRelayer());
@@ -56,7 +57,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
   it('deploy conterfactually on secondary chain', async () => {
     const keyPair = createKeyPair();
     const initCode = getDeployData(ProxyContract as any, [walletContract2.address]);
-    const contractAddress = computeContractAddress(factoryContract2.address, keyPair.publicKey, initCode);
+    const contractAddress = computeCounterfactualAddress(factoryContract2.address, keyPair.publicKey, initCode);
     const initData = await getInitData(keyPair, ensName, ensAddress2, provider2, TEST_GAS_PRICE);
     const signature = await calculateInitializeSignature(initData, keyPair.privateKey);
     await deployer2.sendTransaction({to: contractAddress, value: utils.parseEther('0.5')});
@@ -69,7 +70,8 @@ describe('E2E: Relayer - Multi-Chain', async () => {
         gasPrice: TEST_GAS_PRICE,
         gasToken: ETHER_NATIVE_TOKEN.address,
         signature,
-        network: otherChainName
+        network: otherChainName,
+        applicationName
       });
     expect(result.status).to.eq(201);
     expect(await provider2.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
@@ -120,10 +122,11 @@ describe('E2E: Relayer - Multi-Chain', async () => {
       gasLimit: 1000000,
       gasData: 0,
     };
-    const signedMessage = createSignedMessage(msg, keyPair.privateKey);
+    const signedMessage = messageToSignedMessage(msg, keyPair.privateKey);
+    const stringifiedMessage = stringifySignedMessageFields(signedMessage);
     const result = await chai.request(relayer.server)
       .post('/wallet/execution')
-      .send({signedMessage, network: 'giulioChain'});
+      .send({signedMessage: stringifiedMessage, network: 'giulioChain'});
     expect(result.status).to.eq(409);
     expect(result.error.text).to.be.eq('{"error":"Error: Chain giulioChain is not supported","type":"ChainNotSupported"}');
   });

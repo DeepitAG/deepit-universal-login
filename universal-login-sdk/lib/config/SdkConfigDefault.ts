@@ -3,6 +3,7 @@ import {ETHER_NATIVE_TOKEN, DEFAULT_GAS_LIMIT, DEFAULT_GAS_PRICE} from '@univers
 import {SdkConfig} from './SdkConfig';
 
 export const SdkConfigDefault: SdkConfig = {
+  applicationName: 'Unknown application',
   paymentOptions: {
     gasToken: ETHER_NATIVE_TOKEN.address,
     gasLimit: utils.bigNumberify(DEFAULT_GAS_LIMIT),
@@ -16,6 +17,9 @@ export const SdkConfigDefault: SdkConfig = {
     'DAI',
     'ETH'
   ],
-  authorisationsObserverTick: 1000,
   executionFactoryTick: 1000,
+  notice: '',
+  authorizationsObserverTick: 1000 * 3,
+  balanceObserverTick: 1000 * 3,
+  priceObserverTick: 1000 * 60 * 5
 };

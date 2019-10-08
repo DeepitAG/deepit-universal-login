@@ -2,7 +2,8 @@ import {expect} from 'chai';
 import {loadFixture} from 'ethereum-waffle';
 import MessageExecutor from '../../../../lib/integration/ethereum/MessageExecutor';
 import basicWalletContractWithMockToken from '../../../fixtures/basicWalletContractWithMockToken';
-import {SignedMessage, createSignedMessage, TEST_ACCOUNT_ADDRESS} from '@universal-login/commons';
+import {SignedMessage, TEST_ACCOUNT_ADDRESS} from '@universal-login/commons';
+import {messageToSignedMessage, emptyMessage} from '@universal-login/contracts';
 import {providers, Wallet, Contract} from 'ethers';
 import {bigNumberify} from 'ethers/utils';
 import {MultiChainService} from '../../../../lib/core/services/MultiChainService';
@@ -20,7 +21,8 @@ describe('INT: MessageExecutor', async () => {
   before(async () => {
     ({multiChainService, wallet, walletContract, provider} = await loadFixture(basicWalletContractWithMockToken));
     messageExecutor = new MessageExecutor(multiChainService, new MessageMemoryRepository(), async () => {});
-    signedMessage = createSignedMessage({from: walletContract.address, to: TEST_ACCOUNT_ADDRESS, value: bigNumberify(2), nonce: await walletContract.lastNonce()}, wallet.privateKey);
+    const message = {...emptyMessage, from: walletContract.address, to: TEST_ACCOUNT_ADDRESS, value: bigNumberify(2), nonce: await walletContract.lastNonce()};
+    signedMessage = messageToSignedMessage(message, wallet.privateKey);
   });
 
   it('should execute transaction and wait for it', async () =>  {

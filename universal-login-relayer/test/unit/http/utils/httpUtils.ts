@@ -1,7 +1,10 @@
 import {expect} from 'chai';
 import {getDeviceInfo} from '../../../../lib/http/utils/getDeviceInfo';
+import {TEST_APPLICATION_NAME} from '@universal-login/commons';
 
 describe('UNIT: Http utils test', async () => {
+  const applicationName = TEST_APPLICATION_NAME;
+
   it('Test getDeviceInfo', async () => {
     const req = {
       headers: {
@@ -14,10 +17,11 @@ describe('UNIT: Http utils test', async () => {
       }
     };
 
-    const result = getDeviceInfo(req as any);
+    const result = getDeviceInfo(req as any, applicationName);
     const expectedResult = {
       ipAddress: '::ffff:127.0.0.1',
-      name: 'AppleOS',
+      applicationName,
+      platform: 'AppleOS',
       city: 'unknown',
       os: 'MacOS',
       browser: 'Chrome',
@@ -40,10 +44,11 @@ describe('UNIT: Http utils test', async () => {
       }
     };
 
-    const result = getDeviceInfo(req as any);
+    const result = getDeviceInfo(req as any, applicationName);
     const expectedResult = {
       ipAddress: '::ffff:63.141.56.121',
-      name: 'AppleOS',
+      applicationName,
+      platform: 'AppleOS',
       city: 'San Francisco',
       os: 'MacOS',
       browser: 'Chrome',

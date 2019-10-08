@@ -1,23 +1,42 @@
-import {utils, Contract, providers} from 'ethers';
+import {Contract, providers, utils} from 'ethers';
 import WalletContract from '@universal-login/contracts/build/Wallet.json';
-import {TokensValueConverter, TokenDetailsService, Notification, generateCode, addCodesToNotifications, resolveName, Message, createSignedMessage, ensureNotNull, PublicRelayerConfig, createKeyPair, signRelayerRequest, ensure, BalanceChecker, deepMerge, DeepPartial, SignedMessage} from '@universal-login/commons';
+import {
+  addCodesToNotifications,
+  BalanceChecker,
+  createKeyPair,
+  deepMerge,
+  DeepPartial,
+  ensure,
+  ensureNotEmpty,
+  ensureNotNull,
+  generateCode,
+  Message,
+  Notification,
+  PublicRelayerConfig,
+  resolveName,
+  SignedMessage,
+  signRelayerRequest,
+  TokenDetailsService,
+  TokensValueConverter
+} from '@universal-login/commons';
 import AuthorisationsObserver from '../core/observers/AuthorisationsObserver';
 import BlockchainObserver from '../core/observers/BlockchainObserver';
 import {RelayerApi} from '../integration/http/RelayerApi';
 import {BlockchainService} from '../integration/ethereum/BlockchainService';
-import {MissingConfiguration, InvalidEvent, InvalidContract, InvalidGasLimit} from '../core/utils/errors';
+import {InvalidContract, InvalidEvent, InvalidGasLimit, MissingConfiguration} from '../core/utils/errors';
 import {FutureWalletFactory} from './FutureWalletFactory';
-import {ExecutionFactory, Execution} from '../core/services/ExecutionFactory';
+import {Execution, ExecutionFactory} from '../core/services/ExecutionFactory';
 import {BalanceObserver, OnBalanceChange} from '../core/observers/BalanceObserver';
 import {SdkConfigDefault} from '../config/SdkConfigDefault';
 import {SdkConfig} from '../config/SdkConfig';
 import {AggregateBalanceObserver, OnAggregatedBalanceChange} from '../core/observers/AggregateBalanceObserver';
-import {PriceObserver, OnTokenPricesChange} from '../core/observers/PriceObserver';
+import {OnTokenPricesChange, PriceObserver} from '../core/observers/PriceObserver';
 import {TokensDetailsStore} from '../core/services/TokensDetailsStore';
-import {messageToUnsignedMessage} from '@universal-login/contracts';
+import {messageToSignedMessage} from '@universal-login/contracts';
 import {ensureSufficientGas} from '../core/utils/validation';
 import {GasPriceOracle} from '../integration/ethereum/gasPriceOracle';
 import {GasModeService} from '../core/services/GasModeService';
+import {FeatureFlagsService} from '../core/services/FeatureFlagsService';
 
 class UniversalLoginSDK {
   provider: providers.Provider;
@@ -40,6 +59,7 @@ class UniversalLoginSDK {
   relayerConfig?: PublicRelayerConfig;
   factoryAddress?: string;
   network: string = 'default';
+  featureFlagsService: FeatureFlagsService;
 
   constructor(
     relayerUrl: string,
@@ -49,19 +69,28 @@ class UniversalLoginSDK {
     this.provider = typeof(providerOrUrl) === 'string' ?
       new providers.JsonRpcProvider(providerOrUrl, {chainId: 0} as any)
       : providerOrUrl;
-    this.relayerApi = new RelayerApi(relayerUrl);
     this.sdkConfig = deepMerge(SdkConfigDefault, sdkConfig);
-    this.authorisationsObserver = new AuthorisationsObserver(this.relayerApi, this.sdkConfig.authorisationsObserverTick);
+    this.relayerApi = new RelayerApi(relayerUrl, this.sdkConfig.applicationName);
+    this.authorisationsObserver = new AuthorisationsObserver(this.relayerApi, this.sdkConfig.authorizationsObserverTick);
     this.executionFactory = new ExecutionFactory(this.relayerApi, this.sdkConfig.executionFactoryTick);
     this.blockchainService = new BlockchainService(this.provider);
     this.blockchainObserver = new BlockchainObserver(this.blockchainService);
     this.balanceChecker = new BalanceChecker(this.provider);
     this.tokenDetailsService = new TokenDetailsService(this.provider);
     this.tokensDetailsStore = new TokensDetailsStore(this.tokenDetailsService, this.sdkConfig.observedTokensAddresses);
-    this.priceObserver = new PriceObserver(this.tokensDetailsStore, this.sdkConfig.observedCurrencies);
+    this.priceObserver = new PriceObserver(this.tokensDetailsStore, this.sdkConfig.observedCurrencies, this.sdkConfig.priceObserverTick);
     this.gasPriceOracle = new GasPriceOracle(this.provider);
     this.tokensValueConverter = new TokensValueConverter(this.sdkConfig.observedCurrencies);
-    this.gasModeService = new GasModeService(this.tokensDetailsStore, this.gasPriceOracle, this.priceObserver, this.tokensValueConverter);
+    this.gasModeService = new GasModeService(this.tokensDetailsStore, this.gasPriceOracle, this.priceObserver);
+    this.featureFlagsService = new FeatureFlagsService();
+  }
+
+  getNotice() {
+    return this.sdkConfig.notice;
+  }
+
+  setNotice(notice: string) {
+    this.sdkConfig.notice = notice;
   }
 
   async createFutureWallet() {
@@ -90,28 +119,27 @@ class UniversalLoginSDK {
     return this.relayerApi.getStatus(messageHash);
   }
 
-  async getRelayerConfig() {
+  async getRelayerConfig(): Promise<PublicRelayerConfig> {
     this.relayerConfig = this.relayerConfig || (await this.relayerApi.getConfig()).config;
     return this.relayerConfig;
   }
 
-  async fetchBalanceObserver(ensName: string) {
+  async fetchBalanceObserver(contractAddress: string) {
     if (this.balanceObserver) {
       return;
     }
-    const walletContractAddress = await this.getWalletContractAddress(ensName);
-    ensureNotNull(walletContractAddress, InvalidContract);
-    ensureNotNull(this.relayerConfig, MissingConfiguration);
+    ensureNotNull(contractAddress, InvalidContract);
+    ensureNotEmpty(this.sdkConfig, MissingConfiguration);
 
     await this.tokensDetailsStore.fetchTokensDetails();
-    this.balanceObserver = new BalanceObserver(this.balanceChecker, walletContractAddress, this.tokensDetailsStore);
+    this.balanceObserver = new BalanceObserver(this.balanceChecker, contractAddress, this.tokensDetailsStore, this.sdkConfig.balanceObserverTick);
   }
 
-  async fetchAggregateBalanceObserver(ensName: string) {
+  async fetchAggregateBalanceObserver(contractAddress: string) {
     if (this.aggregateBalanceObserver) {
       return;
     }
-    await this.fetchBalanceObserver(ensName);
+    await this.fetchBalanceObserver(contractAddress);
     this.aggregateBalanceObserver = new AggregateBalanceObserver(this.balanceObserver!, this.priceObserver, this.tokensValueConverter);
   }
 
@@ -136,12 +164,10 @@ class UniversalLoginSDK {
     const {gasLimit, gasPrice, gasToken} = this.sdkConfig.paymentOptions;
     ensureNotNull(this.relayerConfig, Error, 'Relayer configuration not yet loaded');
     ensure(gasLimit <= this.relayerConfig!.networkConfig[this.network].maxGasLimit, InvalidGasLimit, `${gasLimit} provided, when relayer's max gas limit is ${this.relayerConfig!.networkConfig[this.network].maxGasLimit}`);
-
-    const unsignedMessage = messageToUnsignedMessage({gasLimit, gasPrice, gasToken, ...message});
-    unsignedMessage.nonce = unsignedMessage.nonce || parseInt(await this.getNonce(message.from!), 10);
-    ensureSufficientGas(unsignedMessage);
-
-    const signedMessage: SignedMessage = createSignedMessage(unsignedMessage, privateKey);
+    const nonce = message.nonce || parseInt(await this.getNonce(message.from!), 10);
+    const partialMessage = {gasLimit, gasPrice, gasToken, ...message, nonce};
+    const signedMessage: SignedMessage = messageToSignedMessage(partialMessage, privateKey);
+    ensureSufficientGas(signedMessage);
     return this.executionFactory.createExecution(signedMessage);
   }
 
@@ -211,13 +237,13 @@ class UniversalLoginSDK {
     return this.blockchainObserver.subscribe(eventType, filter, callback);
   }
 
-  async subscribeToBalances(ensName: string, callback: OnBalanceChange) {
-    await this.fetchBalanceObserver(ensName);
+  async subscribeToBalances(contractAddress: string, callback: OnBalanceChange) {
+    await this.fetchBalanceObserver(contractAddress);
     return this.balanceObserver!.subscribe(callback);
   }
 
-  async subscribeToAggregatedBalance(ensName: string, callback: OnAggregatedBalanceChange) {
-    await this.fetchAggregateBalanceObserver(ensName);
+  async subscribeToAggregatedBalance(contractAddress: string, callback: OnAggregatedBalanceChange) {
+    await this.fetchAggregateBalanceObserver(contractAddress);
     return this.aggregateBalanceObserver!.subscribe(callback);
   }
 

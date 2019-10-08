@@ -1,45 +1,46 @@
-import React, {useState, useEffect} from 'react';
-import UniversalLoginSDK, {DeployedWallet} from '@universal-login/sdk';
-import './../../styles/devices.sass';
-import './../../styles/devicesDefault.sass';
-import {getStyleForTopLevelComponent} from '../../../core/utils/getStyleForTopLevelComponent';
-import {NewDeviceMessage} from './NewDeviceMessage';
-import {ConnectedDevices} from './ConnectedDevices';
-import {useAsync} from '../../hooks/useAsync';
+import React, {useState} from 'react';
+import {DevicesList} from './DevicesList';
+import {DeployedWallet} from '@universal-login/sdk';
+import {ConnectionNotification} from '../../Notifications/ConnectionNotification';
+import {DeleteAccount} from '../DeleteAccount';
 
 export interface DevicesProps {
-  sdk: UniversalLoginSDK;
+  deployedWallet: DeployedWallet;
   className?: string;
-  contractAddress: string;
-  privateKey: string;
-  ensName: string;
-  onManageDevicesClick: () => void;
-  onDeleteAccountClick: () => void;
 }
 
-export const Devices = ({sdk, contractAddress, privateKey, ensName, className, onManageDevicesClick, onDeleteAccountClick}: DevicesProps) => {
-  const deployedWallet = new DeployedWallet(contractAddress, ensName, privateKey, sdk);
-  const [devices] = useAsync(async () => deployedWallet.getConnectedDevices(), []);
+export type devicesContentType = 'devices' | 'approveDevice' | 'deleteAccount';
 
-  const [notifications, setNotifications] = useState([] as Notification[]);
-  useEffect(() => sdk.subscribeAuthorisations(contractAddress, privateKey, setNotifications), []);
+export const Devices = ({deployedWallet, className}: DevicesProps) => {
+  const [devicesContent, setDevicesContent] = useState<devicesContentType>('devices');
 
-  return (
-    <div className="universal-login-devices">
-      <div className={getStyleForTopLevelComponent(className)}>
-        <div className="devices">
-          <div className="devices-inner">
-            {notifications.length > 0 && <NewDeviceMessage onClick={onManageDevicesClick}/>}
-            {devices ?
-              <ConnectedDevices
-                devicesList={devices}
-                deployedWallet={deployedWallet}
-              /> : 'Loading devices..'
-            }
-          </div>
-          <button onClick={onDeleteAccountClick} className="delete-account-link">Delete account</button>
-        </div>
-      </div>
-    </div>
-  );
+  switch (devicesContent) {
+    case 'devices':
+      return (
+        <DevicesList
+          deployedWallet={deployedWallet}
+          className={className}
+          setDevicesContent={content => setDevicesContent(content)}
+        />
+      );
+    case 'approveDevice':
+      return (
+        <ConnectionNotification
+          onConnectionSuccess={() => setDevicesContent('devices')}
+          deployedWallet={deployedWallet}
+          onDenyRequests={() => setDevicesContent('devices')}
+          className={className}
+        />
+      );
+    case 'deleteAccount':
+      return (
+        <DeleteAccount
+          onCancelClick={() => setDevicesContent('devices')}
+          onConfirmDeleteClick={() => {}}
+          className={className}
+        />
+      );
+    default:
+      return null;
+  }
 };

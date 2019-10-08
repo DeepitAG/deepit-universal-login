@@ -1,7 +1,8 @@
 import {expect} from 'chai';
 import {Contract, Wallet, utils, providers} from 'ethers';
 import {loadFixture, deployContract, createMockProvider, getWallets} from 'ethereum-waffle';
-import {createSignedMessage, MessageWithFrom, TEST_ACCOUNT_ADDRESS, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
+import {TEST_ACCOUNT_ADDRESS, ETHER_NATIVE_TOKEN, Message, TEST_GAS_PRICE} from '@universal-login/commons';
+import {messageToSignedMessage, unsignedMessageToSignedMessage, emptyMessage} from '@universal-login/contracts';
 import basicWalletContractWithMockToken from '../../../../fixtures/basicWalletContractWithMockToken';
 import EnoughTokenValidator, {hasEnoughToken} from '../../../../../lib/integration/ethereum/validators/EnoughTokenValidator';
 import IMessageValidator from '../../../../../lib/core/services/validators/IMessageValidator';
@@ -9,7 +10,7 @@ import MockToken from '@universal-login/contracts/build/MockToken.json';
 import WalletContract from '@universal-login/contracts/build/Wallet.json';
 
 describe('INT: EnoughTokenValidator', async () => {
-  let message: MessageWithFrom;
+  let message: Message;
   let mockToken: Contract;
   let walletContract: Contract;
   let wallet: Wallet;
@@ -17,22 +18,22 @@ describe('INT: EnoughTokenValidator', async () => {
 
   before(async () => {
     ({mockToken, wallet, walletContract} = await loadFixture(basicWalletContractWithMockToken));
-    message = {from: walletContract.address, gasToken: mockToken.address, to: TEST_ACCOUNT_ADDRESS};
+    message = {...emptyMessage, from: walletContract.address, gasToken: mockToken.address, to: TEST_ACCOUNT_ADDRESS};
     validator = new EnoughTokenValidator(wallet);
   });
 
   it('successfully pass the validation', async () => {
-    const signedMessage = createSignedMessage({...message}, wallet.privateKey);
+    const signedMessage = messageToSignedMessage({...message}, wallet.privateKey);
     await expect(validator.validate(signedMessage)).to.not.be.rejected;
   });
 
   it('passes when not enough gas', async () => {
-    const signedMessage = createSignedMessage({...message, gasLimitExecution: 100}, wallet.privateKey);
+    const signedMessage = unsignedMessageToSignedMessage({...message, gasLimitExecution: 100, gasData: 1000}, wallet.privateKey);
     await expect(validator.validate(signedMessage)).to.be.eventually.fulfilled;
   });
 
   it('throws when not enough tokens', async () => {
-    const signedMessage = createSignedMessage({...message, gasLimitExecution: utils.parseEther('2.0')}, wallet.privateKey);
+    const signedMessage = messageToSignedMessage({...message, gasLimit: utils.parseEther('2.0')}, wallet.privateKey);
     await expect(validator.validate(signedMessage))
       .to.be.eventually.rejectedWith('Not enough tokens');
   });
@@ -50,8 +51,8 @@ describe('INT: EnoughTokenValidator', async () => {
       [wallet, otherWallet] = await getWallets(provider);
       token = await deployContract(wallet, MockToken, []);
       walletContract = await deployContract(wallet, WalletContract, []);
-      await walletContract.initialize(wallet.address);
       await wallet.sendTransaction({to: walletContract.address, value: utils.parseEther('1.0')});
+      await walletContract.initialize(wallet.address, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN.address);
       await token.transfer(walletContract.address, utils.parseEther('1'));
     });
 
@@ -70,8 +71,9 @@ describe('INT: EnoughTokenValidator', async () => {
     });
 
     it('Should return true if contract has enough ethers', async () => {
+      const walletBalance = await provider.getBalance(walletContract.address);
       expect(await hasEnoughToken(ETHER_NATIVE_TOKEN.address, walletContract.address, gasLimit, provider)).to.be.true;
-      expect(await hasEnoughToken(ETHER_NATIVE_TOKEN.address, walletContract.address, utils.parseEther('1.0'), provider)).to.be.true;
+      expect(await hasEnoughToken(ETHER_NATIVE_TOKEN.address, walletContract.address, walletBalance, provider)).to.be.true;
     });
 
     it('Should return false if contract has not enough ethers', async () => {

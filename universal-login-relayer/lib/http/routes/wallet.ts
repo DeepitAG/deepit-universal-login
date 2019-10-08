@@ -21,9 +21,10 @@ const getStatus = (messageHandler: MessageHandler) =>
   };
 
 const deploy = (deploymentHandler: DeploymentHandler) =>
-  async (data: {body: DeployArgs}, req: Request) => {
-    const deviceInfo = getDeviceInfo(req);
-    const transaction = await deploymentHandler.handleDeployment(data.body, deviceInfo);
+  async (data: {body: DeployArgs & {applicationName: string}}, req: Request) => {
+    const {applicationName, ...deployArgs} = data.body;
+    const deviceInfo = getDeviceInfo(req, applicationName);
+    const transaction = await deploymentHandler.handleDeployment(deployArgs, deviceInfo);
     return responseOf(transaction, 201);
   };
 
@@ -67,7 +68,8 @@ export default (deploymentHandler : DeploymentHandler, messageHandler: MessageHa
         gasPrice: asString,
         gasToken: asString,
         signature: asString,
-        network: asString
+        network: asString,
+        applicationName: asString
       })
     }),
     deploy(deploymentHandler)

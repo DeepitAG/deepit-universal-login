@@ -14,12 +14,13 @@ export function getPublicNetworkConfig(config: Config): PublicNetworkConfig {
 }
 
 export function getPublicConfig(config: Config): PublicRelayerConfig {
-  const {localization, onRampProviders} = config;
+  const {localization, onRampProviders, ipGeolocationApi} = config;
   const networkConfig = getPublicNetworkConfig(config);
   return {
     localization,
     onRampProviders,
-    networkConfig
+    networkConfig,
+    ipGeolocationApi
   };
 }
 

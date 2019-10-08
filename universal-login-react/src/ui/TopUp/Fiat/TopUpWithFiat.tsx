@@ -1,25 +1,29 @@
 import React, {useEffect, useState} from 'react';
+import UniversalLoginSDK from '@universal-login/sdk';
 import {CountryDropdown} from './CountryDropdown';
 import {AmountInput} from './AmountInput';
 import {FiatFooter} from './FiatFooter';
 import {FiatPaymentMethods, LogoColor} from './FiatPaymentMethods';
-import {useServices} from '../../../core/services/useServices';
 import {useAsyncEffect} from '../../../ui/hooks/useAsyncEffect';
 import {countries} from '../../../core/utils/countries';
 import {TopUpProvider} from '../../../core/models/TopUpProvider';
+import {IPGeolocationService} from '../../../integration/http/IPGeolocationService';
+import {TopUpProviderSupportService} from '../../../core/services/TopUpProviderSupportService';
 
 export interface TopUpWithFiatProps {
+  sdk: UniversalLoginSDK;
   onPayClick: (topUpProvider: TopUpProvider, amount: string) => void;
   logoColor?: LogoColor;
 }
 
-export const TopUpWithFiat = ({onPayClick, logoColor}: TopUpWithFiatProps) => {
+export const TopUpWithFiat = ({sdk, onPayClick, logoColor}: TopUpWithFiatProps) => {
   const [country, setCountry] = useState<string | undefined>(undefined);
   const [currency, setCurrency] = useState('EUR');
   const [amount, setAmount] = useState('');
   const [paymentMethod, setPaymentMethod] = useState<TopUpProvider | undefined>(undefined);
   const [fiatClass, setFiatClass] = useState('');
-  const {ipGeolocationService, topUpProviderSupportService} = useServices();
+
+  const topUpProviderSupportService = new TopUpProviderSupportService(countries);
 
   const changeCountry = (newCountry: string) => {
     if (newCountry === country) {
@@ -39,6 +43,8 @@ export const TopUpWithFiat = ({onPayClick, logoColor}: TopUpWithFiatProps) => {
   }, []);
 
   async function recognizeUserCountry() {
+    const {ipGeolocationApi} = await sdk.getRelayerConfig();
+    const ipGeolocationService = new IPGeolocationService(ipGeolocationApi.baseUrl, ipGeolocationApi.accessKey);
     const userCountryCode = await ipGeolocationService.getCountryCode().catch(console.error);
 
     const userCountry = countries.find(({code}) => code === userCountryCode);
@@ -49,7 +55,7 @@ export const TopUpWithFiat = ({onPayClick, logoColor}: TopUpWithFiatProps) => {
     return () => {};
   }
 
-  useAsyncEffect(() => recognizeUserCountry(), []);
+  useAsyncEffect(recognizeUserCountry, []);
 
   return (
     <div className={`fiat ${fiatClass}`}>
@@ -76,6 +82,7 @@ export const TopUpWithFiat = ({onPayClick, logoColor}: TopUpWithFiatProps) => {
           <p className="top-up-label fiat-payment-methods-title">Payment method</p>
           <FiatPaymentMethods
               selectedCountry={country}
+              supportService={topUpProviderSupportService}
               paymentMethod={paymentMethod}
               setPaymentMethod={setPaymentMethod}
               logoColor={logoColor}

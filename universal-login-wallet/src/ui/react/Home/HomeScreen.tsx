@@ -1,23 +1,29 @@
-import React, {useState, useContext} from 'react';
+import React, {useState, useContext, useEffect} from 'react';
 import {Header} from './Header';
 import Modal from '../Modals/Modal';
 import {useServices} from '../../hooks';
-import {Funds, Devices, BackupCodes, DeleteAccount, ConnectionNotification} from '@universal-login/react';
+import {Funds, Devices, BackupCodes, Notice} from '@universal-login/react';
 import {WalletModalContext} from '../../../core/entities/WalletModalContext';
+import {setBetaNotice} from '@universal-login/sdk';
 
 const HomeScreen = () => {
-  const {sdk, walletPresenter, walletService} = useServices();
+  const {walletService} = useServices();
   const modalService = useContext(WalletModalContext);
   const [content, setContent] = useState('balance');
+
+  const [notice, setNotice] = useState('');
+  const {sdk} = walletService.getDeployedWallet();
+  useEffect(() => {
+    setBetaNotice(sdk);
+    setNotice(sdk.getNotice());
+  });
 
   const renderContent = () => {
     switch (content) {
       case 'balance':
         return (
           <Funds
-            contractAddress={walletPresenter.getContractAddress()}
-            ensName={walletPresenter.getName()}
-            sdk={sdk}
+            deployedWallet={walletService.getDeployedWallet()}
             onTopUpClick={() => {}}
             onSendClick={() => modalService.showModal('transfer')}
             className="jarvis-funds"
@@ -26,13 +32,8 @@ const HomeScreen = () => {
       case 'devices':
         return (
           <Devices
-            sdk={sdk}
-            contractAddress={walletPresenter.getContractAddress()}
-            privateKey={walletPresenter.getPrivateKey()}
-            ensName={walletPresenter.getName()}
-            onManageDevicesClick={() => setContent('approveDevice')}
-            className="jarvis-devices"
-            onDeleteAccountClick={() => setContent('deleteAccount')}
+            deployedWallet={walletService.getDeployedWallet()}
+            className="jarvis-styles"
           />
         );
       case 'backup':
@@ -41,23 +42,6 @@ const HomeScreen = () => {
             deployedWallet={walletService.getDeployedWallet()}
             className="jarvis-backup"
           />
-        );
-      case 'deleteAccount':
-        return (
-          <DeleteAccount
-            onCancelClick={() => setContent('devices')}
-            onConfirmDeleteClick={() => {}}
-            className="jarvis-delete-account"
-          />
-        );
-      case 'approveDevice':
-        return (
-          <div id="notifications">
-            <ConnectionNotification
-              deployedWallet={walletService.getDeployedWallet()}
-              className="jarvis-emojis"
-            />
-          </div>
         );
       default:
         return null;
@@ -70,6 +54,7 @@ const HomeScreen = () => {
         <Header setContent={setContent} />
         <div className="dashboard-content">
           <div className="dashboard-content-box">
+            <Notice message={notice}/>
             {renderContent()}
           </div>
         </div>

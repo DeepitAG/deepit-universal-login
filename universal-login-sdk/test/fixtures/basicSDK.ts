@@ -1,18 +1,18 @@
-import {utils, Contract} from 'ethers';
+import {utils, providers, Contract, Wallet} from 'ethers';
 import {deployContract} from 'ethereum-waffle';
-import {TEST_ACCOUNT_ADDRESS} from '@universal-login/commons';
-import MockToken from '@universal-login/contracts/build/MockToken';
+import {TEST_ACCOUNT_ADDRESS, TEST_SDK_CONFIG} from '@universal-login/commons';
+import MockToken from '@universal-login/contracts/build/MockToken.json';
 import WalletContract from '@universal-login/contracts/build/Wallet.json';
 import {RelayerUnderTest} from '@universal-login/relayer';
 import UniversalLoginSDK from '../../lib/api/sdk';
 import {SdkConfigDefault} from '../../lib/config/SdkConfigDefault';
 import {createWallet} from '../helpers/createWallet';
 
-export default async function basicSDK(givenProvider, wallets) {
+export default async function basicSDK(givenProvider: providers.Provider, wallets: Wallet[]) {
   const [wallet, otherWallet, otherWallet2, deployer] = wallets;
   const {relayer, provider} = await RelayerUnderTest.createPreconfigured(deployer);
   await relayer.start();
-  const sdk = new UniversalLoginSDK(relayer.url(), provider, {authorisationsObserverTick: 10, executionFactoryTick: 10});
+  const sdk = new UniversalLoginSDK(relayer.url(), provider, TEST_SDK_CONFIG);
   const ensName = 'alex.mylogin.eth';
   const {contractAddress, privateKey} = await createWallet(ensName, sdk, wallet);
   const mockToken = await deployContract(wallet, MockToken);

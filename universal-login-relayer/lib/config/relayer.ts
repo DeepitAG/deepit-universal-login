@@ -1,4 +1,4 @@
-import {LocalizationConfig, OnRampConfig, NetworkConfig} from '@universal-login/commons';
+import {LocalizationConfig, OnRampConfig, NetworkConfig, IPGeolocationApiConfig} from '@universal-login/commons';
 import {KnexConfig} from './KnexConfig';
 
 export interface Config {
@@ -7,4 +7,5 @@ export interface Config {
   onRampProviders: OnRampConfig;
   database: KnexConfig;
   networkConfig: NetworkConfig;
+  ipGeolocationApi: IPGeolocationApiConfig;
 }

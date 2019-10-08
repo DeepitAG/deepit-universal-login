@@ -7,9 +7,9 @@ export const TEST_CONTRACT_ADDRESS = '0xd9822CF2a4C3AccD2AF175A5dF0376D46Dcb848d
 
 export const TEST_PRIVATE_KEY = '0x63f01680950dc70f2eb8f373de0c360fcbb89ef437f2f6f2f0a1797979e490a4';
 
-export const TEST_MESSAGE_HASH = '0xjfasd89yhfoi3hpuhfaif3hfasoihf89ph3faoihfouhsfkusahp8h3fa3ouhusd';
+export const TEST_MESSAGE_HASH = '0x06c81cd35a49c66824bc0b84bff850d1a2a56a09260c6fd332ee22a8b15fc9ca';
 
-export const TEST_TRANSACTION_HASH = '0x9djflkdasjfijfiao73f46dbefoniasiofjiefh37ka3hdakdu378h2euh33jmvb';
+export const TEST_TRANSACTION_HASH = '0x06c81cd35a49c66824bc0b84bff850d1a2a56a09260c6fd332ee22a8b15fc9ca';
 
 export const TEST_SIGNATURE_KEY_PAIRS = [{
   key: '0xD1D84F0e28D6fedF03c73151f98dF95139700aa7',
@@ -23,9 +23,12 @@ export const testJsonRpcUrl = 'http://localhost:8545';
 
 export const TEST_GAS_PRICE = '1';
 
+export const TEST_APPLICATION_NAME = 'UniversalLogin';
+
 export const TEST_DEVICE_INFO = {
   os: 'Mac',
-  name: 'laptop',
+  applicationName: TEST_APPLICATION_NAME,
+  platform: 'laptop',
   city: 'Warsaw, Poland',
   ipAddress: '84.10.249.134',
   time: '18 minutes ago',
@@ -34,7 +37,7 @@ export const TEST_DEVICE_INFO = {
 
 export const TEST_TOKEN_DETAILS = [
   {
-    address: '0xA193E42526F1FEA8C99AF609dcEabf30C1c29fAA',
+    address: '0x490932174cc4B7a0f546924a070D151D156095f0',
     symbol: 'DAI',
     name: 'MockToken'
   },
@@ -65,3 +68,10 @@ export const TEST_GAS_MODES = [{
     token: TEST_TOKEN_DETAILS[1],
   }]
 }];
+
+export const TEST_SDK_CONFIG = {
+  executionFactoryTick: 10,
+  authorizationsObserverTick: 10,
+  balanceObserverTick: 10,
+  priceObserverTick: 10
+};

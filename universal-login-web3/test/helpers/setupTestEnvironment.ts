@@ -26,15 +26,19 @@ export async function setupTestEnvironment() {
   ];
   const overrideConfig: DeepPartial<Config> = {
     port: PORT,
-    privateKey: deployer.privateKey,
-    chainSpec: {
-      ensAddress,
-    },
-    ensRegistrars: ensDomains,
-    walletContractAddress: walletContract.address,
-    contractWhiteList,
-    factoryAddress: factoryContract.address,
-    supportedTokens,
+    networkConfig: {
+      default: {
+        privateKey: deployer.privateKey,
+        chainSpec: {
+          ensAddress,
+        },
+        ensRegistrars: ensDomains,
+        walletContractAddress: walletContract.address,
+        contractWhiteList,
+        factoryAddress: factoryContract.address,
+        supportedTokens,
+      }
+    }
   };
   const relayer = RelayerUnderTest.createTestRelayer(overrideConfig, providerWithENS);
   await relayer.start();
