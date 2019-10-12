@@ -2,10 +2,8 @@ import React, {useLayoutEffect, useState} from 'react';
 import {Route, Switch} from 'react-router-dom';
 import {createModalService, useProperty} from '@universal-login/react';
 import HomeScreen from './Home/HomeScreen';
-import TransferringFundsScreen from './Login/TransferringFundsScreen';
 import NotFound from './NotFound';
 import {PrivateRoute} from './PrivateRoute';
-import RecoveryScreen from './Login/RecoveryScreen';
 import {useServices} from '../hooks';
 import {WelcomeScreen} from './Home/WelcomeScreen';
 import {TermsAndConditionsScreen} from './Home/TermsAndConditionsScreen';
@@ -52,23 +50,20 @@ const App = () => {
         <Route
           exact
           path="/connect"
-          render={() => <ConnectAccount />}
-        />
-        <Route
-          exact
-          path="/recovery"
-          render={() => <RecoveryScreen />}
+          render={() =>
+            <div className="main-bg">
+              <div className="box-wrapper">
+                <div className="box">
+                  <ConnectAccount />
+                </div>
+              </div>
+            </div>}
         />
         <PrivateRoute
           authorized={authorized}
           exact
           path="/"
           render={() => <HomeScreen />}
-        />
-        <PrivateRoute
-          path="/transferring"
-          authorized={authorized}
-          render={() => <TransferringFundsScreen />}
         />
         <Route component={NotFound} />
       </Switch>

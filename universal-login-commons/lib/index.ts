@@ -1,7 +1,7 @@
 export {Omit, PartialRequired, Procedure, Predicate, DeepPartial} from './core/types/common';
-export {DeviceInfo, Notification} from './core/models/notifications';
+export {ApplicationInfo, DeviceInfo, Notification} from './core/models/notifications';
 export {Device} from './core/models/Device';
-export {PaymentOptions, Message, MessageWithFrom, MessageWithoutFrom, DecodedMessage, DecodedMessageWithFrom, SignedMessage, UnsignedMessage, MessageStatus, MessageState, CollectedSignatureKeyPair, SignedMessagePaymentOptions} from './core/models/message';
+export {PaymentOptions, Message, MessageWithFrom, MessageWithoutFrom, DecodedMessage, DecodedMessageWithFrom, SignedMessage, UnsignedMessage, MessageStatus, DeploymentStatus, DeploymentState, MessageState, MineableState, CollectedSignatureKeyPair, SignedMessagePaymentOptions} from './core/models/message';
 export * from './core/models/ContractJSON';
 export {SupportedToken, ContractWhiteList, ChainSpec, OnRampConfig, PublicRelayerConfig, NetworkConfig, NetworkData, PublicNetworkData, PublicNetworkConfig} from './core/models/relayer';
 export {LocalizationConfig, SafelloConfig, RampConfig} from './core/models/onRamp';
@@ -9,7 +9,7 @@ export {createKeyPair, KeyPair} from './core/models/keyPair';
 export {TransactionOverrides, TransferDetails} from './core/models/transactions';
 export {WalletSuggestionAction, WALLET_SUGGESTION_ALL_ACTIONS} from './core/models/WalletSuggestionAction';
 export {ApplicationWallet} from './core/models/ApplicationWallet';
-export {TEST_ACCOUNT_ADDRESS, TEST_APPLICATION_NAME, TEST_CONTRACT_ADDRESS, TEST_PRIVATE_KEY, TEST_MESSAGE_HASH, TEST_TRANSACTION_HASH, TEST_SIGNATURE_KEY_PAIRS, testJsonRpcUrl, TEST_GAS_PRICE, TEST_DEVICE_INFO, TEST_TOKEN_DETAILS, TEST_GAS_MODES, TEST_SDK_CONFIG} from './core/constants/test';
+export {TEST_ACCOUNT_ADDRESS, TEST_APPLICATION_INFO, TEST_CONTRACT_ADDRESS, TEST_PRIVATE_KEY, TEST_MESSAGE_HASH, TEST_TRANSACTION_HASH, TEST_SIGNATURE_KEY_PAIRS, testJsonRpcUrl, TEST_GAS_PRICE, TEST_DEVICE_INFO, TEST_TOKEN_DETAILS, TEST_GAS_MODES, TEST_SDK_CONFIG} from './core/constants/test';
 export {EMOJI_COLORS} from './core/constants/emojiColors';
 export {EMPTY_DEVICE_INFO} from './core/constants/device';
 export {EMPTY_GAS_OPTION, INITIAL_GAS_PARAMETERS} from './core/constants/gas';

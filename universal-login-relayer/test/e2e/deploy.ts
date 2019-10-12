@@ -2,7 +2,7 @@ import chai, {expect} from 'chai';
 import chaiHttp from 'chai-http';
 import {utils, providers, Contract, Wallet} from 'ethers';
 import {getDeployData} from '@universal-login/contracts';
-import {createKeyPair, getDeployedBytecode, computeCounterfactualAddress, KeyPair, calculateInitializeSignature, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN, signRelayerRequest, DEPLOYMENT_REFUND, TEST_APPLICATION_NAME} from '@universal-login/commons';
+import {createKeyPair, getDeployedBytecode, computeCounterfactualAddress, KeyPair, calculateInitializeSignature, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN, signRelayerRequest, DEPLOYMENT_REFUND, TEST_APPLICATION_INFO} from '@universal-login/commons';
 import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
 import {startRelayerWithRefund, createWalletCounterfactually, getInitData} from '../helpers/http';
 import Relayer from '../../lib';
@@ -25,7 +25,6 @@ describe('E2E: Relayer - counterfactual deployment', () => {
   const ensName = 'myname.mylogin.eth';
   const network = 'default';
   let signature: string;
-  const applicationName = TEST_APPLICATION_NAME;
 
   beforeEach(async () => {
     ({provider, relayer, deployer, walletContract, factoryContract, mockToken, ensAddress} = await startRelayerWithRefund(relayerPort));
@@ -48,7 +47,7 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         gasToken: ETHER_NATIVE_TOKEN.address,
         signature,
         network,
-        applicationName
+        applicationInfo: TEST_APPLICATION_INFO
       });
     expect(result.status).to.eq(201);
     expect(await provider.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
@@ -64,7 +63,7 @@ describe('E2E: Relayer - counterfactual deployment', () => {
       contractAddress,
       publicKey: keyPair.publicKey,
       deviceInfo: {
-        applicationName,
+        ...TEST_APPLICATION_INFO,
         browser: 'node-superagent',
         city: 'unknown',
         ipAddress: '::ffff:127.0.0.1',
@@ -93,7 +92,7 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         gasToken: ETHER_NATIVE_TOKEN.address,
         signature,
         network,
-        applicationName
+        applicationInfo: TEST_APPLICATION_INFO
       });
     expect(result.body.error).to.eq(`Error: ENS name ${ensName} already taken`);
   });
@@ -114,7 +113,7 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         gasToken: mockToken.address,
         signature,
         network,
-        applicationName
+        applicationInfo: TEST_APPLICATION_INFO
       });
     expect(result.status).to.eq(201);
     expect(await provider.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);
@@ -131,7 +130,7 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         gasToken: ETHER_NATIVE_TOKEN.address,
         signature,
         network,
-        applicationName
+        applicationInfo: TEST_APPLICATION_INFO
       });
     expect(result.status).to.eq(402);
     expect(result.body.type).to.eq('NotEnoughBalance');
@@ -151,7 +150,7 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         gasToken: ETHER_NATIVE_TOKEN.address,
         signature,
         network,
-        applicationName
+        applicationInfo: TEST_APPLICATION_INFO
       });
     expect(result.status).to.eq(404);
     expect(result.body.type).to.eq('InvalidENSDomain');
@@ -172,10 +171,17 @@ describe('E2E: Relayer - counterfactual deployment', () => {
         gasToken: ETHER_NATIVE_TOKEN.address,
         signature,
         network,
-        applicationName
+        applicationInfo: TEST_APPLICATION_INFO
       });
     expect(result.body.type).to.eq('InvalidSignature');
     expect(result.body.error).to.eq(`Error: Invalid signature `);
+  });
+
+  it('Endpoint for checking deployment status should exist', async () => {
+    const result = await chai.request(relayerUrl)
+      .get(`/wallet/deploy/xyz`);
+    expect(result.status).to.eq(501);
+    expect(result.body).to.eq('Not implemented');
   });
 
   afterEach(async () => {

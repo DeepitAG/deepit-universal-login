@@ -1,6 +1,5 @@
 import React from 'react';
-import {IModalService} from '@universal-login/react';
-import {ModalWaitingForProps} from '../../ui/react/Modals/ModalWaitingFor';
+import {IModalService, WaitingForProps} from '@universal-login/react';
 import {OnGasParametersChanged} from '@universal-login/commons';
 
 export type WalletModalType = 'error' | 'transfer' | 'transferRecipient' | 'request' | 'topUpAccount' | 'waitingForDeploy' | 'waitingForTransfer' | 'transactionSuccess' | 'safello' | 'none';
@@ -9,6 +8,8 @@ export interface TopUpModalProps {
   onGasParametersChanged: OnGasParametersChanged;
 }
 
-export type WalletModalPropType = Partial<ModalWaitingForProps> | TopUpModalProps;
+type ErrorMessageType = string;
+
+export type WalletModalPropType = Partial<WaitingForProps> | TopUpModalProps | ErrorMessageType;
 
 export const WalletModalContext = React.createContext({} as IModalService<WalletModalType, WalletModalPropType>);

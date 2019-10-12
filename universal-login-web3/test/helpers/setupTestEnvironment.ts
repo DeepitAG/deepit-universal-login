@@ -40,7 +40,7 @@ export async function setupTestEnvironment() {
       }
     }
   };
-  const relayer = RelayerUnderTest.createTestRelayer(overrideConfig, providerWithENS);
+  const relayer = RelayerUnderTest.createTestRelayer(overrideConfig as any);
   await relayer.start();
 
   return {relayer, provider: providerWithENS, deployer, wallets};

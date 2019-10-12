@@ -1,11 +1,11 @@
-import {http, HttpFunction, PublicRelayerConfig, RelayerRequest} from '@universal-login/commons';
+import {http, HttpFunction, PublicRelayerConfig, RelayerRequest, ApplicationInfo} from '@universal-login/commons';
 import {fetch} from './fetch';
 
 export class RelayerApi {
 
   private network = 'default';
   private readonly http: HttpFunction;
-  constructor(relayerUrl: string, private applicationName: string) {
+  constructor(relayerUrl: string) {
     this.http = http(fetch)(relayerUrl);
   }
 
@@ -25,12 +25,12 @@ export class RelayerApi {
     return this.http('GET', `/wallet/execution/${this.network}/${messageHash}`);
   }
 
-  async connect(walletContractAddress: string, key: string) {
+  async connect(walletContractAddress: string, key: string, applicationInfo: ApplicationInfo) {
     return this.http('POST', '/authorisation', {
       walletContractAddress,
       key,
       network: this.network,
-      applicationName: this.applicationName
+      applicationInfo
     });
   }
 
@@ -59,7 +59,7 @@ export class RelayerApi {
     return this.http('GET', `/devices/${this.network}/${contractAddress}?signature=${signature}`);
   }
 
-  async deploy(publicKey: string, ensName: string, gasPrice: string, gasToken: string, signature: string) {
+  async deploy(publicKey: string, ensName: string, gasPrice: string, gasToken: string, signature: string, applicationInfo: ApplicationInfo) {
     return this.http('POST', '/wallet/deploy', {
       publicKey,
       ensName,
@@ -67,7 +67,7 @@ export class RelayerApi {
       gasToken,
       signature,
       network: this.network,
-      applicationName: this.applicationName
+      applicationInfo
     });
   }
 }

@@ -1,11 +1,9 @@
-import {SignedMessage, MessageState, CollectedSignatureKeyPair} from '@universal-login/commons';
+import {SignedMessage, CollectedSignatureKeyPair} from '@universal-login/commons';
+import {Mineable} from '../Mineable';
 
-export default interface MessageItem {
+export default interface MessageItem extends Mineable {
   collectedSignatureKeyPairs: CollectedSignatureKeyPair[];
-  transactionHash: string | null;
-  error: string | null;
   walletAddress: string;
   message: SignedMessage;
-  state: MessageState;
   network: string;
 }

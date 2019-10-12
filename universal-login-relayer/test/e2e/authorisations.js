@@ -1,7 +1,7 @@
 import chai, {expect} from 'chai';
 import chaiHttp from 'chai-http';
 import {startRelayerWithRefund, createWalletCounterfactually, getAuthorisation, postAuthorisationRequest} from '../helpers/http';
-import {signRelayerRequest, createKeyPair, TEST_APPLICATION_NAME} from '@universal-login/commons';
+import {signRelayerRequest, createKeyPair, TEST_APPLICATION_INFO} from '@universal-login/commons';
 import {utils} from 'ethers';
 
 chai.use(chaiHttp);
@@ -9,7 +9,6 @@ chai.use(chaiHttp);
 
 describe('E2E: Relayer - Authorisation routes', async () => {
   let relayer;
-  let otherWallet;
   let contract;
   let keyPair;
   let walletContract;
@@ -23,7 +22,7 @@ describe('E2E: Relayer - Authorisation routes', async () => {
 
   beforeEach(async () => {
     keyPair = createKeyPair();
-    ({otherWallet, relayer, deployer, walletContract, ensAddress, factoryContract} = await startRelayerWithRefund(relayerPort));
+    ({relayer, deployer, walletContract, ensAddress, factoryContract} = await startRelayerWithRefund(relayerPort));
     contract = await createWalletCounterfactually(deployer, relayerUrl, keyPair, walletContract.address, factoryContract.address, ensAddress);
   });
 

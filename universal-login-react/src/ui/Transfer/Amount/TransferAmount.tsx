@@ -6,6 +6,7 @@ import './../../styles/transferAmount.css';
 import './../../styles/transferAmountDefaults.css';
 import {getStyleForTopLevelComponent} from '../../../core/utils/getStyleForTopLevelComponent';
 import {useAsyncEffect} from '../../hooks/useAsyncEffect';
+import {FeatureFlag} from '../../commons/FeatureFlag';
 
 export interface TransferAmountProps {
   deployedWallet: DeployedWallet;
@@ -25,7 +26,7 @@ export const TransferAmount = ({deployedWallet, onSelectRecipientClick, updateTr
 
   const validateAndUpdateTransferDetails = (amount: string) => {
     if (balance && amount) {
-      setIsAmountCorrect(amount <= balance);
+      setIsAmountCorrect(Number(amount) <= Number(balance));
     } else {
       setIsAmountCorrect(false);
     }
@@ -45,7 +46,9 @@ export const TransferAmount = ({deployedWallet, onSelectRecipientClick, updateTr
         />
         <div className="transfer-amount-row">
           <label className="transfer-amount-label" htmlFor="amount-eth">How much are you sending?</label>
-          <button className="transfer-amount-max">Max</button>
+          <FeatureFlag sdk={sdk} feature="maxButton">
+            <button className="transfer-amount-max">Max</button>
+          </FeatureFlag>
         </div>
         <div className="transfer-amount-input-wrapper">
           <input

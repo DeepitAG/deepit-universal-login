@@ -1,16 +1,17 @@
-import React, {useState, useEffect} from 'react';
+import React, {useState, useEffect, useRef} from 'react';
 import './../../styles/gasPrice.sass';
 import './../../styles/gasPriceDefault.sass';
 import UniversalLoginSDK, {DeployedWallet} from '@universal-login/sdk';
 import {utils} from 'ethers';
 import {useAsync} from '../../hooks/useAsync';
-import {GasMode, GasOption, TokenDetailsWithBalance, EMPTY_GAS_OPTION, ensureNotNull, OnGasParametersChanged} from '@universal-login/commons';
+import {GasMode, GasOption, TokenDetailsWithBalance, EMPTY_GAS_OPTION, ensureNotNull, OnGasParametersChanged, ETHER_NATIVE_TOKEN} from '@universal-login/commons';
 import {getStyleForTopLevelComponent} from '../../../core/utils/getStyleForTopLevelComponent';
 import {findGasMode, findGasOption} from '@universal-login/commons/dist/lib/core/utils/gasPriceMode';
 import {useAsyncEffect} from '../../hooks/useAsyncEffect';
 import {GasPriceSpeedChoose} from './GasPriceSpeed';
 import {TransactionFeeChoose} from './TransactionFeeChoose';
 import {SelectedGasPrice} from './SelectedGasPrice';
+import {useOutsideClick} from '../../hooks/useClickOutside';
 
 interface GasPriceProps {
   deployedWallet?: DeployedWallet;
@@ -52,16 +53,28 @@ export const GasPrice = ({isDeployed = true, deployedWallet, sdk, gasLimit, onGa
     });
   };
 
+  const onGasOptionSelected = (gasOption: GasOption) => {
+    onGasOptionChanged(gasOption);
+    setContentVisibility(visibility => !visibility);
+  };
+
   useEffect(() => {
     if (gasModes) {
       const {name, usdAmount} = gasModes[0];
-      const gasOption = gasModes[0].gasOptions[0];
+      const gasOption = findGasOption(gasModes[0].gasOptions, ETHER_NATIVE_TOKEN.address);
       setUsdAmount(usdAmount);
       setModeName(name);
       onGasOptionChanged(gasOption);
     }
   }, [gasModes]);
   const [contentVisibility, setContentVisibility] = useState(false);
+
+  const ref = useRef(null);
+  useOutsideClick(ref, () => {
+    if (contentVisibility) {
+      setContentVisibility(false);
+    }
+  });
 
   const renderComponent = (gasModes: GasMode[]) => (
     <div className="universal-login-gas">
@@ -77,7 +90,7 @@ export const GasPrice = ({isDeployed = true, deployedWallet, sdk, gasLimit, onGa
               onClick={() => setContentVisibility(!contentVisibility)}
             />
             {contentVisibility &&
-              <div className="gas-price-selector">
+              <div ref={ref} className="gas-price-selector">
                 <GasPriceTitle />
                 <GasPriceSpeedChoose
                   gasModes={gasModes}
@@ -91,7 +104,7 @@ export const GasPrice = ({isDeployed = true, deployedWallet, sdk, gasLimit, onGa
                   gasLimit={gasLimit}
                   usdAmount={usdAmount}
                   tokensDetailsWithBalance={tokenDetailsWithBalance}
-                  onGasOptionChanged={onGasOptionChanged}
+                  onGasOptionChanged={onGasOptionSelected}
                 />
               </div>
             }

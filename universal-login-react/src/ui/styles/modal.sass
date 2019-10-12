@@ -5,21 +5,20 @@
   .modal-wrapper
     position: fixed
     z-index: 99999
-    background: #fff
     max-height: 100%
     max-width: 100%
     overflow-y: auto
+    padding: 15px
 
-    +media(s)
-      position: fixed
-      top: 0
-      left: 0
-      transform: translate(0, 0)
-      width: 100%
-      height: 100%
-      display: flex
-      flex-direction: column-reverse
-      justify-content: space-between
+  .modal
+    position: relative
+    overflow: hidden
+    background: #fff
+
+  .modal
+    position: relative
+    overflow: hidden
+    background: #fff
 
   .modal-wrapper.center
     top: 50%
@@ -50,7 +49,7 @@
     right: 15px
     width: 19px
     height: 19px
-    background: url('./../assets/icons/close.svg') center no-repeat
+    background: url('./../assets/icons/close-light.svg') center no-repeat
     background-size: contain
     border: none
 

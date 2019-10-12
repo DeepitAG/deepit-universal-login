@@ -25,7 +25,7 @@ import WalletMasterContractService from '../../integration/ethereum/services/Wal
 import {MessageStatusService} from '../../core/services/messages/MessageStatusService';
 import {SignaturesService} from '../../integration/ethereum/SignaturesService';
 import {MultiChainService} from '../../core/services/MultiChainService';
-import {PublicRelayerConfig} from '@universal-login/commons';
+import {PublicRelayerConfig, SignedMessage} from '@universal-login/commons';
 import IMessageValidator from '../../core/services/validators/IMessageValidator';
 import MessageExecutor from '../../integration/ethereum/MessageExecutor';
 import {DevicesStore} from '../../integration/sql/services/DevicesStore';
@@ -36,6 +36,8 @@ import IRepository from '../../core/services/messages/IRepository';
 import Deployment from '../../core/models/Deployment';
 import SQLRepository from '../../integration/sql/services/SQLRepository';
 import ExecutionWorker from '../../core/services/messages/ExecutionWorker';
+import DeploymentExecutor from '../../integration/ethereum/DeploymentExecutor';
+import {IExecutor} from '../../core/services/execution/IExecutor';
 
 const defaultPort = '3311';
 
@@ -59,7 +61,6 @@ class Relayer {
   private executionQueue: QueueSQLStore = {} as QueueSQLStore;
   private messageHandler: MessageHandler = {} as MessageHandler;
   private deploymentHandler: DeploymentHandler = {} as DeploymentHandler;
-  private gasValidator: GasValidator = {} as GasValidator;
   private messageRepository: IMessageRepository = {} as IMessageRepository;
   private deploymentRepository: IRepository<Deployment> = {} as IRepository<Deployment>;
   private signaturesService: SignaturesService = {} as SignaturesService;
@@ -67,6 +68,7 @@ class Relayer {
   private messageExecutionValidator: IMessageValidator = {} as IMessageValidator;
   private executionWorker: ExecutionWorker = {} as ExecutionWorker;
   private messageExecutor: MessageExecutor = {} as MessageExecutor;
+  private deploymentExecutor: DeploymentExecutor = {} as DeploymentExecutor;
   private app: Application = {} as Application;
   protected server: Server = {} as Server;
   public publicConfig: PublicRelayerConfig;
@@ -106,7 +108,8 @@ class Relayer {
     this.statusService = new MessageStatusService(this.messageRepository, this.signaturesService);
     this.messageHandler = new MessageHandler(this.multiChainService, this.authorisationStore, this.devicesService, this.hooks, this.messageRepository, this.statusService, this.executionQueue);
     this.messageExecutor = new MessageExecutor(this.multiChainService, this.messageRepository, this.messageHandler.onTransactionMined.bind(this.messageHandler));
-    this.executionWorker = new ExecutionWorker(this.messageExecutor, this.executionQueue);
+    this.deploymentExecutor = new DeploymentExecutor(this.deploymentRepository);
+    this.executionWorker = new ExecutionWorker([this.deploymentExecutor, this.messageExecutor], this.executionQueue);
     this.deploymentHandler = new DeploymentHandler(this.walletContractService, this.deploymentRepository, this.executionQueue);
     this.app.use(bodyParser.json());
     this.app.use('/wallet', WalletRouter(this.deploymentHandler, this.messageHandler));

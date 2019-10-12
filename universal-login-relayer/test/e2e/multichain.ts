@@ -1,6 +1,6 @@
 import chai, {expect} from 'chai';
 import {startMultiChainRelayer, getAuthorisation, postAuthorisationRequest, getInitData} from '../helpers/http';
-import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateInitializeSignature, waitExpect, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN, computeCounterfactualAddress, TEST_APPLICATION_NAME} from '@universal-login/commons';
+import {createKeyPair, getDeployedBytecode, computeContractAddress, calculateInitializeSignature, waitExpect, TEST_GAS_PRICE, ETHER_NATIVE_TOKEN, computeCounterfactualAddress, TEST_APPLICATION_INFO} from '@universal-login/commons';
 import {getDeployData, messageToSignedMessage} from '@universal-login/contracts';
 import {utils, Wallet, Contract} from 'ethers';
 import ProxyContract from '@universal-login/contracts/build/WalletProxy.json';
@@ -25,7 +25,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
   const network = 'default';
   const otherChainName = 'otherChain';
   const ensName = 'giulio.mylogin.eth';
-  const applicationName = TEST_APPLICATION_NAME;
+  const applicationInfo = TEST_APPLICATION_INFO;
 
   beforeEach(async () => {
     ({provider2, mockToken2, deployer1, deployer2, ensAddress2, walletContract2, factoryContract2, otherWallet, relayer} = await startMultiChainRelayer());
@@ -71,7 +71,7 @@ describe('E2E: Relayer - Multi-Chain', async () => {
         gasToken: ETHER_NATIVE_TOKEN.address,
         signature,
         network: otherChainName,
-        applicationName
+        applicationInfo
       });
     expect(result.status).to.eq(201);
     expect(await provider2.getCode(contractAddress)).to.eq(`0x${getDeployedBytecode(ProxyContract as any)}`);

@@ -1,31 +1,37 @@
 import {Router, Request} from 'express';
 import MessageHandler from '../../core/services/MessageHandler';
-import {SignedMessage, DeployArgs} from '@universal-login/commons';
+import {SignedMessage, DeployArgs, ApplicationInfo} from '@universal-login/commons';
 import {asyncHandler, sanitize, responseOf} from '@restless/restless';
 import {asString, asObject} from '@restless/sanitizers';
 import {asEthAddress, asBigNumber} from '@restless/ethereum';
-import {asArrayish} from '../utils/sanitizers';
+import {asArrayish, asApplicationInfo} from '../utils/sanitizers';
 import {getDeviceInfo} from '../utils/getDeviceInfo';
 import DeploymentHandler from '../../core/services/DeploymentHandler';
 
-const execution = (messageHandler : MessageHandler) =>
+
+const messageHandling = (messageHandler : MessageHandler) =>
   async (data: {body: {signedMessage: SignedMessage, network: string}}) => {
     const status = await messageHandler.handleMessage(data.body.signedMessage, data.body.network);
     return responseOf({status}, 201);
   };
 
-const getStatus = (messageHandler: MessageHandler) =>
+const getMessageStatus = (messageHandler: MessageHandler) =>
   async (data: {messageHash: string, network: string}) => {
     const status = await messageHandler.getStatus(data.messageHash, data.network);
     return responseOf(status);
   };
 
-const deploy = (deploymentHandler: DeploymentHandler) =>
-  async (data: {body: DeployArgs & {applicationName: string}}, req: Request) => {
-    const {applicationName, ...deployArgs} = data.body;
-    const deviceInfo = getDeviceInfo(req, applicationName);
+const deploymentHandling = (deploymentHandler: DeploymentHandler) =>
+  async (data: {body: DeployArgs & {applicationInfo: ApplicationInfo}}, req: Request) => {
+    const {applicationInfo, ...deployArgs} = data.body;
+    const deviceInfo = getDeviceInfo(req, applicationInfo);
     const transaction = await deploymentHandler.handleDeployment(deployArgs, deviceInfo);
     return responseOf(transaction, 201);
+  };
+
+const getDeploymentStatus = () =>
+  async () => {
+    return responseOf('Not implemented', 501);
   };
 
 export default (deploymentHandler : DeploymentHandler, messageHandler: MessageHandler) => {
@@ -49,7 +55,7 @@ export default (deploymentHandler : DeploymentHandler, messageHandler: MessageHa
         network: asString
       })
     }),
-    execution(messageHandler)
+    messageHandling(messageHandler)
   ));
 
   router.get('/execution/:network/:messageHash', asyncHandler(
@@ -57,7 +63,7 @@ export default (deploymentHandler : DeploymentHandler, messageHandler: MessageHa
       messageHash: asString,
       network: asString
     }),
-    getStatus(messageHandler)
+    getMessageStatus(messageHandler)
   ));
 
   router.post('/deploy', asyncHandler(
@@ -69,10 +75,17 @@ export default (deploymentHandler : DeploymentHandler, messageHandler: MessageHa
         gasToken: asString,
         signature: asString,
         network: asString,
-        applicationName: asString
+        applicationInfo: asApplicationInfo
       })
     }),
-    deploy(deploymentHandler)
+    deploymentHandling(deploymentHandler)
+  ));
+
+  router.get('/deploy/:deploymentHash', asyncHandler(
+    sanitize({
+      deploymentHash: asString,
+    }),
+    getDeploymentStatus()
   ));
 
   return router;

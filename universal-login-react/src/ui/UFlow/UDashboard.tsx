@@ -2,7 +2,7 @@ import React, {useEffect, useState} from 'react';
 import {ModalWrapper} from '../Modals/ModalWrapper';
 import {UHeader} from './UHeader';
 import {Funds} from './Funds';
-import {asTransferDetails, TransferDetails, DEFAULT_GAS_LIMIT, GasParameters} from '@universal-login/commons';
+import {asTransferDetails, TransferDetails, GasParameters} from '@universal-login/commons';
 import {DeployedWallet, TransferService, setBetaNotice} from '@universal-login/sdk';
 import logoIcon from '../assets/icons/U.svg';
 import {DashboardContentType} from '../../core/models/ReactUDashboardContentType';
@@ -10,13 +10,13 @@ import './../styles/udashboard.sass';
 import {TopUp} from '../TopUp/TopUp';
 import {TransferAmount} from '../Transfer/Amount/TransferAmount';
 import {TransferRecipient} from '../Transfer/Recipient/TransferRecipient';
-import {TransferInProgress} from './TransferInProgress';
 import {Devices} from './Devices/Devices';
 import BackupCodes from '../BackupCodes/BackupCodes';
 import {cast} from '@restless/sanitizers';
 import {InvalidTransferDetails} from '../../core/utils/errors';
 import {Notice} from '../commons/Notice';
-import {GasPrice} from '../commons/GasPrice';
+import {UNavBarMobile} from './UNavBarMobile';
+import {WaitingFor} from '../commons/WaitingFor';
 
 export interface UDashboardProps {
   deployedWallet: DeployedWallet;
@@ -32,10 +32,12 @@ function sanitizeTransferDetails(details: Partial<TransferDetails>) {
 
 export const UDashboard = ({deployedWallet}: UDashboardProps) => {
   const {contractAddress, privateKey, sdk} = deployedWallet;
+  const {relayerConfig} = deployedWallet.sdk;
   const [transferDetails, setTransferDetails] = useState<Partial<TransferDetails>>({transferToken: sdk.tokensDetailsStore.tokensDetails[0].address} as TransferDetails);
   const selectedToken = sdk.tokensDetailsStore.getTokenByAddress(transferDetails.transferToken!);
   const [dashboardContent, setDashboardContent] = useState<DashboardContentType>('none');
   const [dashboardVisibility, setDashboardVisibility] = useState(false);
+  const [transactionHash, setTransactionHash] = useState('');
 
   const [notice, setNotice] = useState('');
   useEffect(() => {
@@ -60,7 +62,10 @@ export const UDashboard = ({deployedWallet}: UDashboardProps) => {
   const onTransferSendClick = async () => {
     const sanitizedDetails = sanitizeTransferDetails(transferDetails);
     setDashboardContent('waitingForTransfer');
-    await transferService.transfer(sanitizedDetails);
+    const {waitToBeSuccess, waitForTransactionHash} = await transferService.transfer(sanitizedDetails);
+    const {transactionHash} = await waitForTransactionHash();
+    setTransactionHash(transactionHash!);
+    await waitToBeSuccess();
     setDashboardContent('funds');
   };
 
@@ -68,11 +73,14 @@ export const UDashboard = ({deployedWallet}: UDashboardProps) => {
     switch (dashboardContent) {
       case 'funds':
         return (
-          <Funds
-            deployedWallet={deployedWallet}
-            onTopUpClick={() => setDashboardContent('topup')}
-            onSendClick={() => setDashboardContent('transferAmount')}
-          />
+          <>
+            <Funds
+              deployedWallet={deployedWallet}
+              onTopUpClick={() => setDashboardContent('topup')}
+              onSendClick={() => setDashboardContent('transferAmount')}
+            />
+            <UNavBarMobile activeTab={dashboardContent} setActiveTab={setDashboardContent}/>
+          </>
         );
       case 'topup':
         return (
@@ -96,34 +104,36 @@ export const UDashboard = ({deployedWallet}: UDashboardProps) => {
         return (
           <div>
             <TransferRecipient
+              deployedWallet={deployedWallet}
+              onGasParametersChanged={(gasParameters: GasParameters) => updateTransferDetailsWith({gasParameters})}
               symbol={selectedToken.symbol}
               onRecipientChange={event => updateTransferDetailsWith({to: event.target.value})}
               onSendClick={onTransferSendClick}
               transferDetails={transferDetails}
             />
-            <GasPrice
-              isDeployed={true}
-              deployedWallet={deployedWallet}
-              gasLimit={DEFAULT_GAS_LIMIT}
-              onGasParametersChanged={(gasParameters: GasParameters) => updateTransferDetailsWith({gasParameters})}
-            />
           </div>
         );
       case 'waitingForTransfer':
         return (
-          <TransferInProgress />
+          <WaitingFor action={'Transferring funds'} relayerConfig={relayerConfig!} transactionHash={transactionHash}/>
         );
       case 'devices':
         return (
-          <Devices
-            deployedWallet={deployedWallet}
-          />
+          <>
+            <Devices
+              deployedWallet={deployedWallet}
+            />
+            <UNavBarMobile activeTab={dashboardContent} setActiveTab={setDashboardContent}/>
+          </>
         );
       case 'backup':
         return (
-          <BackupCodes
-            deployedWallet={deployedWallet}
-          />
+          <>
+            <BackupCodes
+              deployedWallet={deployedWallet}
+            />
+            <UNavBarMobile activeTab={dashboardContent} setActiveTab={setDashboardContent}/>
+          </>
         );
       default:
         return null;
@@ -141,10 +151,12 @@ export const UDashboard = ({deployedWallet}: UDashboardProps) => {
           hideModal={() => setDashboardVisibility(false)}
           modalClassName="udashboard-modal"
         >
-          <UHeader activeTab={dashboardContent} setActiveTab={setDashboardContent} />
-          <Notice message={notice}/>
-          <div className="udashboard-content">
-            {renderDashboardContent()}
+          <div className="udashboard">
+            <UHeader activeTab={dashboardContent} setActiveTab={setDashboardContent} />
+            <Notice message={notice}/>
+            <div className="udashboard-content">
+              {renderDashboardContent()}
+            </div>
           </div>
         </ModalWrapper>
       }

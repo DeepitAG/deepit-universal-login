@@ -70,7 +70,7 @@ class UniversalLoginSDK {
       new providers.JsonRpcProvider(providerOrUrl, {chainId: 0} as any)
       : providerOrUrl;
     this.sdkConfig = deepMerge(SdkConfigDefault, sdkConfig);
-    this.relayerApi = new RelayerApi(relayerUrl, this.sdkConfig.applicationName);
+    this.relayerApi = new RelayerApi(relayerUrl);
     this.authorisationsObserver = new AuthorisationsObserver(this.relayerApi, this.sdkConfig.authorizationsObserverTick);
     this.executionFactory = new ExecutionFactory(this.relayerApi, this.sdkConfig.executionFactoryTick);
     this.blockchainService = new BlockchainService(this.provider);
@@ -213,7 +213,7 @@ class UniversalLoginSDK {
 
   async connect(walletContractAddress: string) {
     const {publicKey, privateKey} = createKeyPair();
-    await this.relayerApi.connect(walletContractAddress, publicKey);
+    await this.relayerApi.connect(walletContractAddress, publicKey, this.sdkConfig.applicationInfo);
     return {
       privateKey,
       securityCode: generateCode(publicKey)

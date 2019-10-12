@@ -15,8 +15,10 @@ class DeploymentHandler {
   async handleDeployment(deployArgs: DeployArgs, deviceInfo: DeviceInfo) {
     const deployment : Deployment = {
       ...deployArgs,
-      hash: calculateDeployHash(deployArgs)
-    };
+      hash: calculateDeployHash(deployArgs),
+      deviceInfo,
+      state: 'Queued'
+    } as Deployment;
     await this.deploymentRepository.add(deployment.hash, deployment);
     await this.executionQueue.addDeployment(deployment);
     return this.walletService.deploy(deployment, deviceInfo);

@@ -2,16 +2,17 @@ import {Router, Request} from 'express';
 import {asyncHandler, sanitize, responseOf} from '@restless/restless';
 import {asString, asObject} from '@restless/sanitizers';
 import {asEthAddress} from '@restless/ethereum';
-import {RelayerRequest} from '@universal-login/commons';
+import {RelayerRequest, ApplicationInfo} from '@universal-login/commons';
 import {getDeviceInfo} from '../utils/getDeviceInfo';
-import {asRelayerRequest} from '../utils/sanitizers';
+import {asRelayerRequest, asApplicationInfo} from '../utils/sanitizers';
 import AuthorisationService from '../../core/services/AuthorisationService';
 import {AddAuthorisationRequest} from '../../core/models/AddAuthorisationRequest';
 
 
 const request = (authorisationService: AuthorisationService) =>
-  async (data: {body: {key: string, walletContractAddress: string, network: string, applicationName: string}}, req: Request) => {
-    const addAuthorisationRequest: AddAuthorisationRequest = {...data.body, deviceInfo: getDeviceInfo(req, data.body.applicationName)};
+  async (data: {body: {key: string, walletContractAddress: string, applicationInfo: ApplicationInfo, network: string}}, req: Request) => {
+    const {applicationInfo, ...relayerRequest} = data.body;
+    const addAuthorisationRequest: AddAuthorisationRequest = {...relayerRequest, deviceInfo: getDeviceInfo(req, applicationInfo)};
     const result = await authorisationService.addRequest(addAuthorisationRequest, data.body.network);
     return responseOf({response: result}, 201);
   };
@@ -48,7 +49,7 @@ export default (authorisationService: AuthorisationService) => {
         network: asString,
         walletContractAddress: asEthAddress,
         key: asString,
-        applicationName: asString
+        applicationInfo: asApplicationInfo
       })
     }),
     request(authorisationService)

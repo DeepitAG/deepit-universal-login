@@ -39,7 +39,7 @@ export default class PendingMessages {
 
   private async onReadyToExecute(messageHash: string, message: SignedMessage, network: string) {
     await this.ensureCorrectExecution(messageHash, network);
-    await this.messageRepository.setMessageState(messageHash, 'Queued', network);
+    await this.messageRepository.setState(messageHash, 'Queued', network);
     return this.executionQueue.addMessage(message, network);
   }
 

@@ -1,6 +1,8 @@
-import {sleep, onCritical} from '@universal-login/commons';
+import {sleep, onCritical, SignedMessage} from '@universal-login/commons';
 import {IExecutionQueue} from './IExecutionQueue';
-import MessageExecutor from '../../../integration/ethereum/MessageExecutor';
+import {QueueItem} from '../../models/QueueItem';
+import Deployment from '../../models/Deployment';
+import {IExecutor} from '../execution/IExecutor';
 
 type ExecutionWorkerState = 'running' | 'stopped' | 'stopping';
 
@@ -8,16 +10,26 @@ class ExecutionWorker {
   private state: ExecutionWorkerState;
 
   constructor(
-    private messageExecutor: MessageExecutor,
+    private executors: Array<IExecutor<SignedMessage | Deployment>>,
     private executionQueue: IExecutionQueue,
-    private tick: number = 100
+    private tickInterval: number = 100
   ) {
     this.state = 'stopped';
   }
 
-  async execute(messageHash: string, network: string) {
-    await this.messageExecutor.handleExecute(messageHash, network);
-    await this.executionQueue.remove(messageHash, network);
+  private async tryExecute(nextItem: QueueItem) {
+    for (let i = 0; i < this.executors.length; i++) {
+      if (this.executors[i].canExecute(nextItem)){
+        await this.execute(this.executors[i], nextItem.hash, nextItem.network);
+        return;
+      }
+    }
+    await this.executionQueue.remove(nextItem.hash, nextItem.network);
+  }
+
+  async execute(executor: IExecutor<SignedMessage | Deployment>, itemHash: string, network: string) {
+    await executor.handleExecute(itemHash, network);
+    await this.executionQueue.remove(itemHash, network);
   }
 
   start() {
@@ -27,19 +39,21 @@ class ExecutionWorker {
     }
   }
 
+  private async tick() {
+    if (this.state === 'stopping'){
+      this.state = 'stopped';
+    } else {
+      await sleep(this.tickInterval);
+    }
+  }
+
   async loop() {
     do {
-      const nextMessage = await this.executionQueue.getNext();
-      if (nextMessage && this.messageExecutor.canExecute(nextMessage)){
-        await this.execute(nextMessage.hash, nextMessage.network);
-      } else if (nextMessage) {
-        await this.executionQueue.remove(nextMessage.hash, nextMessage.network);
+      const nextItem = await this.executionQueue.getNext();
+      if (nextItem){
+        await this.tryExecute(nextItem);
       } else {
-        if (this.state === 'stopping'){
-          this.state = 'stopped';
-        } else {
-          await sleep(this.tick);
-        }
+        await this.tick();
       }
     } while (this.state !== 'stopped');
   }
@@ -51,7 +65,7 @@ class ExecutionWorker {
   async stopLater() {
     this.state = 'stopping';
     while (!this.isStopped()) {
-      await sleep(this.tick);
+      await sleep(this.tickInterval);
     }
   }
 

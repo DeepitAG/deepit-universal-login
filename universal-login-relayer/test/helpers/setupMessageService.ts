@@ -12,22 +12,30 @@ import MessageExecutor from '../../lib/integration/ethereum/MessageExecutor';
 import {DevicesStore} from '../../lib/integration/sql/services/DevicesStore';
 import {DevicesService} from '../../lib/core/services/DevicesService';
 import WalletMasterContractService from '../../lib/integration/ethereum/services/WalletMasterContractService';
-import {Config} from '../../lib';
+import {Config, getContractWhiteList} from '../../lib';
 import ExecutionWorker from '../../lib/core/services/messages/ExecutionWorker';
+import DeploymentExecutor from '../../lib/integration/ethereum/DeploymentExecutor';
+import SQLRepository from '../../lib/integration/sql/services/SQLRepository';
+import Deployment from '../../lib/core/models/Deployment';
+import MessageExecutionValidator from '../../lib/integration/ethereum/validators/MessageExecutionValidator';
+import IMessageValidator from '../../lib/core/services/validators/IMessageValidator';
 
 export default async function setupMessageService(knex: Knex, config: Config) {
   const {multiChainService, wallet, actionKey, provider, mockToken, walletContract, otherWallet} = await loadFixture(basicWalletContractWithMockToken);
   const hooks = new EventEmitter();
   const authorisationStore = new AuthorisationStore(knex);
   const messageRepository = new MessageSQLRepository(knex);
+  const deploymentRepository = new SQLRepository<Deployment>(knex, 'deployments');
   const devicesStore = new DevicesStore(knex);
   const executionQueue = new QueueSQLStore(knex);
   const walletMasterContractService = new WalletMasterContractService(multiChainService);
   const devicesService = new DevicesService(devicesStore, walletMasterContractService);
   const signaturesService = new SignaturesService(multiChainService);
   const statusService = new MessageStatusService(messageRepository, signaturesService);
+  const messageExecutionValidator: IMessageValidator = new MessageExecutionValidator(wallet, getContractWhiteList());
   const messageHandler = new MessageHandler(multiChainService, authorisationStore, devicesService, hooks, messageRepository, statusService, executionQueue);
   const messageExecutor = new MessageExecutor(multiChainService, messageRepository, messageHandler.onTransactionMined.bind(messageHandler));
-  const executionWorker = new ExecutionWorker(messageExecutor, executionQueue);
-  return { multiChainService, wallet, actionKey, provider, mockToken, authorisationStore, devicesStore, messageHandler, walletContract, otherWallet, executionWorker };
+  const deploymentExecutor = new DeploymentExecutor(deploymentRepository);
+  const executionWorker = new ExecutionWorker([deploymentExecutor, messageExecutor], executionQueue);
+  return { multiChainService, wallet, actionKey, provider,messageExecutionValidator, mockToken, authorisationStore, devicesStore, messageHandler, walletContract, otherWallet, executionWorker };
 }

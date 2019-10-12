@@ -31,19 +31,19 @@ export class MessageExecutor implements IExecutor<SignedMessage> {
       await this.messageRepository.markAsPending(messageHash, hash!, network);
       await wait();
       await this.onTransactionMined(transactionResponse, network);
-      await this.messageRepository.setMessageState(messageHash, 'Success', network);
+      await this.messageRepository.setState(messageHash, 'Success', network);
     } catch (error) {
       const errorMessage = `${error.name}: ${error.message}`;
       await this.messageRepository.markAsError(messageHash, errorMessage, network);
     }
   }
 
-  async execute(signedMessage: SignedMessage, network: string): Promise<providers.TransactionResponse> {
-    const transactionReq: providers.TransactionRequest = messageToTransaction(signedMessage);
+  async execute(item: SignedMessage, network: string): Promise<providers.TransactionResponse> {
+    const transactionReq: providers.TransactionRequest = messageToTransaction(item);
     const wallet = this.multiChainService.getWallet(network);
     const contractWhitelist = this.multiChainService.getContractWhiteList(network);
     const messageValidator = new MessageExecutionValidator(wallet, contractWhitelist);
-    await messageValidator.validate(signedMessage);
+    await messageValidator.validate(item);
     return wallet.sendTransaction(transactionReq);
   }
 }

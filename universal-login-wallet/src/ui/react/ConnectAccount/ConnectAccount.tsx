@@ -1,21 +1,25 @@
 import React, {useState} from 'react';
+import {ConnectionFlow} from '@universal-login/react';
 import {ConnectSelector} from './ConnectSelector';
-import {ChooseConnectionMethod} from './ChooseConnectionMethod';
-import {ConnectWithPassphrase} from './ConnectWithPassphrase';
-import {ConnectWithEmoji} from './ConnectWithEmoji';
+import {useServices, useRouter} from '../../hooks';
 
-export type ConnectModal = 'connectionMethod' | 'selector' | 'recover' | 'emoji';
+export type ConnectModal = 'connectionFlow' | 'selector';
 
 export const ConnectAccount = () => {
+  const {history} = useRouter();
+  const {sdk, walletService} = useServices();
   const [name, setName] = useState<string | undefined>(undefined);
   const [connectModal, setConnectModal] = useState<ConnectModal>('selector');
-  if (connectModal === 'connectionMethod') {
-    return <ChooseConnectionMethod name={name!} setConnectModal={setConnectModal}/>;
-  } else if (connectModal === 'recover') {
-    return <ConnectWithPassphrase name={name!}/>;
-  } else if (connectModal === 'emoji') {
-    return <ConnectWithEmoji name={name!} setConnectModal={setConnectModal} />;
+  if (connectModal === 'connectionFlow') {
+    return <ConnectionFlow
+      name={name!}
+      sdk={sdk}
+      walletService={walletService}
+      onCancel={() => setConnectModal('selector')}
+      onSuccess={() => history.push('/')}
+      className="jarvis-styles"
+    />;
   } else {
-    return <ConnectSelector setName={setName} setConnectModal={setConnectModal}/>;
+    return <ConnectSelector setName={setName} setConnectModal={setConnectModal} />;
   }
 };

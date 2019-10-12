@@ -26,7 +26,7 @@ class QueueService {
 
   async add(signedMessage: SignedMessage, network: string) {
     const messageHash = await this.queueStore.add(signedMessage, network);
-    await this.messageRepository.setMessageState(messageHash, 'Queued', network);
+    await this.messageRepository.setState(messageHash, 'Queued', network);
     return messageHash;
   }
 
@@ -39,7 +39,7 @@ class QueueService {
       await this.messageRepository.markAsPending(messageHash, hash!, network);
       await wait();
       await this.onTransactionMined(transactionResponse, network);
-      await this.messageRepository.setMessageState(messageHash, 'Success', network);
+      await this.messageRepository.setState(messageHash, 'Success', network);
     } catch (error) {
       const errorMessage = `${error.name}: ${error.message}`;
       await this.messageRepository.markAsError(messageHash, errorMessage, network);

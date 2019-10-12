@@ -160,7 +160,15 @@ export class RelayerUnderTest extends Relayer {
     return withENS(wallet.provider as providers.Web3Provider, ensAddress);
   }
 
-  public static createTestRelayer(config: Config) {
+  public static createTestRelayer(overrideConfig: DeepPartial<Config>) {
+    const testConfig = getConfig('test');
+    const config: Config = {
+      ...overrideConfig,
+      database: testConfig.database,
+      onRampProviders: testConfig.onRampProviders,
+      localization: testConfig.localization,
+      ipGeolocationApi: testConfig.ipGeolocationApi
+    } as Config;
     return new RelayerUnderTest(config);
   }
 

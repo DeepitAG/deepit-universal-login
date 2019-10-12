@@ -4,7 +4,6 @@ import {walletFromBrain, DeepPartial} from '@universal-login/commons';
 import UniversalLoginSDK, {WalletService} from '@universal-login/sdk';
 import {StorageService, WalletStorageService} from '@universal-login/react';
 import UserDropdownService from '../core/app/UserDropdownService';
-import connectToWallet from '../core/services/ConnectToWallet';
 import WalletPresenter from '../core/presenters/WalletPresenter';
 import {ConfigService} from '../core/services/ConfigService';
 import {SdkConfig} from '@universal-login/sdk/dist/lib/config/SdkConfig';
@@ -25,7 +24,10 @@ interface Overrides {
 export const createServices = (config: Config, overrides: Overrides = {}) => {
   const sdkConfig = {
     ...overrides.sdkConfig,
-    applicationName: 'Jarvis',
+    applicationInfo: {
+      applicationName: 'Jarvis',
+      type: 'laptop'
+    },
     paymentOptions: {},
     observedTokensAddresses: config.tokens
   };
@@ -41,13 +43,11 @@ export const createServices = (config: Config, overrides: Overrides = {}) => {
   const walletService = new WalletService(sdk, walletFromBrain, walletStorageService);
   const walletPresenter = new WalletPresenter(walletService);
   const configService = new ConfigService(sdk);
-  const _connectToWallet = connectToWallet(sdk, walletService);
   sdk.featureFlagsService.enableAll(new URLSearchParams(window.location.search).getAll('feature'));
   return {
     sdk,
     config,
     userDropdownService,
-    connectToWallet: _connectToWallet,
     walletService,
     walletPresenter,
     configService,

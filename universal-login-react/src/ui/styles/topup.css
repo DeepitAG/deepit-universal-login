@@ -161,6 +161,8 @@
 .universal-login-topup .top-up-label {
   font-size: 10px;
   margin: 0 0 8px;
+  text-align: left;
+  line-height: normal;
 }
 
 .universal-login-topup .input-address-wrapper {
@@ -180,7 +182,7 @@
   border: none;
 }
 
-.universal-login-topup .address-copy-btn {
+.universal-login-topup .copy-btn {
   position: relative;
   margin: 0;
   border: none;
@@ -190,12 +192,12 @@
   width: 50px;
   height: 45px;
   margin-left: 5px;
-  background: #FFFFFF;
-  border: 1px solid #C9C9D7;
+  background: none;
+  border: none;
   cursor: pointer;
 }
 
-.universal-login-topup .address-copy-btn::before {
+.universal-login-topup .copy-btn::before {
   content: '';
   height: 20px;
   width: 20px;
@@ -205,10 +207,13 @@
 
 .universal-login-topup .info-text {
   position: relative;
+  margin: 15px 0;
   padding-left: 28px;
   font-size: 12px;
   color: #A4A8B4;
   line-height: 24px;
+  text-align: left;
+  line-height: normal;
 }
 
 .universal-login-topup .info-text::before {

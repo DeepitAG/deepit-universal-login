@@ -1,7 +1,7 @@
 import {Wallet, utils, Contract} from 'ethers';
 import {RelayerUnderTest} from '../../lib/http/relayers/RelayerUnderTest';
 import {createMockProvider, getWallets} from 'ethereum-waffle';
-import {waitForContractDeploy, calculateInitializeSignature, TEST_GAS_PRICE, parseDomain, ETHER_NATIVE_TOKEN, TEST_APPLICATION_NAME, TEST_APPLICATION_INFO, signRelayerRequest} from '@universal-login/commons';
+import {waitForContractDeploy, calculateInitializeSignature, TEST_GAS_PRICE, parseDomain, ETHER_NATIVE_TOKEN, TEST_APPLICATION_INFO, signRelayerRequest} from '@universal-login/commons';
 import WalletContract from '@universal-login/contracts/build/Wallet.json';
 import ENS from '@universal-login/contracts/build/ENS.json';
 import chai from 'chai';
@@ -55,7 +55,7 @@ export const createWalletCounterfactually = async (wallet, relayerUrlOrServer, k
     gasToken: ETHER_NATIVE_TOKEN.address,
     signature,
     network,
-    applicationName: TEST_APPLICATION_NAME
+    applicationInfo: TEST_APPLICATION_INFO
   });
   return new Contract(futureAddress, WalletContract.interface, wallet);
 };
@@ -88,7 +88,7 @@ export const postAuthorisationRequest = (relayer, contract, keyPair, network) =>
       walletContractAddress: contract.address,
       key: keyPair.publicKey,
       network,
-      applicationName: TEST_APPLICATION_NAME
+      applicationInfo: TEST_APPLICATION_INFO
     });
 
 
